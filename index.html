@@ -1054,7 +1054,7 @@ async function confirmarEditEntrada(){
   }
   closeModal('modal-ent');renderEntradas();
 }
-async async function delEnt(id){if(!confirm('Excluir esta entrada?'))return;if(sbOnline)await sbDelete('entradas',id);entradas=entradas.filter(e=>e.id!==id);renderEntradas();}
+async function delEnt(id){if(!confirm('Excluir esta entrada?'))return;if(sbOnline)await sbDelete('entradas',id);entradas=entradas.filter(e=>e.id!==id);renderEntradas();}
 
 // ===== SAÍDAS =====
 function renderSaidas(){
@@ -1133,7 +1133,7 @@ async function confirmarEditSaida(){
   }
   closeModal('modal-sai');renderSaidas();
 }
-async async function delSai(id){if(!confirm('Excluir esta saída?'))return;if(sbOnline)await sbDelete('saidas',id);saidas=saidas.filter(s=>s.id!==id);renderSaidas();}
+async function delSai(id){if(!confirm('Excluir esta saída?'))return;if(sbOnline)await sbDelete('saidas',id);saidas=saidas.filter(s=>s.id!==id);renderSaidas();}
 
 // ===== VARIAÇÃO =====
 let varModo = 'qt'; // 'qt' = quantidade | 'val' = valor
@@ -1370,7 +1370,7 @@ async function salvarProduto(){
   }
   limparProduto();renderProdutos();
 }
-async async function delProd(id){if(!confirm('Excluir produto?'))return;if(sbOnline)await sbDelete('produtos',id);produtos=produtos.filter(p=>p.id!==id);renderProdutos();}
+async function delProd(id){if(!confirm('Excluir produto?'))return;if(sbOnline)await sbDelete('produtos',id);produtos=produtos.filter(p=>p.id!==id);renderProdutos();}
 
 // ===== CLIENTES =====
 function renderClientes(busca=''){
@@ -1399,7 +1399,7 @@ async function salvarCliente(){
   }
   limparCliente();renderClientes();
 }
-async async function delCli(id){if(!confirm('Excluir cliente?'))return;if(sbOnline)await sbDelete('clientes',id);clientes=clientes.filter(c=>c.id!==id);renderClientes();}
+async function delCli(id){if(!confirm('Excluir cliente?'))return;if(sbOnline)await sbDelete('clientes',id);clientes=clientes.filter(c=>c.id!==id);renderClientes();}
 
 // ===== FORNECEDORES =====
 function renderForn(busca=''){
@@ -1441,7 +1441,7 @@ async function salvarForn(){
   }
   limparForn();renderForn();
 }
-async async function delForn(id){if(!confirm('Excluir fornecedor?'))return;if(sbOnline)await sbDelete('fornecedores',id);fornecedores=fornecedores.filter(f=>f.id!==id);renderForn();}
+async function delForn(id){if(!confirm('Excluir fornecedor?'))return;if(sbOnline)await sbDelete('fornecedores',id);fornecedores=fornecedores.filter(f=>f.id!==id);renderForn();}
 
 // ===== SUBFAMÍLIAS =====
 function renderSF(){
