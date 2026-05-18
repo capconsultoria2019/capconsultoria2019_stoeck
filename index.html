@@ -728,9 +728,9 @@ function mapCli(r){ return{id:r.id,nome:r.nome,doc:r.doc||'',tipo:r.tipo||'clien
 function mapEnt(r){ return{id:r.id,data:r.data,prodId:r.produto_id,qt:Number(r.quantidade),custo:Number(r.custo_unitario),fornId:r.fornecedor_id,nf:r.nota_fiscal||'',resp:r.responsavel||'',obs:r.obs||'',mes:r.mes,ano:r.ano}; }
 function mapSai(r){ return{id:r.id,data:r.data,prodId:r.produto_id,qt:Number(r.quantidade),cliId:r.cliente_id,resp:r.responsavel||'',valor:Number(r.valor_total),obs:r.obs||'',mes:r.mes,ano:r.ano}; }
 
-async function carregarTudo(){
+async function carregarTudo(silent=false){
   setSyncStatus('connecting');
-  showLoader(true);
+  if(!silent) showLoader(true);
   const [sf, locs, prods, clis, forns, ents, sais] = await Promise.all([
     sbReq('subfamilias','GET',null,'?order=id'),
     sbReq('localizacoes','GET',null,'?order=id'),
@@ -748,9 +748,22 @@ async function carregarTudo(){
   if(ents) entradas    = ents.map(mapEnt);
   if(sais) saidas      = sais.map(mapSai);
   setSyncStatus('ok');
-  showLoader(false);
+  if(!silent) showLoader(false);
   fillAllSelects();
   renderDash();
+}
+
+let _autoRefreshInterval = null;
+function iniciarAutoRefresh(){
+  if(_autoRefreshInterval) clearInterval(_autoRefreshInterval);
+  _autoRefreshInterval = setInterval(()=>{
+    if(sbOnline && document.getElementById('app').style.display !== 'none'){
+      carregarTudo(true);
+    }
+  }, 5000);
+}
+function pararAutoRefresh(){
+  if(_autoRefreshInterval){ clearInterval(_autoRefreshInterval); _autoRefreshInterval=null; }
 }
 
 function showLoader(show){
@@ -855,8 +868,10 @@ function doLogin(){
   document.getElementById('user-av').textContent=user.nome[0].toUpperCase();
   document.getElementById('topbar-user').textContent=user.nome+' ('+user.perfil+')';
   init();
+  iniciarAutoRefresh();
 }
 function logout(){
+  pararAutoRefresh();
   currentUser=null;
   document.getElementById('app').style.display='none';
   document.getElementById('login-screen').style.display='flex';
