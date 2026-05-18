@@ -198,7 +198,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--preto);color:var(--txt);m
   <label>Usuário</label>
   <input type="text" id="login-user" placeholder="Digite seu usuário" onkeydown="if(event.key==='Enter')doLogin()">
   <label>Senha</label>
-  <input type="password" id="login-pass" placeholder="Digite sua senha" onkeydown="if(event.key==='Enter')doLogin()">
+  <div style="position:relative">
+    <input type="password" id="login-pass" placeholder="Digite sua senha" onkeydown="if(event.key==='Enter')doLogin()" style="width:100%;background:var(--cm);border:1px solid var(--borda);border-radius:8px;padding:12px 40px 12px 14px;color:var(--txt);font-size:14px;font-family:'DM Sans',sans-serif;outline:none;transition:border-color .2s">
+    <span onclick="toggleSenha('login-pass','olho-login')" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;color:var(--fraco);font-size:18px;user-select:none" id="olho-login">👁</span>
+  </div>
   <button class="btn-login" onclick="doLogin()">Entrar no Sistema</button>
   <div class="login-err" id="login-err">Usuário ou senha incorretos.</div>
 </div>
@@ -577,7 +580,21 @@ body{font-family:'DM Sans',sans-serif;background:var(--preto);color:var(--txt);m
       <div class="form-grid">
         <div class="fg"><label>Nome *</label><input type="text" id="usr-nome" placeholder="Nome completo"></div>
         <div class="fg"><label>Login *</label><input type="text" id="usr-login" placeholder="Login de acesso"></div>
-        <div class="fg"><label>Senha *</label><input type="password" id="usr-senha" placeholder="Senha"></div>
+        <div class="fg">
+          <label>Senha *</label>
+          <div style="position:relative">
+            <input type="password" id="usr-senha" placeholder="Senha" style="width:100%;padding-right:38px">
+            <span onclick="toggleSenha('usr-senha','olho-usr')" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);cursor:pointer;color:var(--fraco);font-size:16px;user-select:none" id="olho-usr">👁</span>
+          </div>
+        </div>
+        <div class="fg">
+          <label>Confirmar Senha *</label>
+          <div style="position:relative">
+            <input type="password" id="usr-senha2" placeholder="Repita a senha" style="width:100%;padding-right:38px" oninput="verificarSenhas()">
+            <span onclick="toggleSenha('usr-senha2','olho-usr2')" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);cursor:pointer;color:var(--fraco);font-size:16px;user-select:none" id="olho-usr2">👁</span>
+          </div>
+          <div id="msg-senha" style="font-size:11px;margin-top:4px;display:none"></div>
+        </div>
         <div class="fg"><label>Perfil</label><select id="usr-perfil"><option value="admin">Administrador</option><option value="operador">Operador</option><option value="consulta">Somente Consulta</option></select></div>
       </div>
       <div class="form-actions">
@@ -793,6 +810,34 @@ function estItem(prodId){
   return{e,s,saldo:e-s,cmp};
 }
 
+// SENHA HELPERS
+function toggleSenha(inputId, olhoId){
+  const inp = document.getElementById(inputId);
+  const olho = document.getElementById(olhoId);
+  if(inp.type === 'password'){
+    inp.type = 'text';
+    olho.textContent = '🙈';
+  } else {
+    inp.type = 'password';
+    olho.textContent = '👁';
+  }
+}
+function verificarSenhas(){
+  const s1 = document.getElementById('usr-senha').value;
+  const s2 = document.getElementById('usr-senha2').value;
+  const msg = document.getElementById('msg-senha');
+  if(!s2){ msg.style.display='none'; return; }
+  if(s1 === s2){
+    msg.style.display='block';
+    msg.style.color='var(--verde)';
+    msg.textContent='✓ Senhas conferem';
+  } else {
+    msg.style.display='block';
+    msg.style.color='var(--verm)';
+    msg.textContent='✗ Senhas não conferem';
+  }
+}
+
 // MODALS
 function openModal(id){document.getElementById(id).classList.add('open')}
 function closeModal(id){document.getElementById(id).classList.remove('open')}
@@ -973,7 +1018,7 @@ function limparEntrada(){
   document.getElementById('ent-data').value=today();
   document.getElementById('btn-salvar-ent').textContent='💾 Registrar Entrada';
 }
-function salvarEntrada(){
+async function salvarEntrada(){
   const data=document.getElementById('ent-data').value||today();
   const prodId=parseInt(document.getElementById('ent-prod').value);
   const qt=parseFloat(document.getElementById('ent-qt').value);
@@ -1000,7 +1045,7 @@ function abrirEditEnt(id){
   document.getElementById('me-obs').value=e.obs||'';
   openModal('modal-ent');
 }
-function confirmarEditEntrada(){
+async function confirmarEditEntrada(){
   const idx=entradas.findIndex(x=>x.id===editEntId);if(idx<0)return;
   const data=document.getElementById('me-data').value;
   entradas[idx]={...entradas[idx],data,prodId:parseInt(document.getElementById('me-prod').value),qt:parseFloat(document.getElementById('me-qt').value),custo:parseFloat(document.getElementById('me-custo').value)||0,fornId:parseInt(document.getElementById('me-forn').value)||'',nf:document.getElementById('me-nf').value,resp:document.getElementById('me-resp').value,obs:document.getElementById('me-obs').value,mes:getM(data),ano:getY(data)};
@@ -1009,7 +1054,7 @@ function confirmarEditEntrada(){
   }
   closeModal('modal-ent');renderEntradas();
 }
-async function delEnt(id){if(!confirm('Excluir esta entrada?'))return;if(sbOnline)await sbDelete('entradas',id);entradas=entradas.filter(e=>e.id!==id);renderEntradas();}
+async async function delEnt(id){if(!confirm('Excluir esta entrada?'))return;if(sbOnline)await sbDelete('entradas',id);entradas=entradas.filter(e=>e.id!==id);renderEntradas();}
 
 // ===== SAÍDAS =====
 function renderSaidas(){
@@ -1051,7 +1096,7 @@ function limparSaida(){
   document.getElementById('sai-data').value=today();
   document.getElementById('btn-salvar-sai').textContent='💾 Registrar Saída';
 }
-function salvarSaida(){
+async function salvarSaida(){
   const data=document.getElementById('sai-data').value||today();
   const prodId=parseInt(document.getElementById('sai-prod').value);
   const qt=parseFloat(document.getElementById('sai-qt').value);
@@ -1079,7 +1124,7 @@ function abrirEditSai(id){
   document.getElementById('ms-obs').value=s.obs||'';
   openModal('modal-sai');
 }
-function confirmarEditSaida(){
+async function confirmarEditSaida(){
   const idx=saidas.findIndex(x=>x.id===editSaiId);if(idx<0)return;
   const data=document.getElementById('ms-data').value;
   saidas[idx]={...saidas[idx],data,prodId:parseInt(document.getElementById('ms-prod').value),qt:parseFloat(document.getElementById('ms-qt').value),cliId:parseInt(document.getElementById('ms-cli').value)||'',resp:document.getElementById('ms-resp').value,valor:parseFloat(document.getElementById('ms-valor').value)||0,obs:document.getElementById('ms-obs').value,mes:getM(data),ano:getY(data)};
@@ -1088,7 +1133,7 @@ function confirmarEditSaida(){
   }
   closeModal('modal-sai');renderSaidas();
 }
-async function delSai(id){if(!confirm('Excluir esta saída?'))return;if(sbOnline)await sbDelete('saidas',id);saidas=saidas.filter(s=>s.id!==id);renderSaidas();}
+async async function delSai(id){if(!confirm('Excluir esta saída?'))return;if(sbOnline)await sbDelete('saidas',id);saidas=saidas.filter(s=>s.id!==id);renderSaidas();}
 
 // ===== VARIAÇÃO =====
 let varModo = 'qt'; // 'qt' = quantidade | 'val' = valor
@@ -1311,7 +1356,7 @@ function editProd(id){
   document.getElementById('prod-at3').value=p.at3||'';
   document.querySelector('#page-produtos').scrollTop=0;
 }
-function salvarProduto(){
+async function salvarProduto(){
   const desc=document.getElementById('prod-desc').value.trim();
   if(!desc)return alert('Descrição é obrigatória.');
   const d={desc,subfam:parseInt(document.getElementById('prod-sf').value)||null,locId:parseInt(document.getElementById('prod-loc-sel').value)||null,min:parseFloat(document.getElementById('prod-min').value)||0,custo:parseFloat(document.getElementById('prod-custo').value)||0,at1:document.getElementById('prod-at1').value,at2:document.getElementById('prod-at2').value,at3:document.getElementById('prod-at3').value};
@@ -1325,7 +1370,7 @@ function salvarProduto(){
   }
   limparProduto();renderProdutos();
 }
-async function delProd(id){if(!confirm('Excluir produto?'))return;if(sbOnline)await sbDelete('produtos',id);produtos=produtos.filter(p=>p.id!==id);renderProdutos();}
+async async function delProd(id){if(!confirm('Excluir produto?'))return;if(sbOnline)await sbDelete('produtos',id);produtos=produtos.filter(p=>p.id!==id);renderProdutos();}
 
 // ===== CLIENTES =====
 function renderClientes(busca=''){
@@ -1341,7 +1386,7 @@ function renderClientes(busca=''){
 }
 function limparCliente(){editCliId=null;['cli-nome','cli-doc','cli-tel','cli-email','cli-cidade','cli-end','cli-obs'].forEach(id=>document.getElementById(id).value='');document.getElementById('cli-tipo').value='cliente';}
 function editCli(id){const c=gCli(id);if(!c)return;editCliId=id;document.getElementById('cli-nome').value=c.nome;document.getElementById('cli-doc').value=c.doc||'';document.getElementById('cli-tipo').value=c.tipo||'cliente';document.getElementById('cli-tel').value=c.tel||'';document.getElementById('cli-email').value=c.email||'';document.getElementById('cli-cidade').value=c.cidade||'';document.getElementById('cli-end').value=c.end||'';document.getElementById('cli-obs').value=c.obs||'';document.querySelector('#page-clientes').scrollTop=0;}
-function salvarCliente(){
+async function salvarCliente(){
   const nome=document.getElementById('cli-nome').value.trim();if(!nome)return alert('Nome é obrigatório.');
   const d={nome,doc:document.getElementById('cli-doc').value,tipo:document.getElementById('cli-tipo').value,tel:document.getElementById('cli-tel').value,email:document.getElementById('cli-email').value,cidade:document.getElementById('cli-cidade').value,end:document.getElementById('cli-end').value,obs:document.getElementById('cli-obs').value};
   if(editCliId){
@@ -1354,7 +1399,7 @@ function salvarCliente(){
   }
   limparCliente();renderClientes();
 }
-async function delCli(id){if(!confirm('Excluir cliente?'))return;if(sbOnline)await sbDelete('clientes',id);clientes=clientes.filter(c=>c.id!==id);renderClientes();}
+async async function delCli(id){if(!confirm('Excluir cliente?'))return;if(sbOnline)await sbDelete('clientes',id);clientes=clientes.filter(c=>c.id!==id);renderClientes();}
 
 // ===== FORNECEDORES =====
 function renderForn(busca=''){
@@ -1383,7 +1428,7 @@ function editForn(id){
   document.getElementById('forn-nome').value=f.nome;document.getElementById('forn-doc').value=f.doc||'';document.getElementById('forn-contato').value=f.contato||'';document.getElementById('forn-tel').value=f.tel||'';document.getElementById('forn-email').value=f.email||'';document.getElementById('forn-cidade').value=f.cidade||'';document.getElementById('forn-end').value=f.end||'';document.getElementById('forn-materiais').value=f.materiais||'';document.getElementById('forn-prazo').value=f.prazo||'';document.getElementById('forn-pagto').value=f.pagto||'';document.getElementById('forn-obs').value=f.obs||'';
   document.querySelector('#page-fornecedores').scrollTop=0;
 }
-function salvarForn(){
+async function salvarForn(){
   const nome=document.getElementById('forn-nome').value.trim();if(!nome)return alert('Nome é obrigatório.');
   const d={nome,doc:document.getElementById('forn-doc').value,contato:document.getElementById('forn-contato').value,tel:document.getElementById('forn-tel').value,email:document.getElementById('forn-email').value,cidade:document.getElementById('forn-cidade').value,end:document.getElementById('forn-end').value,materiais:document.getElementById('forn-materiais').value,prazo:parseInt(document.getElementById('forn-prazo').value)||0,pagto:document.getElementById('forn-pagto').value,obs:document.getElementById('forn-obs').value};
   if(editFornId){
@@ -1396,7 +1441,7 @@ function salvarForn(){
   }
   limparForn();renderForn();
 }
-async function delForn(id){if(!confirm('Excluir fornecedor?'))return;if(sbOnline)await sbDelete('fornecedores',id);fornecedores=fornecedores.filter(f=>f.id!==id);renderForn();}
+async async function delForn(id){if(!confirm('Excluir fornecedor?'))return;if(sbOnline)await sbDelete('fornecedores',id);fornecedores=fornecedores.filter(f=>f.id!==id);renderForn();}
 
 // ===== SUBFAMÍLIAS =====
 function renderSF(){
@@ -1409,12 +1454,12 @@ function renderSF(){
   fillAllSelects();
 }
 function limparSF(){document.getElementById('sf-nome').value='';document.getElementById('sf-tipo').value='materia_prima';document.getElementById('sf-desc').value='';}
-function editSF(id){const sf=gSF(id);if(!sf)return;document.getElementById('sf-nome').value=sf.nome;document.getElementById('sf-tipo').value=sf.tipo;document.getElementById('sf-desc').value=sf.desc||'';subfamilias=subfamilias.filter(s=>s.id!==id);renderSF();}
-function salvarSF(){const nome=document.getElementById('sf-nome').value.trim();if(!nome)return alert('Nome é obrigatório.');const sfD={nome,tipo:document.getElementById('sf-tipo').value,desc:document.getElementById('sf-desc').value};
+async function editSF(id){const sf=gSF(id);if(!sf)return;document.getElementById('sf-nome').value=sf.nome;document.getElementById('sf-tipo').value=sf.tipo;document.getElementById('sf-desc').value=sf.desc||'';subfamilias=subfamilias.filter(s=>s.id!==id);renderSF();}
+async function salvarSF(){const nome=document.getElementById('sf-nome').value.trim();if(!nome)return alert('Nome é obrigatório.');const sfD={nome,tipo:document.getElementById('sf-tipo').value,desc:document.getElementById('sf-desc').value};
   if(sbOnline){const db=await sbSave('subfamilias',{nome:sfD.nome,tipo:sfD.tipo,descricao:sfD.desc});if(db)sfD.id=db.id;}
   else sfD.id=nId(subfamilias);
   subfamilias.push(sfD);limparSF();renderSF();}
-function delSF(id){if(produtos.some(p=>p.subfam===id))return alert('Há produtos vinculados.');if(!confirm('Excluir subfamília?'))return;subfamilias=subfamilias.filter(s=>s.id!==id);save();renderSF();}
+async function delSF(id){if(produtos.some(p=>p.subfam===id))return alert('Há produtos vinculados.');if(!confirm('Excluir subfamília?'))return;subfamilias=subfamilias.filter(s=>s.id!==id);save();renderSF();}
 
 // ===== LOCALIZAÇÕES =====
 function renderLoc(){
@@ -1428,7 +1473,7 @@ function renderLoc(){
 }
 function limparLoc(){editLocId=null;['loc-nome','loc-cap','loc-desc'].forEach(id=>document.getElementById(id).value='');document.getElementById('loc-tipo').value='galpao';}
 function editLoc(id){const l=gLoc(id);if(!l)return;editLocId=id;document.getElementById('loc-nome').value=l.nome;document.getElementById('loc-tipo').value=l.tipo;document.getElementById('loc-cap').value=l.cap||'';document.getElementById('loc-desc').value=l.desc||'';document.querySelector('#page-localizacoes').scrollTop=0;}
-function salvarLoc(){
+async function salvarLoc(){
   const nome=document.getElementById('loc-nome').value.trim();if(!nome)return alert('Nome é obrigatório.');
   const d={nome,tipo:document.getElementById('loc-tipo').value,cap:parseInt(document.getElementById('loc-cap').value)||0,desc:document.getElementById('loc-desc').value};
   if(editLocId){
@@ -1441,7 +1486,7 @@ function salvarLoc(){
   }
   limparLoc();renderLoc();
 }
-function delLoc(id){if(produtos.some(p=>p.locId===id))return alert('Há produtos vinculados.');if(!confirm('Excluir localização?'))return;if(sbOnline)await sbDelete('localizacoes',id);localizacoes=localizacoes.filter(l=>l.id!==id);renderLoc();}
+async function delLoc(id){if(produtos.some(p=>p.locId===id))return alert('Há produtos vinculados.');if(!confirm('Excluir localização?'))return;if(sbOnline)await sbDelete('localizacoes',id);localizacoes=localizacoes.filter(l=>l.id!==id);renderLoc();}
 
 // ===== USUÁRIOS =====
 function renderUsr(){
@@ -1452,9 +1497,19 @@ function renderUsr(){
   });
   document.getElementById('tb-usr').innerHTML=rows;
 }
-function limparUsr(){editUsrIdx=null;['usr-nome','usr-login','usr-senha'].forEach(id=>document.getElementById(id).value='');document.getElementById('usr-perfil').value='admin';}
+function limparUsr(){editUsrIdx=null;['usr-nome','usr-login','usr-senha','usr-senha2'].forEach(id=>document.getElementById(id).value='');document.getElementById('usr-perfil').value='admin';const msg=document.getElementById('msg-senha');if(msg)msg.style.display='none';}
 function editUsr(i){const u=usuarios[i];editUsrIdx=i;document.getElementById('usr-nome').value=u.nome;document.getElementById('usr-login').value=u.login;document.getElementById('usr-senha').value=u.senha;document.getElementById('usr-perfil').value=u.perfil;}
-function salvarUsr(){const nome=document.getElementById('usr-nome').value.trim();const login=document.getElementById('usr-login').value.trim();const senha=document.getElementById('usr-senha').value;if(!nome||!login||!senha)return alert('Nome, login e senha obrigatórios.');const d={nome,login,senha,perfil:document.getElementById('usr-perfil').value};if(editUsrIdx!==null)usuarios[editUsrIdx]=d;else usuarios.push(d);limparUsr();renderUsr();}
+function salvarUsr(){
+  const nome=document.getElementById('usr-nome').value.trim();
+  const login=document.getElementById('usr-login').value.trim();
+  const senha=document.getElementById('usr-senha').value;
+  const senha2=document.getElementById('usr-senha2').value;
+  if(!nome||!login||!senha)return alert('Nome, login e senha obrigatórios.');
+  if(senha!==senha2)return alert('As senhas não conferem. Verifique e tente novamente.');
+  const d={nome,login,senha,perfil:document.getElementById('usr-perfil').value};
+  if(editUsrIdx!==null)usuarios[editUsrIdx]=d;else usuarios.push(d);
+  limparUsr();renderUsr();
+}
 function delUsr(i){if(!confirm('Excluir usuário?'))return;usuarios.splice(i,1);save();renderUsr();}
 
 // ===== INIT =====
