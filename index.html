@@ -223,7 +223,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--preto);color:var(--txt);m
     <div class="nav-item" onclick="goPage('estoque')"><span class="ic">🗃️</span> Estoque</div>
     <div class="nav-item" onclick="goPage('entradas')"><span class="ic">📥</span> Entradas</div>
     <div class="nav-item" onclick="goPage('saidas')"><span class="ic">📤</span> Saídas</div>
-    <div class="nav-item" onclick="goPage('variacao')"><span class="ic">📈</span> Variação Mensal</div>
+    <div class="nav-item" onclick="goPage('variacao')" data-page="variacao"><span class="ic">📈</span> Variação Mensal</div>
+    <div class="nav-item" onclick="goPage('movimentacao')" data-page="movimentacao"><span class="ic">🔄</span> Movimentação</div>
     <div class="nav-sec">Cadastros</div>
     <div class="nav-item" onclick="goPage('produtos')"><span class="ic">🏷️</span> Produtos</div>
     <div class="nav-item" onclick="goPage('clientes')"><span class="ic">👤</span> Clientes</div>
@@ -575,6 +576,112 @@ body{font-family:'DM Sans',sans-serif;background:var(--preto);color:var(--txt);m
     </div>
   </div>
 
+  <!-- ========= MOVIMENTAÇÃO ========= -->
+  <div class="page" id="page-movimentacao">
+
+    <!-- FILTROS -->
+    <div class="form-card" style="padding:14px 18px;margin-bottom:16px">
+      <div style="display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;justify-content:space-between">
+        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end">
+          <div class="fg" style="min-width:90px">
+            <label>Mês Início</label>
+            <select class="fi" id="mov-mes-ini" onchange="renderMovimentacao()">
+              <option value="1">Jan</option><option value="2">Fev</option><option value="3">Mar</option>
+              <option value="4">Abr</option><option value="5">Mai</option><option value="6">Jun</option>
+              <option value="7">Jul</option><option value="8">Ago</option><option value="9">Set</option>
+              <option value="10" selected>Out</option><option value="11">Nov</option><option value="12">Dez</option>
+            </select>
+          </div>
+          <div class="fg" style="min-width:80px">
+            <label>Ano Início</label>
+            <select class="fi" id="mov-ano-ini" onchange="renderMovimentacao()">
+              <option value="2024">2024</option><option value="2025" selected>2025</option><option value="2026">2026</option>
+            </select>
+          </div>
+          <div style="display:flex;align-items:flex-end;padding-bottom:2px;color:var(--fraco);font-size:18px">→</div>
+          <div class="fg" style="min-width:90px">
+            <label>Mês Fim</label>
+            <select class="fi" id="mov-mes-fim" onchange="renderMovimentacao()">
+              <option value="1">Jan</option><option value="2">Fev</option><option value="3">Mar</option>
+              <option value="4">Abr</option><option value="5" selected>Mai</option><option value="6">Jun</option>
+              <option value="7">Jul</option><option value="8">Ago</option><option value="9">Set</option>
+              <option value="10">Out</option><option value="11">Nov</option><option value="12">Dez</option>
+            </select>
+          </div>
+          <div class="fg" style="min-width:80px">
+            <label>Ano Fim</label>
+            <select class="fi" id="mov-ano-fim" onchange="renderMovimentacao()">
+              <option value="2024">2024</option><option value="2025">2025</option><option value="2026" selected>2026</option>
+            </select>
+          </div>
+          <div class="fg" style="min-width:180px">
+            <label>Subfamília</label>
+            <select class="fi" id="mov-sf" onchange="onMovSfChange()">
+              <option value="">Todas as subfamílias</option>
+            </select>
+          </div>
+          <div class="fg" style="min-width:200px">
+            <label>Produto</label>
+            <select class="fi" id="mov-prod" onchange="renderMovimentacao()">
+              <option value="">Todos os produtos</option>
+            </select>
+          </div>
+          <button class="btn btn-s" style="height:36px" onclick="limparFiltrosMov()">✕ Limpar</button>
+        </div>
+        <!-- TOGGLE QT / VALOR -->
+        <div style="display:flex;align-items:center;gap:0;border:1px solid var(--borda);border-radius:8px;overflow:hidden;height:36px;flex-shrink:0">
+          <button id="btn-mov-qt" onclick="setModoMov('qt')"
+            style="padding:0 16px;height:100%;font-size:12px;font-weight:600;border:none;cursor:pointer;transition:all .15s;background:var(--vm);color:#fff;font-family:DM Sans,sans-serif">
+            📦 Quantidade
+          </button>
+          <button id="btn-mov-val" onclick="setModoMov('val')"
+            style="padding:0 16px;height:100%;font-size:12px;font-weight:600;border:none;cursor:pointer;transition:all .15s;background:var(--cm);color:var(--fraco);font-family:DM Sans,sans-serif">
+            💰 Valor (R$)
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- KPIs -->
+    <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:16px">
+      <div class="kpi-card">
+        <div class="kpi-label">Estoque Início</div>
+        <div class="kpi-value" id="mov-kpi-ini" style="font-size:22px">—</div>
+        <div class="kpi-sub" id="mov-kpi-ini-label">—</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Estoque Fim</div>
+        <div class="kpi-value" id="mov-kpi-fim" style="font-size:22px">—</div>
+        <div class="kpi-sub" id="mov-kpi-fim-label">—</div>
+      </div>
+      <div class="kpi-card ok">
+        <div class="kpi-label">Variação Total</div>
+        <div class="kpi-value" id="mov-kpi-var" style="font-size:22px">—</div>
+        <div class="kpi-sub" id="mov-kpi-var-pct">no período</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Meses Analisados</div>
+        <div class="kpi-value" id="mov-kpi-meses" style="font-size:22px">—</div>
+        <div class="kpi-sub">períodos</div>
+      </div>
+    </div>
+
+    <!-- TABELA -->
+    <div class="table-card">
+      <div class="tc-head">
+        <div class="tc-title" id="mov-table-title">🔄 Movimentação do Estoque — Variação mês a mês</div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead id="mov-thead"></thead>
+          <tbody id="mov-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+
   <!-- ========= USUÁRIOS ========= -->
   <div class="page" id="page-usuarios">
     <div class="form-card">
@@ -897,15 +1004,58 @@ function logout(){
 }
 
 // ══════ NAV ══════
-const PT={dashboard:'Dashboard',estoque:'Estoque Atual',entradas:'Entradas',saidas:'Saídas',variacao:'Variação Mensal',produtos:'Cadastro de Produtos',clientes:'Cadastro de Clientes',fornecedores:'Cadastro de Fornecedores',subfamilias:'Subfamílias',localizacoes:'Localizações',usuarios:'Usuários'};
+const PT={dashboard:'Dashboard',estoque:'Estoque Atual',entradas:'Entradas',saidas:'Saídas',variacao:'Variação Mensal',movimentacao:'Movimentação do Estoque',produtos:'Cadastro de Produtos',clientes:'Cadastro de Clientes',fornecedores:'Cadastro de Fornecedores',subfamilias:'Subfamílias',localizacoes:'Localizações',usuarios:'Usuários'};
+// ── FILTRO GLOBAL (subfamília + produto) ──
+let _gFiltroSF = '';
+let _gFiltroProd = '';
+
+function salvarFiltroGlobal(sfId, prodId){
+  _gFiltroSF   = sfId   || '';
+  _gFiltroProd = prodId || '';
+}
+function aplicarFiltroGlobal(sfSelId, prodSelId, renderFn, onSfChangeFn){
+  const sfSel   = document.getElementById(sfSelId);
+  const prodSel = document.getElementById(prodSelId);
+  if(!sfSel||!prodSel) return;
+  if(_gFiltroSF && sfSel.querySelector(`option[value="${_gFiltroSF}"]`)){
+    sfSel.value = _gFiltroSF;
+    // refiltra produtos pelo SF
+    const lista = _gFiltroSF ? produtos.filter(p=>p.subfam===parseInt(_gFiltroSF)) : produtos;
+    prodSel.innerHTML = '<option value="">Todos os produtos</option>' +
+      lista.map(p=>`<option value="${p.id}">${p.desc}</option>`).join('');
+  }
+  if(_gFiltroProd && prodSel.querySelector(`option[value="${_gFiltroProd}"]`)){
+    prodSel.value = _gFiltroProd;
+  }
+}
+
 function goPage(id){
+  // salvar filtro global da tela que está saindo
+  const active = document.querySelector('.page.active');
+  if(active){
+    const pid = active.id.replace('page-','');
+    if(pid==='variacao'){
+      salvarFiltroGlobal(document.getElementById('var-sf')?.value, document.getElementById('var-prod')?.value);
+    } else if(pid==='movimentacao'){
+      salvarFiltroGlobal(document.getElementById('mov-sf')?.value, document.getElementById('mov-prod')?.value);
+    }
+  }
+
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   document.getElementById('page-'+id).classList.add('active');
   const ni=document.querySelector(`[onclick="goPage('${id}')"]`);
   if(ni)ni.classList.add('active');
   document.getElementById('page-title').textContent=PT[id]||id;
-  const renders={dashboard:renderDash,estoque:renderEstoque,entradas:renderEntradas,saidas:renderSaidas,variacao:renderVariacao,produtos:renderProdutos,clientes:renderClientes,fornecedores:renderForn,subfamilias:renderSF,localizacoes:renderLoc,usuarios:renderUsr};
+
+  // aplicar filtro global ao entrar em variação ou movimentação
+  if(id==='variacao'){
+    aplicarFiltroGlobal('var-sf','var-prod',renderVariacao,onVarSfChange);
+  } else if(id==='movimentacao'){
+    aplicarFiltroGlobal('mov-sf','mov-prod',renderMovimentacao,onMovSfChange);
+  }
+
+  const renders={dashboard:renderDash,estoque:renderEstoque,entradas:renderEntradas,saidas:renderSaidas,variacao:renderVariacao,movimentacao:renderMovimentacao,produtos:renderProdutos,clientes:renderClientes,fornecedores:renderForn,subfamilias:renderSF,localizacoes:renderLoc,usuarios:renderUsr};
   if(renders[id])renders[id]();
 }
 
@@ -1527,6 +1677,7 @@ const TELAS_PERMISSAO = [
   {key:'entradas',label:'Entradas',icon:'📥'},
   {key:'saidas',label:'Saídas',icon:'📤'},
   {key:'variacao',label:'Variação',icon:'📈'},
+  {key:'movimentacao',label:'Movimentação',icon:'🔄'},
   {key:'produtos',label:'Produtos',icon:'🏷️'},
   {key:'clientes',label:'Clientes',icon:'👤'},
   {key:'fornecedores',label:'Fornecedores',icon:'🚚'},
@@ -1536,8 +1687,8 @@ const TELAS_PERMISSAO = [
 ];
 const PERFIS_DEFAULT = {
   admin: TELAS_PERMISSAO.map(t=>t.key),
-  operador: ['dashboard','estoque','entradas','saidas','variacao','produtos'],
-  consulta: ['dashboard','estoque','variacao'],
+  operador: ['dashboard','estoque','entradas','saidas','variacao','movimentacao','produtos'],
+  consulta: ['dashboard','estoque','variacao','movimentacao'],
   custom: []
 };
 function buildGridPermissoes(){
@@ -1637,6 +1788,165 @@ function salvarUsr(){
 function delUsr(i){if(!confirm('Excluir usuário?'))return;usuarios.splice(i,1);save();renderUsr();}
 
 
+
+
+// ===== MOVIMENTAÇÃO =====
+let movModo = 'val';
+
+function setModoMov(modo){
+  movModo = modo;
+  const bq = document.getElementById('btn-mov-qt');
+  const bv = document.getElementById('btn-mov-val');
+  if(modo==='qt'){
+    bq.style.background='var(--vm)'; bq.style.color='#fff';
+    bv.style.background='var(--cm)'; bv.style.color='var(--fraco)';
+  } else {
+    bv.style.background='var(--vm)'; bv.style.color='#fff';
+    bq.style.background='var(--cm)'; bq.style.color='var(--fraco)';
+  }
+  renderMovimentacao();
+}
+
+function onMovSfChange(){
+  const sfF = parseInt(document.getElementById('mov-sf').value)||null;
+  const sel = document.getElementById('mov-prod');
+  const cur = sel.value;
+  const lista = sfF ? produtos.filter(p=>p.subfam===sfF) : produtos;
+  sel.innerHTML = '<option value="">Todos os produtos</option>' +
+    lista.map(p=>`<option value="${p.id}">${p.desc}</option>`).join('');
+  sel.value = lista.find(p=>String(p.id)===cur) ? cur : '';
+  renderMovimentacao();
+}
+
+function limparFiltrosMov(){
+  document.getElementById('mov-prod').value='';
+  document.getElementById('mov-sf').value='';
+  onMovSfChange();
+}
+
+function renderMovimentacao(){
+  fillAllSelects();
+
+  // preencher selects de sf/prod da movimentação
+  const sfSel = document.getElementById('mov-sf');
+  if(sfSel && sfSel.options.length<=1){
+    sfSel.innerHTML = '<option value="">Todas as subfamílias</option>' +
+      subfamilias.map(s=>`<option value="${s.id}">${s.nome}</option>`).join('');
+  }
+  const prodSel = document.getElementById('mov-prod');
+  if(prodSel && prodSel.options.length<=1){
+    prodSel.innerHTML = '<option value="">Todos os produtos</option>' +
+      produtos.map(p=>`<option value="${p.id}">${p.desc}</option>`).join('');
+  }
+
+  const mesIni = parseInt(document.getElementById('mov-mes-ini')?.value)||10;
+  const anoIni = parseInt(document.getElementById('mov-ano-ini')?.value)||2025;
+  const mesFim = parseInt(document.getElementById('mov-mes-fim')?.value)||5;
+  const anoFim = parseInt(document.getElementById('mov-ano-fim')?.value)||2026;
+  const prodF  = parseInt(document.getElementById('mov-prod')?.value)||null;
+  const sfF    = parseInt(document.getElementById('mov-sf')?.value)||null;
+  const modoVal = movModo === 'val';
+
+  const prodIds = prodF ? [prodF] : sfF ? produtos.filter(p=>p.subfam===sfF).map(p=>p.id) : null;
+  const pidsCalc = prodIds || produtos.map(p=>p.id);
+
+  // helpers (mesmo da variação)
+  function custoMedio(pid){ const est=estItem(pid); return est.cmp||gP(pid)?.custo||0; }
+  function estoqueAte(pid, mes, ano){
+    const e=entradas.filter(x=>x.prodId===pid&&(x.ano<ano||(x.ano===ano&&x.mes<mes))).reduce((a,b)=>a+b.qt,0);
+    const s=saidas.filter(x=>x.prodId===pid&&(x.ano<ano||(x.ano===ano&&x.mes<mes))).reduce((a,b)=>a+b.qt,0);
+    return e-s;
+  }
+  function estoqueAteVal(pid, mes, ano){
+    const ents=entradas.filter(x=>x.prodId===pid&&(x.ano<ano||(x.ano===ano&&x.mes<mes)));
+    const qt=ents.reduce((a,b)=>a+b.qt,0);
+    const vl=ents.reduce((a,b)=>a+(b.qt*(b.custo||0)),0);
+    const cmp=qt>0?vl/qt:(gP(pid)?.custo||0);
+    return estoqueAte(pid,mes,ano)*cmp;
+  }
+  function estoqueNoFimDoMes(pid, mes, ano){
+    const proxMes = mes===12 ? 1 : mes+1;
+    const proxAno = mes===12 ? ano+1 : ano;
+    return estoqueAte(pid, proxMes, proxAno);
+  }
+  function estoqueNoFimDoMesVal(pid, mes, ano){
+    const proxMes = mes===12 ? 1 : mes+1;
+    const proxAno = mes===12 ? ano+1 : ano;
+    return estoqueAteVal(pid, proxMes, proxAno);
+  }
+
+  // gerar sequência de meses no intervalo
+  const periodos = [];
+  let m = mesIni, a = anoIni;
+  let safety = 0;
+  while((a < anoFim || (a === anoFim && m <= mesFim)) && safety++ < 60){
+    periodos.push({mes:m, ano:a});
+    m++; if(m>12){m=1;a++;}
+  }
+  if(!periodos.length){
+    document.getElementById('mov-tbody').innerHTML='<tr><td colspan="6" class="empty">Período inválido.</td></tr>';
+    return;
+  }
+
+  // calcular estoque final de cada mês
+  const serie = periodos.map(({mes,ano})=>({
+    mes, ano,
+    val: modoVal
+      ? pidsCalc.reduce((acc,pid)=>acc+estoqueNoFimDoMesVal(pid,mes,ano),0)
+      : pidsCalc.reduce((acc,pid)=>acc+estoqueNoFimDoMes(pid,mes,ano),0)
+  }));
+
+  // montar thead
+  document.getElementById('mov-thead').innerHTML = `<tr>
+    <th>Mês / Ano</th>
+    <th style="text-align:right">Est. Final ${modoVal?'(R$)':'(un.)'}</th>
+    <th style="text-align:right">Mês Anterior</th>
+    <th style="text-align:right">Variação ${modoVal?'(R$)':'(un.)'}</th>
+    <th style="text-align:right">Variação %</th>
+    <th style="text-align:right">Tendência</th>
+  </tr>`;
+
+  // montar tbody
+  const MESES_N = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  let rows = '';
+  serie.forEach((cur, i)=>{
+    const prev = i > 0 ? serie[i-1] : null;
+    const varAbs = prev !== null ? cur.val - prev.val : null;
+    const varPct = (prev !== null && prev.val !== 0) ? (varAbs / Math.abs(prev.val) * 100) : null;
+    const varCls = varAbs === null ? 'txt-f' : varAbs > 0 ? 'txt-v' : varAbs < 0 ? 'txt-r' : 'txt-f';
+    const varTxt = varAbs === null ? '—' : (modoVal ? (varAbs>=0?'+':'')+varAbs.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}) : (varAbs>=0?'+':'')+varAbs.toLocaleString('pt-BR'));
+    const pctTxt = varPct === null ? '—' : (varPct>=0?'+':'')+varPct.toFixed(1)+'%';
+    const tendencia = varAbs === null ? '—' : varAbs > 0 ? '▲' : varAbs < 0 ? '▼' : '—';
+    const tendCls  = varAbs === null ? 'txt-f' : varAbs > 0 ? 'txt-v' : varAbs < 0 ? 'txt-r' : 'txt-f';
+    const prevTxt  = prev === null ? '—' : modoVal ? 'R$ '+prev.val.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}) : prev.val.toLocaleString('pt-BR');
+    const curTxt   = modoVal ? 'R$ '+cur.val.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}) : cur.val.toLocaleString('pt-BR');
+    rows += `<tr>
+      <td class="fw">${MESES_N[cur.mes-1]} ${cur.ano}</td>
+      <td style="text-align:right;font-weight:600">${curTxt}</td>
+      <td style="text-align:right;color:var(--fraco)">${prevTxt}</td>
+      <td style="text-align:right" class="${varCls} fw">${varTxt}</td>
+      <td style="text-align:right" class="${varCls}">${pctTxt}</td>
+      <td style="text-align:right;font-size:16px" class="${tendCls}">${tendencia}</td>
+    </tr>`;
+  });
+  document.getElementById('mov-tbody').innerHTML = rows || '<tr><td colspan="6" class="empty">Sem dados.</td></tr>';
+
+  // KPIs
+  const first = serie[0], last = serie[serie.length-1];
+  const varTotal = last.val - first.val;
+  const varTotalPct = first.val !== 0 ? (varTotal/Math.abs(first.val)*100) : null;
+  const fmt = v => modoVal ? 'R$ '+v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}) : v.toLocaleString('pt-BR');
+  document.getElementById('mov-kpi-ini').textContent = fmt(first.val);
+  document.getElementById('mov-kpi-ini-label').textContent = MESES_N[first.mes-1]+' '+first.ano;
+  document.getElementById('mov-kpi-fim').textContent = fmt(last.val);
+  document.getElementById('mov-kpi-fim-label').textContent = MESES_N[last.mes-1]+' '+last.ano;
+  const varEl = document.getElementById('mov-kpi-var');
+  varEl.textContent = (varTotal>=0?'+':'')+fmt(varTotal);
+  varEl.style.color = varTotal>0?'var(--verde)':varTotal<0?'var(--verm)':'var(--txt)';
+  document.getElementById('mov-kpi-var-pct').textContent = varTotalPct!==null ? (varTotalPct>=0?'+':'')+varTotalPct.toFixed(1)+'% no período' : 'no período';
+  document.getElementById('mov-kpi-meses').textContent = serie.length;
+  document.getElementById('mov-table-title').textContent = `🔄 Movimentação do Estoque — ${MESES_N[first.mes-1]} ${first.ano} → ${MESES_N[last.mes-1]} ${last.ano}`;
+}
 
 // ===== IMPORTAR SAÍDAS XLSX =====
 const XLSX_SAIDAS_DATA = [{"data": "2025-10-06", "codigo": 5, "qt": 130.0, "valor": 214.5, "resp": "", "destino": "", "mes": 10, "ano": 2025}, {"data": "2025-10-07", "codigo": 5, "qt": 750.0, "valor": 1237.5, "resp": "", "destino": "", "mes": 10, "ano": 2025}, {"data": "2025-10-17", "codigo": 6, "qt": 12290.0, "valor": 0, "resp": "", "destino": "", "mes": 10, "ano": 2025}, {"data": "2025-10-17", "codigo": 7, "qt": 4100.0, "valor": 1640.0, "resp": "", "destino": "", "mes": 10, "ano": 2025}, {"data": "2025-10-17", "codigo": 11, "qt": 1170.0, "valor": 0, "resp": "", "destino": "", "mes": 10, "ano": 2025}, {"data": "2025-10-20", "codigo": 5, "qt": 100.0, "valor": 165.0, "resp": "", "destino": "", "mes": 10, "ano": 2025}, {"data": "2025-10-20", "codigo": 5, "qt": 500.0, "valor": 825.0, "resp": "", "destino": "", "mes": 10, "ano": 2025}, {"data": "2025-10-23", "codigo": 6, "qt": 5570.0, "valor": 0, "resp": "", "destino": "", "mes": 10, "ano": 2025}, {"data": "2025-10-23", "codigo": 5, "qt": 500.0, "valor": 825.0, "resp": "", "destino": "", "mes": 10, "ano": 2025}, {"data": "2025-10-23", "codigo": 5, "qt": 1000.0, "valor": 1650.0, "resp": "", "destino": "", "mes": 10, "ano": 2025}, {"data": "2025-10-29", "codigo": 5, "qt": 915.0, "valor": 1509.75, "resp": "", "destino": "", "mes": 10, "ano": 2025}, {"data": "2025-10-30", "codigo": 13, "qt": 83025.0, "valor": 272322.0, "resp": "", "destino": "", "mes": 10, "ano": 2025}, {"data": "2025-10-30", "codigo": 14, "qt": 12450.0, "valor": 40836.0, "resp": "", "destino": "", "mes": 10, "ano": 2025}, {"data": "2025-10-30", "codigo": 15, "qt": 2600.0, "valor": 8528.0, "resp": "", "destino": "", "mes": 10, "ano": 2025}, {"data": "2025-10-31", "codigo": 1, "qt": 68225.0, "valor": 218190.3725, "resp": "", "destino": "", "mes": 10, "ano": 2025}, {"data": "2025-11-03", "codigo": 5, "qt": 100.0, "valor": 165.0, "resp": "", "destino": "", "mes": 11, "ano": 2025}, {"data": "2025-11-05", "codigo": 7, "qt": 2255.0, "valor": 902.0, "resp": "", "destino": "BOTUVERA", "mes": 11, "ano": 2025}, {"data": "2025-11-07", "codigo": 6, "qt": 1570.0, "valor": 0, "resp": "", "destino": "", "mes": 11, "ano": 2025}, {"data": "2025-11-07", "codigo": 6, "qt": 15630.0, "valor": 0, "resp": "", "destino": "", "mes": 11, "ano": 2025}, {"data": "2025-11-14", "codigo": 5, "qt": 1000.0, "valor": 1650.0, "resp": "", "destino": "", "mes": 11, "ano": 2025}, {"data": "2025-11-28", "codigo": 1, "qt": 68325.0, "valor": 218510.1825, "resp": "", "destino": "", "mes": 11, "ano": 2025}, {"data": "2025-11-28", "codigo": 2, "qt": 3700.0, "valor": 11840.0, "resp": "", "destino": "", "mes": 11, "ano": 2025}, {"data": "2025-11-30", "codigo": 13, "qt": 68850.0, "valor": 225828.0, "resp": "", "destino": "", "mes": 11, "ano": 2025}, {"data": "2025-11-30", "codigo": 14, "qt": 3650.0, "valor": 11972.0, "resp": "", "destino": "", "mes": 11, "ano": 2025}, {"data": "2025-11-30", "codigo": 15, "qt": 2500.0, "valor": 8200.0, "resp": "", "destino": "", "mes": 11, "ano": 2025}, {"data": "2025-12-10", "codigo": 7, "qt": 1642.0, "valor": 656.8, "resp": "", "destino": "BOTUVERA", "mes": 12, "ano": 2025}, {"data": "2025-12-12", "codigo": 6, "qt": 16100.0, "valor": 0, "resp": "", "destino": "", "mes": 12, "ano": 2025}, {"data": "2025-12-15", "codigo": 7, "qt": 6420.0, "valor": 2568.0, "resp": "", "destino": "", "mes": 12, "ano": 2025}, {"data": "2025-12-30", "codigo": 1, "qt": 51425.0, "valor": 164462.2925, "resp": "", "destino": "", "mes": 12, "ano": 2025}, {"data": "2025-12-30", "codigo": 13, "qt": 49550.0, "valor": 162524.0, "resp": "", "destino": "", "mes": 12, "ano": 2025}, {"data": "2025-12-30", "codigo": 15, "qt": 1000.0, "valor": 3280.0, "resp": "", "destino": "", "mes": 12, "ano": 2025}, {"data": "2026-01-19", "codigo": 5, "qt": 500.0, "valor": 825.0, "resp": "", "destino": "", "mes": 1, "ano": 2026}, {"data": "2026-01-28", "codigo": 7, "qt": 1540.0, "valor": 616.0, "resp": "", "destino": "", "mes": 1, "ano": 2026}, {"data": "2026-01-30", "codigo": 13, "qt": 44900.0, "valor": 147272.0, "resp": "", "destino": "", "mes": 1, "ano": 2026}, {"data": "2026-01-30", "codigo": 14, "qt": 1500.0, "valor": 4920.0, "resp": "", "destino": "", "mes": 1, "ano": 2026}, {"data": "2026-01-31", "codigo": 1, "qt": 45000.0, "valor": 143914.5, "resp": "", "destino": "", "mes": 1, "ano": 2026}, {"data": "2026-01-31", "codigo": 2, "qt": 7650.0, "valor": 24480.0, "resp": "", "destino": "", "mes": 1, "ano": 2026}, {"data": "2026-02-12", "codigo": 6, "qt": 15736.0, "valor": 0, "resp": "", "destino": "", "mes": 2, "ano": 2026}, {"data": "2026-02-13", "codigo": 5, "qt": 500.0, "valor": 825.0, "resp": "", "destino": "", "mes": 2, "ano": 2026}, {"data": "2026-02-13", "codigo": 5, "qt": 340.0, "valor": 561.0, "resp": "", "destino": "", "mes": 2, "ano": 2026}, {"data": "2026-02-16", "codigo": 7, "qt": 5819.0, "valor": 2327.6, "resp": "", "destino": "", "mes": 2, "ano": 2026}, {"data": "2026-02-17", "codigo": 8, "qt": 2320.0, "valor": 1160.0, "resp": "", "destino": "", "mes": 2, "ano": 2026}, {"data": "2026-02-28", "codigo": 13, "qt": 60150.0, "valor": 197292.0, "resp": "", "destino": "", "mes": 2, "ano": 2026}, {"data": "2026-02-28", "codigo": 1, "qt": 58600.0, "valor": 187408.66, "resp": "", "destino": "", "mes": 2, "ano": 2026}, {"data": "2026-02-28", "codigo": 15, "qt": 2700.0, "valor": 8856.0, "resp": "", "destino": "", "mes": 2, "ano": 2026}, {"data": "2026-02-28", "codigo": 14, "qt": 6500.0, "valor": 21320.0, "resp": "", "destino": "", "mes": 2, "ano": 2026}, {"data": "2026-02-28", "codigo": 3, "qt": 6650.0, "valor": 16625.0, "resp": "", "destino": "", "mes": 2, "ano": 2026}, {"data": "2026-03-03", "codigo": 5, "qt": 890.0, "valor": 1468.5, "resp": "", "destino": "", "mes": 3, "ano": 2026}, {"data": "2026-03-04", "codigo": 7, "qt": 2964.0, "valor": 1185.6, "resp": "", "destino": "", "mes": 3, "ano": 2026}, {"data": "2026-03-31", "codigo": 1, "qt": 68400.0, "valor": 218750.04, "resp": "", "destino": "", "mes": 3, "ano": 2026}, {"data": "2026-03-31", "codigo": 2, "qt": 6925.0, "valor": 22160.0, "resp": "", "destino": "", "mes": 3, "ano": 2026}, {"data": "2026-03-31", "codigo": 13, "qt": 68500.0, "valor": 224680.0, "resp": "", "destino": "", "mes": 3, "ano": 2026}, {"data": "2026-03-31", "codigo": 15, "qt": 8050.0, "valor": 26404.0, "resp": "", "destino": "", "mes": 3, "ano": 2026}, {"data": "2026-03-31", "codigo": 14, "qt": 7200.0, "valor": 23616.0, "resp": "", "destino": "", "mes": 3, "ano": 2026}, {"data": "2026-03-31", "codigo": 5, "qt": 500.0, "valor": 825.0, "resp": "", "destino": "", "mes": 3, "ano": 2026}, {"data": "2026-03-31", "codigo": 5, "qt": 500.0, "valor": 825.0, "resp": "", "destino": "", "mes": 3, "ano": 2026}, {"data": "2026-03-31", "codigo": 3, "qt": 3675.0, "valor": 9187.5, "resp": "", "destino": "", "mes": 3, "ano": 2026}, {"data": "2026-04-01", "codigo": 5, "qt": 500.0, "valor": 825.0, "resp": "", "destino": "", "mes": 4, "ano": 2026}, {"data": "2026-04-07", "codigo": 5, "qt": 750.0, "valor": 1237.5, "resp": "", "destino": "LB PLAST NF1097", "mes": 4, "ano": 2026}, {"data": "2026-04-15", "codigo": 5, "qt": 200.0, "valor": 330.0, "resp": "", "destino": "CHARUTARIA NF1102", "mes": 4, "ano": 2026}, {"data": "2026-04-17", "codigo": 5, "qt": 1000.0, "valor": 1650.0, "resp": "", "destino": "MURANO NF 1103", "mes": 4, "ano": 2026}, {"data": "2026-04-17", "codigo": 5, "qt": 750.0, "valor": 1237.5, "resp": "", "destino": "MENPLAST PV014", "mes": 4, "ano": 2026}, {"data": "2026-04-22", "codigo": 5, "qt": 1000.0, "valor": 1650.0, "resp": "", "destino": "NF 1107 VALE IMPORTADORA", "mes": 4, "ano": 2026}, {"data": "2026-04-27", "codigo": 5, "qt": 500.0, "valor": 825.0, "resp": "", "destino": "ZAROC", "mes": 4, "ano": 2026}, {"data": "2026-04-28", "codigo": 7, "qt": 2082.0, "valor": 832.8, "resp": "", "destino": "BOTUVERA", "mes": 4, "ano": 2026}, {"data": "2026-04-28", "codigo": 7, "qt": 1031.0, "valor": 412.4, "resp": "", "destino": "BOTUVERA", "mes": 4, "ano": 2026}, {"data": "2026-04-29", "codigo": 5, "qt": 500.0, "valor": 825.0, "resp": "", "destino": "BG PLAS Nfe 1115", "mes": 4, "ano": 2026}, {"data": "2026-04-30", "codigo": 5, "qt": 250.0, "valor": 412.5, "resp": "", "destino": "MOACIR BRIQQ", "mes": 4, "ano": 2026}, {"data": "2026-04-30", "codigo": 1, "qt": 59625.0, "valor": 190686.7125, "resp": "", "destino": "", "mes": 4, "ano": 2026}, {"data": "2026-04-30", "codigo": 13, "qt": 61900.0, "valor": 203032.0, "resp": "", "destino": "", "mes": 4, "ano": 2026}, {"data": "2026-04-30", "codigo": 2, "qt": 6050.0, "valor": 19360.0, "resp": "", "destino": "", "mes": 4, "ano": 2026}, {"data": "2026-04-30", "codigo": 14, "qt": 2025.0, "valor": 6642.0, "resp": "", "destino": "", "mes": 4, "ano": 2026}, {"data": "2026-04-30", "codigo": 5, "qt": 5950.0, "valor": 9817.5, "resp": "", "destino": "", "mes": 4, "ano": 2026}, {"data": "2026-04-30", "codigo": 3, "qt": 4300.0, "valor": 10750.0, "resp": "", "destino": "", "mes": 4, "ano": 2026}, {"data": "2026-04-30", "codigo": 15, "qt": 4000.0, "valor": 13120.0, "resp": "", "destino": "", "mes": 4, "ano": 2026}, {"data": "2026-05-06", "codigo": 5, "qt": 500.0, "valor": 825.0, "resp": "", "destino": "REDE ANCORA Nfe 1121", "mes": 5, "ano": 2026}, {"data": "2026-05-06", "codigo": 5, "qt": 1000.0, "valor": 1650.0, "resp": "", "destino": "MURANO Nfe 1120", "mes": 5, "ano": 2026}, {"data": "2026-05-05", "codigo": 8, "qt": 647.0, "valor": 323.5, "resp": "", "destino": "SUL BRASIL (IVAN)", "mes": 5, "ano": 2026}, {"data": "2026-05-07", "codigo": 5, "qt": 50.0, "valor": 82.5, "resp": "", "destino": "CASA BRINQ", "mes": 5, "ano": 2026}, {"data": "2026-05-07", "codigo": 5, "qt": 500.0, "valor": 825.0, "resp": "", "destino": "CAPITAL SIX Nfe 1123", "mes": 5, "ano": 2026}, {"data": "2026-05-18", "codigo": 5, "qt": 500.0, "valor": 825.0, "resp": "", "destino": "MURANO Nfe 1129", "mes": 5, "ano": 2026}, {"data": "2026-05-20", "codigo": 5, "qt": 150.0, "valor": 247.5, "resp": "", "destino": "CHARUTARIA NF1131", "mes": 5, "ano": 2026}, {"data": "2026-05-22", "codigo": 5, "qt": 500.0, "valor": 825.0, "resp": "", "destino": "BG PLAS Nfe 1133", "mes": 5, "ano": 2026}];
