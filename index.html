@@ -408,7 +408,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--preto);color:var(--txt);m
       </div>
       <div class="form-actions">
         <button class="btn btn-s" onclick="limparFT()">Limpar</button>
-        <button class="btn btn-p" onclick="salvarFT()">💾 Salvar Ficha Técnica</button>
+        <button class="btn btn-p" id="btn-salvar-ft" onclick="salvarFT()">💾 Salvar Ficha Técnica</button>
       </div>
     </div>
     <div class="table-card">
@@ -1316,7 +1316,10 @@ function renderEntradas(){
       &&(!fornF||String(e.fornId)===fornF);
   }).forEach(e=>{
     const p=gP(e.prodId);const f=gForn(e.fornId);const sf=gSF(p?.subfam);
-    rows+=`<tr>
+    const isProd = e.resp==='Produção';
+    const rowStyle = isProd ? ' style="background:rgba(46,139,46,.10)"' : '';
+    const prodBadge = isProd ? ' <span class="badge badge-producao" style="font-size:10px">🏭</span>' : '';
+    rows+=`<tr${rowStyle}>
       <td>${fD(e.data)}</td>
       <td class="fw">${p?p.desc:'—'}</td>
       <td class="txt-f">${sf?sf.nome:'—'}</td>
@@ -1325,7 +1328,7 @@ function renderEntradas(){
       <td>${fR(e.qt*e.custo)}</td>
       <td>${f?f.nome:(e.fornId||'—')}</td>
       <td class="txt-f">${e.nf||'—'}</td>
-      <td class="txt-f">${e.resp||'—'}</td>
+      <td class="txt-f">${e.resp||'—'}${prodBadge}</td>
       <td><span class="r-edit" onclick="abrirEditEnt(${e.id})">✏️</span><span class="r-del" onclick="delEnt(${e.id})">🗑</span></td>
     </tr>`;
   });
@@ -1395,13 +1398,16 @@ function renderSaidas(){
       &&(!cliF||String(s.cliId)===cliF);
   }).forEach(s=>{
     const p=gP(s.prodId);const c=gCli(s.cliId);const sf=gSF(p?.subfam);
-    rows+=`<tr>
+    const isProd = s.resp==='Produção';
+    const rowStyle = isProd ? ' style="background:rgba(46,139,46,.10)"' : '';
+    const prodBadge = isProd ? ' <span class="badge badge-producao" style="font-size:10px">🏭</span>' : '';
+    rows+=`<tr${rowStyle}>
       <td>${fD(s.data)}</td>
       <td class="fw">${p?p.desc:'—'}</td>
       <td class="txt-f">${sf?sf.nome:'—'}</td>
       <td class="txt-r fw">${fN(s.qt)}</td>
       <td>${c?c.nome:(s.cliId||'—')}</td>
-      <td class="txt-f">${s.resp||'—'}</td>
+      <td class="txt-f">${s.resp||'—'}${prodBadge}</td>
       <td>${fR(s.valor)}</td>
       <td class="txt-f">${s.obs||'—'}</td>
       <td><span class="r-edit" onclick="abrirEditSai(${s.id})">✏️</span><span class="r-del" onclick="delSai(${s.id})">🗑</span></td>
@@ -2215,7 +2221,6 @@ async function salvarProducao(){
   let ok = false;
 
   if(editProdLancId){
-    // EDIÇÃO — sem movimentação de estoque
     const r = await sbUpdate('lancamentos_producao', editProdLancId, corpo);
     if(r){
       const idx = lancamentosProducao.findIndex(l=>l.id===editProdLancId);
@@ -2223,31 +2228,37 @@ async function salvarProducao(){
       ok = true;
     }
   } else {
-    // NOVO LANÇAMENTO
     const r = await sbSave('lancamentos_producao', corpo);
     if(r){
-      lancamentosProducao.push(mapLanc(r));
-      // movimentação de estoque conforme situação
+      lancamentosProducao.push(mapLanc(Array.isArray(r)?r[0]:r));
+
       if(sit === 'PRODUCAO'){
         // entrada no produto acabado
-        const entCorpo = {data, produto_id:prodId, quantidade:qt, custo_unitario:custo, fornecedor_id:null, nota_fiscal:'', responsavel:'Produção', obs:'Lançamento produção auto', mes, ano};
+        const entCorpo = {data, produto_id:prodId, quantidade:qt, custo_unitario:custo,
+          fornecedor_id:null, nota_fiscal:'', responsavel:'Produção',
+          obs:'Lançamento produção auto', mes, ano};
         const entR = await sbSave('entradas', entCorpo);
-        if(entR) entradas.push(mapEnt(entR));
+        if(entR){ entradas.push(mapEnt(Array.isArray(entR)?entR[0]:entR)); }
+        else { console.error('Falha ao criar entrada de produção'); }
+
         // saída automática de MP via ficha técnica
         const ft = getFT(prodId);
         if(ft){
           const qtMP = ft.qtMP * qt;
-          const saiCorpo = {data, produto_id:ft.mpId, quantidade:qtMP, cliente_id:null, responsavel:'Produção', valor_total:0, obs:'Baixa MP auto — produção', mes, ano};
+          const saiCorpo = {data, produto_id:ft.mpId, quantidade:qtMP,
+            cliente_id:null, responsavel:'Produção', valor_total:0,
+            obs:'Baixa MP auto — produção', mes, ano};
           const saiR = await sbSave('saidas', saiCorpo);
-          if(saiR) saidas.push(mapSai(saiR));
+          if(saiR){ saidas.push(mapSai(Array.isArray(saiR)?saiR[0]:saiR)); }
+          else { console.error('Falha ao criar saída de MP'); }
         }
       } else if(sit === 'VENDA'){
-        // saída do produto acabado
-        const saiCorpo = {data, produto_id:prodId, quantidade:qt, cliente_id:cliId, responsavel:'Produção', valor_total:custo*qt, obs:obs||'Venda via produção', mes, ano};
+        const saiCorpo = {data, produto_id:prodId, quantidade:qt,
+          cliente_id:cliId, responsavel:'Produção', valor_total:custo*qt,
+          obs:obs||'Venda via produção', mes, ano};
         const saiR = await sbSave('saidas', saiCorpo);
-        if(saiR) saidas.push(mapSai(saiR));
+        if(saiR){ saidas.push(mapSai(Array.isArray(saiR)?saiR[0]:saiR)); }
       }
-      // PRE_VENDA — sem movimentação de estoque
       ok = true;
     }
   }
@@ -2256,6 +2267,7 @@ async function salvarProducao(){
     limparProducao();
     renderProducao();
     renderDash();
+    renderEstoque();
   } else {
     alert('Erro ao salvar lançamento. Verifique a conexão com o Supabase.');
   }
@@ -2353,10 +2365,28 @@ function renderProducao(){
 
 // ══════ FICHA TÉCNICA ══════
 
+let editFTId = null;
+
+function editarFT(id){
+  const ft = fichasTecnicas.find(f=>f.id===id);
+  if(!ft) return;
+  editFTId = id;
+  fillSel('ft-acabado',produtos,'id',p=>p.desc,'Selecione...');
+  fillSel('ft-mp',produtos,'id',p=>p.desc,'Selecione...');
+  document.getElementById('ft-acabado').value = ft.acabadoId;
+  document.getElementById('ft-mp').value = ft.mpId;
+  document.getElementById('ft-qt').value = ft.qtMP;
+  document.getElementById('btn-salvar-ft').textContent = '💾 Atualizar Ficha';
+  document.getElementById('page-fichatecnica').scrollTop = 0;
+}
+
 function limparFT(){
+  editFTId = null;
   document.getElementById('ft-acabado').value = '';
   document.getElementById('ft-mp').value = '';
   document.getElementById('ft-qt').value = '';
+  const btn = document.getElementById('btn-salvar-ft');
+  if(btn) btn.textContent = '💾 Salvar Ficha Técnica';
 }
 
 async function salvarFT(){
@@ -2366,18 +2396,27 @@ async function salvarFT(){
   if(!acabadoId||!mpId||!qtMP||qtMP<=0){ alert('Preencha todos os campos.'); return; }
   if(acabadoId===mpId){ alert('Produto Acabado e Matéria-Prima não podem ser o mesmo produto.'); return; }
 
-  // verifica se já existe ficha para este produto acabado
-  const existente = fichasTecnicas.find(f=>f.acabadoId===acabadoId);
-  if(existente){
-    if(!confirm('Já existe uma ficha técnica para este produto. Deseja substituir?')) return;
-    const r = await sbUpdate('ficha_tecnica', existente.id, {produto_acabado_id:acabadoId, materia_prima_id:mpId, quantidade_mp:qtMP});
+  if(editFTId){
+    // EDIÇÃO
+    const r = await sbUpdate('ficha_tecnica', editFTId, {produto_acabado_id:acabadoId, materia_prima_id:mpId, quantidade_mp:qtMP});
     if(r){
-      const idx = fichasTecnicas.findIndex(f=>f.id===existente.id);
-      fichasTecnicas[idx] = mapFT({...r, id:existente.id, produto_acabado_id:acabadoId, materia_prima_id:mpId, quantidade_mp:qtMP});
+      const idx = fichasTecnicas.findIndex(f=>f.id===editFTId);
+      if(idx>=0) fichasTecnicas[idx] = {id:editFTId, acabadoId, mpId, qtMP};
     }
   } else {
-    const r = await sbSave('ficha_tecnica', {produto_acabado_id:acabadoId, materia_prima_id:mpId, quantidade_mp:qtMP});
-    if(r) fichasTecnicas.push(mapFT(r));
+    // NOVO
+    const existente = fichasTecnicas.find(f=>f.acabadoId===acabadoId);
+    if(existente){
+      if(!confirm('Já existe uma ficha técnica para este produto. Deseja substituir?')) return;
+      const r = await sbUpdate('ficha_tecnica', existente.id, {produto_acabado_id:acabadoId, materia_prima_id:mpId, quantidade_mp:qtMP});
+      if(r){
+        const idx = fichasTecnicas.findIndex(f=>f.id===existente.id);
+        fichasTecnicas[idx] = {id:existente.id, acabadoId, mpId, qtMP};
+      }
+    } else {
+      const r = await sbSave('ficha_tecnica', {produto_acabado_id:acabadoId, materia_prima_id:mpId, quantidade_mp:qtMP});
+      if(r) fichasTecnicas.push(mapFT(Array.isArray(r)?r[0]:r));
+    }
   }
   limparFT();
   renderFT();
@@ -2402,7 +2441,10 @@ function renderFT(){
       + '<td class="fw">'+(acab?acab.desc:'#'+f.acabadoId)+'</td>'
       + '<td>'+(mp?mp.desc:'#'+f.mpId)+'</td>'
       + '<td class="txt-r">'+fN(f.qtMP)+'</td>'
-      + '<td><button class="btn btn-d" style="padding:4px 10px;font-size:12px" onclick="excluirFT('+f.id+')">🗑 Excluir</button></td>'
+      + '<td><div style="display:flex;gap:6px">'
+      + '<button class="btn btn-s" style="padding:4px 10px;font-size:12px" onclick="editarFT('+f.id+')">✏️ Editar</button>'
+      + '<button class="btn btn-d" style="padding:4px 10px;font-size:12px" onclick="excluirFT('+f.id+')">🗑 Excluir</button>'
+      + '</div></td>'
       + '</tr>';
   });
   document.getElementById('tb-ft').innerHTML = rows || '<tr><td colspan="4" class="empty">Nenhuma ficha técnica cadastrada.</td></tr>';
