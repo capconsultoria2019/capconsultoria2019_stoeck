@@ -2215,7 +2215,7 @@ async function salvarProducao(){
   const corpo = {
     data, produto_id:prodId, situacao:sit,
     cliente_id:cliId, quantidade:qt,
-    custo_producao:custo, origem, obs, mes, ano
+    custo_producao:custo, origem, obs
   };
 
   let ok = false;
@@ -2236,7 +2236,7 @@ async function salvarProducao(){
         // entrada no produto acabado
         const entCorpo = {data, produto_id:prodId, quantidade:qt, custo_unitario:custo,
           fornecedor_id:null, nota_fiscal:'', responsavel:'Produção',
-          obs:'Lançamento produção auto', mes, ano};
+          obs:'Lançamento produção auto'};
         const entR = await sbSave('entradas', entCorpo);
         if(entR){ entradas.push(mapEnt(Array.isArray(entR)?entR[0]:entR)); }
         else { console.error('Falha ao criar entrada de produção'); }
@@ -2247,7 +2247,7 @@ async function salvarProducao(){
           const qtMP = ft.qtMP * qt;
           const saiCorpo = {data, produto_id:ft.mpId, quantidade:qtMP,
             cliente_id:null, responsavel:'Produção', valor_total:0,
-            obs:'Baixa MP auto — produção', mes, ano};
+            obs:'Baixa MP auto — produção'};
           const saiR = await sbSave('saidas', saiCorpo);
           if(saiR){ saidas.push(mapSai(Array.isArray(saiR)?saiR[0]:saiR)); }
           else { console.error('Falha ao criar saída de MP'); }
@@ -2255,7 +2255,7 @@ async function salvarProducao(){
       } else if(sit === 'VENDA'){
         const saiCorpo = {data, produto_id:prodId, quantidade:qt,
           cliente_id:cliId, responsavel:'Produção', valor_total:custo*qt,
-          obs:obs||'Venda via produção', mes, ano};
+          obs:obs||'Venda via produção'};
         const saiR = await sbSave('saidas', saiCorpo);
         if(saiR){ saidas.push(mapSai(Array.isArray(saiR)?saiR[0]:saiR)); }
       }
