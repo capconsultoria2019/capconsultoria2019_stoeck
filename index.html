@@ -96,7 +96,13 @@ body{font-family:'DM Sans',sans-serif;background:var(--preto);color:var(--txt);m
 .badge-e{background:rgba(39,174,96,.15);color:var(--verde)}
 .badge-s{background:rgba(231,76,60,.15);color:var(--verm)}
 
-/* FORMS */
+.badge-venda{background:rgba(39,174,96,.15);color:#27ae60}
+.badge-producao{background:rgba(46,139,46,.15);color:#2e8b2e}
+.badge-prevenda{background:rgba(243,156,18,.15);color:#f39c12}
+.badge-manual{background:rgba(136,136,136,.15);color:#888}
+.badge-ficha{background:rgba(52,152,219,.15);color:#3498db}
+
+
 .form-card{background:var(--ce);border:1px solid var(--borda);border-radius:12px;padding:20px;margin-bottom:20px}
 .form-card h3{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px}
 .form-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
@@ -225,6 +231,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--preto);color:var(--txt);m
     <div class="nav-item" onclick="goPage('saidas')"><span class="ic">📤</span> Saídas</div>
     <div class="nav-item" onclick="goPage('variacao')" data-page="variacao"><span class="ic">📈</span> Variação Mensal</div>
     <div class="nav-item" onclick="goPage('movimentacao')" data-page="movimentacao"><span class="ic">🔄</span> Movimentação</div>
+    <div class="nav-sec">Produção</div>
+    <div class="nav-item" onclick="goPage('producao')"><span class="ic">🏭</span> Lançamentos</div>
+    <div class="nav-item" onclick="goPage('fichatecnica')"><span class="ic">📋</span> Ficha Técnica</div>
     <div class="nav-sec">Cadastros</div>
     <div class="nav-item" onclick="goPage('produtos')"><span class="ic">🏷️</span> Produtos</div>
     <div class="nav-item" onclick="goPage('clientes')"><span class="ic">👤</span> Clientes</div>
@@ -294,6 +303,121 @@ body{font-family:'DM Sans',sans-serif;background:var(--preto);color:var(--txt);m
     <div class="table-card">
       <div class="tc-head"><div class="tc-title" id="estoque-count">Estoque</div></div>
       <div class="table-wrap"><table><thead><tr><th>Cód.</th><th>Produto</th><th>Subfamília</th><th>Localização</th><th>Estoque Mín.</th><th>Entradas</th><th>Saídas</th><th>Saldo</th><th>Custo Médio</th><th>Valor Estoque</th><th>Status</th></tr></thead><tbody id="tb-estoque"></tbody></table></div>
+    </div>
+  </div>
+
+  <!-- ========= PRODUÇÃO ========= -->
+  <div class="page" id="page-producao">
+    <div class="form-card">
+      <h3>🏭 Registrar Lançamento de Produção</h3>
+      <div class="form-grid">
+        <div class="fg">
+          <label>Data *</label>
+          <input type="date" id="prod-data">
+        </div>
+        <div class="fg">
+          <label>Situação *</label>
+          <select id="prod-situacao" onchange="onProdSituacaoChange()">
+            <option value="">Selecione...</option>
+            <option value="PRODUCAO">🏭 PRODUÇÃO</option>
+            <option value="VENDA">💚 VENDA</option>
+            <option value="PRE_VENDA">🟡 PRÉ-VENDA</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label>Produto *</label>
+          <select id="prod-produto" onchange="onProdProdutoChange()"><option value="">Selecione...</option></select>
+        </div>
+        <div class="fg">
+          <label>Quantidade *</label>
+          <input type="number" id="prod-qt" min="0.001" step="0.001" placeholder="0" oninput="onProdQtChange()">
+        </div>
+        <div class="fg">
+          <label>Cliente</label>
+          <select id="prod-cliente"><option value="">— Sem vínculo —</option></select>
+        </div>
+        <div class="fg">
+          <label>Custo de Produção (R$)</label>
+          <input type="number" id="prod-custo" min="0" step="0.01" placeholder="0,00" readonly style="opacity:.7;cursor:not-allowed">
+        </div>
+        <div class="fg" id="prod-mp-info" style="display:none">
+          <label>Matéria-Prima (baixa automática)</label>
+          <input type="text" id="prod-mp-txt" readonly style="opacity:.7;cursor:not-allowed;color:var(--amar)">
+        </div>
+        <div class="fg full">
+          <label>Observação</label>
+          <input type="text" id="prod-obs" placeholder="Observação">
+        </div>
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-s" onclick="limparProducao()">Limpar</button>
+        <button class="btn btn-p" id="btn-salvar-prod" onclick="salvarProducao()">💾 Registrar Lançamento</button>
+      </div>
+    </div>
+    <div class="table-card">
+      <div class="tc-head">
+        <div class="tc-title" id="prod-count">Lançamentos de Produção</div>
+        <div class="filters" style="margin:0;flex-wrap:nowrap">
+          <select class="fi" id="fp-mes" onchange="renderProducao()">
+            <option value="">Todos os meses</option>
+            <option value="1">Janeiro</option><option value="2">Fevereiro</option><option value="3">Março</option>
+            <option value="4">Abril</option><option value="5">Maio</option><option value="6">Junho</option>
+            <option value="7">Julho</option><option value="8">Agosto</option><option value="9">Setembro</option>
+            <option value="10">Outubro</option><option value="11">Novembro</option><option value="12">Dezembro</option>
+          </select>
+          <select class="fi" id="fp-ano" onchange="renderProducao()">
+            <option value="">Todos os anos</option>
+            <option value="2024">2024</option><option value="2025">2025</option><option value="2026">2026</option>
+          </select>
+          <select class="fi" id="fp-situacao" onchange="renderProducao()">
+            <option value="">Todas as situações</option>
+            <option value="PRODUCAO">PRODUÇÃO</option>
+            <option value="VENDA">VENDA</option>
+            <option value="PRE_VENDA">PRÉ-VENDA</option>
+          </select>
+          <select class="fi" id="fp-sf" onchange="onFpSfChange()"><option value="">Todas subfamílias</option></select>
+          <select class="fi" id="fp-prod-f" onchange="renderProducao()"><option value="">Todos produtos</option></select>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Data</th><th>Produto</th><th>Situação</th><th>Qtd</th><th>Cliente</th><th>Custo Prod.</th><th>Origem</th><th>Obs.</th><th>Ações</th></tr></thead>
+          <tbody id="tb-producao"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========= FICHA TÉCNICA ========= -->
+  <div class="page" id="page-fichatecnica">
+    <div class="form-card">
+      <h3>📋 Cadastro de Ficha Técnica</h3>
+      <div class="form-grid">
+        <div class="fg">
+          <label>Produto Acabado *</label>
+          <select id="ft-acabado"><option value="">Selecione...</option></select>
+        </div>
+        <div class="fg">
+          <label>Matéria-Prima *</label>
+          <select id="ft-mp"><option value="">Selecione...</option></select>
+        </div>
+        <div class="fg">
+          <label>Quantidade MP por unidade *</label>
+          <input type="number" id="ft-qt" min="0.001" step="0.001" placeholder="Ex: 1.5">
+        </div>
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-s" onclick="limparFT()">Limpar</button>
+        <button class="btn btn-p" onclick="salvarFT()">💾 Salvar Ficha Técnica</button>
+      </div>
+    </div>
+    <div class="table-card">
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Produto Acabado</th><th>Matéria-Prima</th><th>Qtd MP / unid.</th><th>Ações</th></tr></thead>
+          <tbody id="tb-ft"></tbody>
+        </table>
+      </div>
     </div>
   </div>
 
@@ -839,6 +963,10 @@ let clientes   = [];
 let fornecedores=[];
 let entradas   = [];
 let saidas     = [];
+let lancamentosProducao = [];
+let fichasTecnicas = [];
+
+let editProdLancId = null;
 
 let currentUser=null,editProdId=null,editCliId=null,editFornId=null,editLocId=null,editUsrIdx=null,editEntId=null,editSaiId=null;
 
@@ -850,11 +978,13 @@ function mapForn(r){ return{id:r.id,nome:r.nome,doc:r.doc||'',contato:r.contato|
 function mapCli(r){ return{id:r.id,nome:r.nome,doc:r.doc||'',tipo:r.tipo||'cliente',tel:r.tel||'',email:r.email||'',cidade:r.cidade||'',end:r.endereco||'',obs:r.obs||''}; }
 function mapEnt(r){ return{id:r.id,data:r.data,prodId:r.produto_id,qt:Number(r.quantidade),custo:Number(r.custo_unitario),fornId:r.fornecedor_id,nf:r.nota_fiscal||'',resp:r.responsavel||'',obs:r.obs||'',mes:r.mes,ano:r.ano}; }
 function mapSai(r){ return{id:r.id,data:r.data,prodId:r.produto_id,qt:Number(r.quantidade),cliId:r.cliente_id,resp:r.responsavel||'',valor:Number(r.valor_total),obs:r.obs||'',mes:r.mes,ano:r.ano}; }
+function mapLanc(r){ return{id:r.id,data:r.data,prodId:r.produto_id,situacao:r.situacao,cliId:r.cliente_id,qt:Number(r.quantidade),custo:Number(r.custo_producao||0),origem:r.origem||'manual',obs:r.obs||'',mes:r.mes,ano:r.ano}; }
+function mapFT(r){ return{id:r.id,acabadoId:r.produto_acabado_id,mpId:r.materia_prima_id,qtMP:Number(r.quantidade_mp)}; }
 
 async function carregarTudo(silent=false){
   setSyncStatus('connecting');
   if(!silent) showLoader(true);
-  const [sf, locs, prods, clis, forns, ents, sais] = await Promise.all([
+  const [sf, locs, prods, clis, forns, ents, sais, lancs, fts] = await Promise.all([
     sbReq('subfamilias','GET',null,'?order=id'),
     sbReq('localizacoes','GET',null,'?order=id'),
     sbReq('produtos','GET',null,'?order=id'),
@@ -862,6 +992,8 @@ async function carregarTudo(silent=false){
     sbReq('fornecedores','GET',null,'?order=id'),
     sbReq('entradas','GET',null,'?order=data'),
     sbReq('saidas','GET',null,'?order=data'),
+    sbReq('lancamentos_producao','GET',null,'?order=data'),
+    sbReq('ficha_tecnica','GET',null,'?order=id'),
   ]);
   if(sf) subfamilias   = sf.map(mapSF);
   if(locs) localizacoes= locs.map(mapLoc);
@@ -870,6 +1002,8 @@ async function carregarTudo(silent=false){
   if(forns) fornecedores=forns.map(mapForn);
   if(ents) entradas    = ents.map(mapEnt);
   if(sais) saidas      = sais.map(mapSai);
+  if(lancs) lancamentosProducao = lancs.map(mapLanc);
+  if(fts) fichasTecnicas = fts.map(mapFT);
   setSyncStatus('ok');
   if(!silent) showLoader(false);
   fillAllSelects();
@@ -1004,7 +1138,7 @@ function logout(){
 }
 
 // ══════ NAV ══════
-const PT={dashboard:'Dashboard',estoque:'Estoque Atual',entradas:'Entradas',saidas:'Saídas',variacao:'Variação Mensal',movimentacao:'Movimentação do Estoque',produtos:'Cadastro de Produtos',clientes:'Cadastro de Clientes',fornecedores:'Cadastro de Fornecedores',subfamilias:'Subfamílias',localizacoes:'Localizações',usuarios:'Usuários'};
+const PT={dashboard:'Dashboard',estoque:'Estoque Atual',entradas:'Entradas',saidas:'Saídas',variacao:'Variação Mensal',movimentacao:'Movimentação do Estoque',producao:'Lançamentos de Produção',fichatecnica:'Ficha Técnica',produtos:'Cadastro de Produtos',clientes:'Cadastro de Clientes',fornecedores:'Cadastro de Fornecedores',subfamilias:'Subfamílias',localizacoes:'Localizações',usuarios:'Usuários'};
 // ── FILTRO GLOBAL (subfamília + produto) ──
 let _gFiltroSF = '';
 let _gFiltroProd = '';
@@ -1055,7 +1189,7 @@ function goPage(id){
     aplicarFiltroGlobal('mov-sf','mov-prod',renderMovimentacao,onMovSfChange);
   }
 
-  const renders={dashboard:renderDash,estoque:renderEstoque,entradas:renderEntradas,saidas:renderSaidas,variacao:renderVariacao,movimentacao:renderMovimentacao,produtos:renderProdutos,clientes:renderClientes,fornecedores:renderForn,subfamilias:renderSF,localizacoes:renderLoc,usuarios:renderUsr};
+  const renders={dashboard:renderDash,estoque:renderEstoque,entradas:renderEntradas,saidas:renderSaidas,variacao:renderVariacao,movimentacao:renderMovimentacao,producao:renderProducao,fichatecnica:renderFT,produtos:renderProdutos,clientes:renderClientes,fornecedores:renderForn,subfamilias:renderSF,localizacoes:renderLoc,usuarios:renderUsr};
   if(renders[id])renders[id]();
 }
 
@@ -1068,12 +1202,17 @@ function fillSel(id,items,valKey,labelFn,def='Selecione...'){
 }
 function fillAllSelects(){
   ['ent-prod','sai-prod','var-prod','me-prod','ms-prod'].forEach(id=>fillSel(id,produtos,'id',p=>p.desc));
-  ['prod-sf','fe-sf','fp-sf','var-sf','fe-ent-sf','fe-sai-sf'].forEach(id=>fillSel(id,subfamilias,'id',s=>s.nome,'Todas'));
+  ['prod-sf','fe-sf','fp-sf'].forEach(id=>fillSel(id,subfamilias,'id',s=>s.nome,'Todas'));
   ['prod-loc-sel','fe-loc','fp-loc'].forEach(id=>fillSel(id,localizacoes,'id',l=>l.nome,'Todas'));
   ['ent-forn','fe-ent-forn','me-forn'].forEach(id=>fillSel(id,fornecedores,'id',f=>f.nome,'— Sem vínculo —'));
-  ['sai-cli','ms-cli','fe-sai-cli'].forEach(id=>fillSel(id,clientes,'id',c=>c.nome,'— Sem vínculo —'));
+  ['sai-cli','ms-cli','fe-sai-cli','prod-cliente'].forEach(id=>fillSel(id,clientes,'id',c=>c.nome,'— Sem vínculo —'));
   fillSel('fe-ent-prod',produtos,'id',p=>p.desc,'Todos produtos');
   fillSel('fe-sai-prod',produtos,'id',p=>p.desc,'Todos produtos');
+  fillSel('prod-produto',produtos,'id',p=>p.desc,'Selecione...');
+  fillSel('fp-prod-f',produtos,'id',p=>p.desc,'Todos produtos');
+  // ficha técnica
+  fillSel('ft-acabado',produtos,'id',p=>p.desc,'Selecione...');
+  fillSel('ft-mp',produtos,'id',p=>p.desc,'Selecione...');
 }
 // ===== DASHBOARD =====
 function renderDash(){
@@ -1998,14 +2137,285 @@ async function importarEntradasXlsx(){
   alert(`Importação concluída!\n✅ Importados: ${importados}\n⏭ Ignorados (duplicata): ${ignorados}\n❌ Erros: ${erros}`);
 }
 
+// ══════ PRODUÇÃO ══════
+
+function getFT(acabadoId){
+  return fichasTecnicas.find(f=>f.acabadoId===parseInt(acabadoId));
+}
+
+function onProdSituacaoChange(){
+  onProdProdutoChange();
+}
+
+function onProdProdutoChange(){
+  const prodId = parseInt(document.getElementById('prod-produto').value);
+  const sit = document.getElementById('prod-situacao').value;
+  const prod = gP(prodId);
+  // custo automático do custo_base
+  document.getElementById('prod-custo').value = prod ? prod.custo : '';
+  // info de MP apenas para PRODUCAO com ficha técnica
+  const mpInfo = document.getElementById('prod-mp-info');
+  const mpTxt = document.getElementById('prod-mp-txt');
+  if(sit === 'PRODUCAO' && prodId){
+    const ft = getFT(prodId);
+    if(ft){
+      const mp = gP(ft.mpId);
+      mpInfo.style.display = '';
+      mpTxt.value = mp ? mp.desc + ' (' + ft.qtMP + ' un./unid.)' : 'MP não encontrada';
+    } else {
+      mpInfo.style.display = '';
+      mpTxt.value = '⚠ Sem ficha técnica — baixa manual de MP não será feita';
+    }
+  } else {
+    mpInfo.style.display = 'none';
+    mpTxt.value = '';
+  }
+  onProdQtChange();
+}
+
+function onProdQtChange(){
+  // custo já é fixo do produto — sem cálculo extra
+}
+
+function limparProducao(){
+  document.getElementById('prod-data').value = today();
+  document.getElementById('prod-situacao').value = '';
+  document.getElementById('prod-produto').value = '';
+  document.getElementById('prod-qt').value = '';
+  document.getElementById('prod-custo').value = '';
+  document.getElementById('prod-cliente').value = '';
+  document.getElementById('prod-obs').value = '';
+  document.getElementById('prod-mp-info').style.display = 'none';
+  document.getElementById('prod-mp-txt').value = '';
+  editProdLancId = null;
+  document.getElementById('btn-salvar-prod').textContent = '💾 Registrar Lançamento';
+}
+
+async function salvarProducao(){
+  const data   = document.getElementById('prod-data').value;
+  const sit    = document.getElementById('prod-situacao').value;
+  const prodId = parseInt(document.getElementById('prod-produto').value);
+  const qt     = parseFloat(document.getElementById('prod-qt').value);
+  const custo  = parseFloat(document.getElementById('prod-custo').value)||0;
+  const cliId  = parseInt(document.getElementById('prod-cliente').value)||null;
+  const obs    = document.getElementById('prod-obs').value.trim();
+
+  if(!data||!sit||!prodId||!qt||qt<=0){ alert('Preencha Data, Situação, Produto e Quantidade.'); return; }
+
+  const mes = getM(data);
+  const ano = getY(data);
+  const origem = editProdLancId ? (lancamentosProducao.find(l=>l.id===editProdLancId)?.origem||'manual') : 'manual';
+
+  const corpo = {
+    data, produto_id:prodId, situacao:sit,
+    cliente_id:cliId, quantidade:qt,
+    custo_producao:custo, origem, obs, mes, ano
+  };
+
+  let ok = false;
+
+  if(editProdLancId){
+    // EDIÇÃO — sem movimentação de estoque
+    const r = await sbUpdate('lancamentos_producao', editProdLancId, corpo);
+    if(r){
+      const idx = lancamentosProducao.findIndex(l=>l.id===editProdLancId);
+      if(idx>=0) lancamentosProducao[idx] = mapLanc({...corpo, id:editProdLancId});
+      ok = true;
+    }
+  } else {
+    // NOVO LANÇAMENTO
+    const r = await sbSave('lancamentos_producao', corpo);
+    if(r){
+      lancamentosProducao.push(mapLanc(r));
+      // movimentação de estoque conforme situação
+      if(sit === 'PRODUCAO'){
+        // entrada no produto acabado
+        const entCorpo = {data, produto_id:prodId, quantidade:qt, custo_unitario:custo, fornecedor_id:null, nota_fiscal:'', responsavel:'Produção', obs:'Lançamento produção auto', mes, ano};
+        const entR = await sbSave('entradas', entCorpo);
+        if(entR) entradas.push(mapEnt(entR));
+        // saída automática de MP via ficha técnica
+        const ft = getFT(prodId);
+        if(ft){
+          const qtMP = ft.qtMP * qt;
+          const saiCorpo = {data, produto_id:ft.mpId, quantidade:qtMP, cliente_id:null, responsavel:'Produção', valor_total:0, obs:'Baixa MP auto — produção', mes, ano};
+          const saiR = await sbSave('saidas', saiCorpo);
+          if(saiR) saidas.push(mapSai(saiR));
+        }
+      } else if(sit === 'VENDA'){
+        // saída do produto acabado
+        const saiCorpo = {data, produto_id:prodId, quantidade:qt, cliente_id:cliId, responsavel:'Produção', valor_total:custo*qt, obs:obs||'Venda via produção', mes, ano};
+        const saiR = await sbSave('saidas', saiCorpo);
+        if(saiR) saidas.push(mapSai(saiR));
+      }
+      // PRE_VENDA — sem movimentação de estoque
+      ok = true;
+    }
+  }
+
+  if(ok){
+    limparProducao();
+    renderProducao();
+    renderDash();
+  } else {
+    alert('Erro ao salvar lançamento. Verifique a conexão com o Supabase.');
+  }
+}
+
+function editarProducao(id){
+  const l = lancamentosProducao.find(x=>x.id===id);
+  if(!l) return;
+  editProdLancId = id;
+  document.getElementById('prod-data').value = l.data;
+  document.getElementById('prod-situacao').value = l.situacao;
+  fillSel('prod-produto',produtos,'id',p=>p.desc,'Selecione...');
+  document.getElementById('prod-produto').value = l.prodId;
+  document.getElementById('prod-qt').value = l.qt;
+  document.getElementById('prod-custo').value = l.custo;
+  fillSel('prod-cliente',clientes,'id',c=>c.nome,'— Sem vínculo —');
+  document.getElementById('prod-cliente').value = l.cliId||'';
+  document.getElementById('prod-obs').value = l.obs;
+  document.getElementById('btn-salvar-prod').textContent = '💾 Atualizar Lançamento';
+  onProdProdutoChange();
+  document.getElementById('page-producao').scrollTop = 0;
+}
+
+async function excluirProducao(id){
+  if(!confirm('Excluir este lançamento? O estoque NÃO será revertido automaticamente.')) return;
+  const r = await sbDelete('lancamentos_producao', id);
+  if(r !== null){
+    lancamentosProducao = lancamentosProducao.filter(l=>l.id!==id);
+    renderProducao();
+  }
+}
+
+function onFpSfChange(){
+  const sfId = document.getElementById('fp-sf').value;
+  const lista = sfId ? produtos.filter(p=>p.subfam===parseInt(sfId)) : produtos;
+  const sel = document.getElementById('fp-prod-f');
+  sel.innerHTML = '<option value="">Todos produtos</option>' + lista.map(p=>`<option value="${p.id}">${p.desc}</option>`).join('');
+  renderProducao();
+}
+
+const MESES_ABREV=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+
+function badgeSit(sit){
+  const map={PRODUCAO:'badge-producao',VENDA:'badge-venda',PRE_VENDA:'badge-prevenda'};
+  const txt={PRODUCAO:'🏭 PRODUÇÃO',VENDA:'💚 VENDA',PRE_VENDA:'🟡 PRÉ-VENDA'};
+  return '<span class="badge '+(map[sit]||'badge-manual')+'">'+(txt[sit]||sit)+'</span>';
+}
+
+function badgeOrigem(orig){
+  if(orig==='ficha_tecnica') return '<span class="badge badge-ficha">⚙ Ficha</span>';
+  return '<span class="badge badge-manual">✍ Manual</span>';
+}
+
+function renderProducao(){
+  fillAllSelects();
+  const mes   = document.getElementById('fp-mes')?.value||'';
+  const ano   = document.getElementById('fp-ano')?.value||'';
+  const sit   = document.getElementById('fp-situacao')?.value||'';
+  const prodF = document.getElementById('fp-prod-f')?.value||'';
+
+  let lista = lancamentosProducao.filter(l=>{
+    return (!mes||String(l.mes)===mes)
+      && (!ano||String(l.ano)===ano)
+      && (!sit||l.situacao===sit)
+      && (!prodF||String(l.prodId)===prodF);
+  });
+
+  // ordenar por data desc
+  lista.sort((a,b)=>b.data.localeCompare(a.data));
+
+  let rows = '';
+  lista.forEach(l=>{
+    const prod = gP(l.prodId);
+    const cli  = gCli(l.cliId);
+    const [y,m,d] = l.data.split('-');
+    rows += '<tr>'
+      + '<td>'+d+'/'+m+'/'+y+'</td>'
+      + '<td class="fw">'+(prod?prod.desc:'—')+'</td>'
+      + '<td>'+badgeSit(l.situacao)+'</td>'
+      + '<td class="txt-r">'+fN(l.qt)+'</td>'
+      + '<td>'+(cli?cli.nome:'—')+'</td>'
+      + '<td>'+fR(l.custo)+'</td>'
+      + '<td>'+badgeOrigem(l.origem)+'</td>'
+      + '<td style="max-width:160px;overflow:hidden;text-overflow:ellipsis">'+(l.obs||'—')+'</td>'
+      + '<td><div style="display:flex;gap:6px">'
+      + '<button class="btn btn-s" style="padding:4px 10px;font-size:12px" onclick="editarProducao('+l.id+')">✏️</button>'
+      + '<button class="btn btn-d" style="padding:4px 10px;font-size:12px" onclick="excluirProducao('+l.id+')">🗑</button>'
+      + '</div></td>'
+      + '</tr>';
+  });
+
+  document.getElementById('tb-producao').innerHTML = rows || '<tr><td colspan="9" class="empty">Nenhum lançamento encontrado.</td></tr>';
+  document.getElementById('prod-count').textContent = 'Lançamentos de Produção (' + lista.length + ')';
+}
+
+// ══════ FICHA TÉCNICA ══════
+
+function limparFT(){
+  document.getElementById('ft-acabado').value = '';
+  document.getElementById('ft-mp').value = '';
+  document.getElementById('ft-qt').value = '';
+}
+
+async function salvarFT(){
+  const acabadoId = parseInt(document.getElementById('ft-acabado').value);
+  const mpId      = parseInt(document.getElementById('ft-mp').value);
+  const qtMP      = parseFloat(document.getElementById('ft-qt').value);
+  if(!acabadoId||!mpId||!qtMP||qtMP<=0){ alert('Preencha todos os campos.'); return; }
+  if(acabadoId===mpId){ alert('Produto Acabado e Matéria-Prima não podem ser o mesmo produto.'); return; }
+
+  // verifica se já existe ficha para este produto acabado
+  const existente = fichasTecnicas.find(f=>f.acabadoId===acabadoId);
+  if(existente){
+    if(!confirm('Já existe uma ficha técnica para este produto. Deseja substituir?')) return;
+    const r = await sbUpdate('ficha_tecnica', existente.id, {produto_acabado_id:acabadoId, materia_prima_id:mpId, quantidade_mp:qtMP});
+    if(r){
+      const idx = fichasTecnicas.findIndex(f=>f.id===existente.id);
+      fichasTecnicas[idx] = mapFT({...r, id:existente.id, produto_acabado_id:acabadoId, materia_prima_id:mpId, quantidade_mp:qtMP});
+    }
+  } else {
+    const r = await sbSave('ficha_tecnica', {produto_acabado_id:acabadoId, materia_prima_id:mpId, quantidade_mp:qtMP});
+    if(r) fichasTecnicas.push(mapFT(r));
+  }
+  limparFT();
+  renderFT();
+}
+
+async function excluirFT(id){
+  if(!confirm('Excluir esta ficha técnica?')) return;
+  const r = await sbDelete('ficha_tecnica', id);
+  if(r !== null){
+    fichasTecnicas = fichasTecnicas.filter(f=>f.id!==id);
+    renderFT();
+  }
+}
+
+function renderFT(){
+  fillAllSelects();
+  let rows = '';
+  fichasTecnicas.forEach(f=>{
+    const acab = gP(f.acabadoId);
+    const mp   = gP(f.mpId);
+    rows += '<tr>'
+      + '<td class="fw">'+(acab?acab.desc:'#'+f.acabadoId)+'</td>'
+      + '<td>'+(mp?mp.desc:'#'+f.mpId)+'</td>'
+      + '<td class="txt-r">'+fN(f.qtMP)+'</td>'
+      + '<td><button class="btn btn-d" style="padding:4px 10px;font-size:12px" onclick="excluirFT('+f.id+')">🗑 Excluir</button></td>'
+      + '</tr>';
+  });
+  document.getElementById('tb-ft').innerHTML = rows || '<tr><td colspan="4" class="empty">Nenhuma ficha técnica cadastrada.</td></tr>';
+}
+
 // ===== INIT =====
 function init(){
   document.getElementById('ent-data').value=today();
   document.getElementById('sai-data').value=today();
-  if(SB_URL && SB_KEY){ // sempre true — credenciais embutidas
+  document.getElementById('prod-data').value=today();
+  if(SB_URL && SB_KEY){
     testarConexao().then(ok=>{ if(ok)carregarTudo(); else { fillAllSelects(); renderDash(); } });
   } else {
-    // credenciais fixas no código — conectar direto
     testarConexao().then(ok=>{ if(ok) carregarTudo(); else { fillAllSelects(); renderDash(); } });
   }
 }
