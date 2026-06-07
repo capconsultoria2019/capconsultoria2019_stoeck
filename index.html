@@ -275,17 +275,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--preto);color:var(--txt);m
     </div>
 
     <!-- ITENS CRÍTICOS -->
-    <div class="table-card">
-      <div class="tc-head" style="flex-wrap:wrap;gap:8px">
-        <div class="tc-title">⚠️ Itens Críticos</div>
-        <div class="filters" style="margin:0;flex-wrap:nowrap">
-          <input class="fi" id="fd-crit-busca" placeholder="🔍 Buscar..." style="min-width:140px" oninput="renderDash()">
-          <select class="fi" id="fd-crit-sf" onchange="renderDash()"><option value="">Todas subfamílias</option></select>
-        </div>
-      </div>
-      <div class="table-wrap"><table><thead><tr><th>Cód.</th><th>Produto</th><th>Subfamília</th><th>Localização</th><th>Saldo Atual</th><th>Mínimo</th><th>Status</th></tr></thead><tbody id="tb-crit"></tbody></table></div>
-    </div>
-
     <!-- POSIÇÃO DE ESTOQUE -->
     <div class="table-card">
       <div class="tc-head" style="flex-wrap:wrap;gap:8px">
@@ -1714,20 +1703,16 @@ function fillAllSelects(){
 function renderDash(){
   fillAllSelects();
   // fill filter selects
-  const sfSelCrit = document.getElementById('fd-crit-sf');
-  const sfSelPos  = document.getElementById('fd-pos-sf');
-  if(sfSelCrit){const cv=sfSelCrit.value;sfSelCrit.innerHTML='<option value="">Todas subfamílias</option>'+subfamilias.map(s=>`<option value="${s.id}">${s.nome}</option>`).join('');sfSelCrit.value=cv;}
+  const sfSelPos = document.getElementById('fd-pos-sf');
   if(sfSelPos){const cv=sfSelPos.value;sfSelPos.innerHTML='<option value="">Todas subfamílias</option>'+subfamilias.map(s=>`<option value="${s.id}">${s.nome}</option>`).join('');sfSelPos.value=cv;}
 
-  // filtros
-  const buscaCrit  = (document.getElementById('fd-crit-busca')?.value||'').toLowerCase();
-  const sfCrit     = document.getElementById('fd-crit-sf')?.value||'';
-  const buscaPos   = (document.getElementById('fd-pos-busca')?.value||'').toLowerCase();
-  const sfPos      = document.getElementById('fd-pos-sf')?.value||'';
-  const statusPos  = document.getElementById('fd-pos-status')?.value||'';
+  // filtros posição
+  const buscaPos = (document.getElementById('fd-pos-busca')?.value||'').toLowerCase();
+  const sfPos    = document.getElementById('fd-pos-sf')?.value||'';
+  const statusPos= document.getElementById('fd-pos-status')?.value||'';
 
   let tot=produtos.length, totQt=0, totV=0, crit=0;
-  let rowsCrit='', rowsDash='';
+  let rowsDash='';
 
   produtos.forEach(p=>{
     const est=estItem(p.id);
@@ -1736,29 +1721,21 @@ function renderDash(){
     if(isCrit)crit++;
     const val=Math.max(0,est.saldo)*est.cmp;
     totQt+=Math.max(0,est.saldo); totV+=val;
+    const critIcon=isCrit?`<span onclick="abrirDetalhesCrit(${p.id},'','')" title="Ver detalhes críticos" style="cursor:pointer;font-size:15px;margin-left:4px">⚠️</span>`:'';
     const badge=isCrit?'<span class="badge badge-crit">⚠ Crítico</span>':'<span class="badge badge-ok">✓ OK</span>';
 
-    // CRÍTICOS — com filtro busca + subfamília
-    if(isCrit){
-      const matchB=!buscaCrit||p.desc.toLowerCase().includes(buscaCrit)||String(p.id)===buscaCrit;
-      const matchSF=!sfCrit||String(p.subfam)===sfCrit;
-      if(matchB&&matchSF)
-        rowsCrit+=`<tr><td>${p.id}</td><td class="fw">${p.desc}</td><td>${sf?sf.nome:'—'}</td><td>${loc?loc.nome:'—'}</td><td class="txt-r fw">${fN(est.saldo)}</td><td>${fN(p.min)}</td><td>${badge}</td></tr>`;
-    }
-
     // POSIÇÃO — com filtro busca + subfamília + status
-    const matchB2=!buscaPos||p.desc.toLowerCase().includes(buscaPos)||String(p.id)===buscaPos;
-    const matchSF2=!sfPos||String(p.subfam)===sfPos;
+    const matchB=!buscaPos||p.desc.toLowerCase().includes(buscaPos)||String(p.id)===buscaPos;
+    const matchSF=!sfPos||String(p.subfam)===sfPos;
     const matchSt=!statusPos||(statusPos==='ok'&&!isCrit)||(statusPos==='crit'&&isCrit);
-    if(matchB2&&matchSF2&&matchSt)
-      rowsDash+=`<tr><td>${p.id}</td><td>${p.desc}</td><td>${sf?sf.nome:'—'}</td><td>${loc?loc.nome:'—'}</td><td class="txt-v">${fN(est.e)}</td><td class="txt-r">${fN(est.s)}</td><td class="fw ${est.saldo<0?'txt-r':''}">${fN(est.saldo)}</td><td>${fR(val)}</td><td>${badge}</td></tr>`;
+    if(matchB&&matchSF&&matchSt)
+      rowsDash+=`<tr><td>${p.id}</td><td>${p.desc}</td><td>${sf?sf.nome:'—'}</td><td>${loc?loc.nome:'—'}</td><td class="txt-v">${fN(est.e)}</td><td class="txt-r">${fN(est.s)}</td><td class="fw ${isCrit?'txt-r':est.saldo<0?'txt-r':''}">${fN(est.saldo)}${critIcon}</td><td>${fR(val)}</td><td>${badge}</td></tr>`;
   });
 
   document.getElementById('kpi-itens').textContent=tot;
   document.getElementById('kpi-qt').textContent=fN(totQt);
   document.getElementById('kpi-crit').textContent=crit;
   document.getElementById('kpi-valor').textContent=fR(totV);
-  document.getElementById('tb-crit').innerHTML=rowsCrit||'<tr><td colspan="7" class="empty">Nenhum item crítico 🎉</td></tr>';
   document.getElementById('tb-dash').innerHTML=rowsDash||'<tr><td colspan="9" class="empty">Nenhum item encontrado.</td></tr>';
 }
 // ===== ESTOQUE =====
