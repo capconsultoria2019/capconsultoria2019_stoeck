@@ -1376,7 +1376,11 @@ function setSyncStatus(s){
 }
 
 // ══════ DADOS (memória) ══════
-let usuarios   = [{id:1, nome:'Admin', login:'admin', senha:'1234', perfil:'admin'}];
+let usuarios   = [
+  {id:1, nome:'Admin',      login:'admin',      senha:'Sto3_@maic', perfil:'admin'},
+  {id:2, nome:'Financeiro', login:'financeiro', senha:'Sto3_@secr', perfil:'consulta'},
+  {id:3, nome:'Produção',   login:'producao',   senha:'Sto3_@jaks', perfil:'operador'},
+];
 let subfamilias= [{id:1,nome:'Matéria Prima',tipo:'materia_prima',desc:''},{id:2,nome:'Produto Acabado',tipo:'produto_acabado',desc:''},{id:3,nome:'Produto Intermediário',tipo:'produto_intermediario',desc:''},{id:4,nome:'Embalagem',tipo:'embalagem',desc:''},{id:5,nome:'Sucata / Refugo',tipo:'sucata',desc:''}];
 let localizacoes=[{id:1,nome:'Galpão 01',tipo:'galpao',cap:0,desc:''},{id:2,nome:'Galpão 02',tipo:'galpao',cap:0,desc:''},{id:3,nome:'Área Externa',tipo:'externo',cap:0,desc:''}];
 let produtos   = [];
