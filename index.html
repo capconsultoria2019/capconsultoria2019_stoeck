@@ -856,23 +856,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--preto);color:var(--txt);m
 
   <!-- ========= PRODUTOS ========= -->
   <div class="page" id="page-produtos">
-    <div class="form-card">
-      <h3>🏷️ Cadastro de Produto</h3>
-      <div class="form-grid">
-        <div class="fg"><label>Código</label><input type="text" id="prod-cod" readonly style="opacity:.5" placeholder="Auto gerado"></div>
-        <div class="fg"><label>Descrição *</label><input type="text" id="prod-desc" placeholder="Nome do produto"></div>
-        <div class="fg"><label>Subfamília</label><select id="prod-sf"></select></div>
-        <div class="fg"><label>Estoque Mínimo</label><input type="number" id="prod-min" min="0" placeholder="0"></div>
-        <div class="fg"><label>Localização</label><select id="prod-loc-sel"></select></div>
-        <div class="fg"><label>Custo Base (R$) <span style="color:var(--fraco);font-size:10px;font-weight:400">(CMP calculado auto)</span></label><input type="number" id="prod-custo" min="0" step="0.01" placeholder="0,00"></div>
-        <div class="fg"><label>Atributo 1</label><input type="text" id="prod-at1" placeholder="Opcional"></div>
-        <div class="fg"><label>Atributo 2</label><input type="text" id="prod-at2" placeholder="Opcional"></div>
-        <div class="fg"><label>Atributo 3</label><input type="text" id="prod-at3" placeholder="Opcional"></div>
-      </div>
-      <div class="form-actions">
-        <button class="btn btn-s" onclick="limparProduto()">Limpar</button>
-        <button class="btn btn-p" onclick="salvarProduto()">💾 Salvar Produto</button>
-      </div>
+    <div class="filters" style="margin-bottom:12px">
+      <button class="btn btn-p" onclick="abrirModalProduto()">+ Novo Produto</button>
     </div>
     <div class="filters">
       <input class="fi fi-search" placeholder="🔍 Buscar..." oninput="renderProdutos(this.value)">
@@ -886,22 +871,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--preto);color:var(--txt);m
 
   <!-- ========= CLIENTES ========= -->
   <div class="page" id="page-clientes">
-    <div class="form-card">
-      <h3>👤 Cadastro de Cliente</h3>
-      <div class="form-grid">
-        <div class="fg"><label>Razão Social / Nome *</label><input type="text" id="cli-nome" placeholder="Nome do cliente"></div>
-        <div class="fg"><label>CNPJ / CPF</label><input type="text" id="cli-doc" placeholder="00.000.000/0000-00"></div>
-        <div class="fg"><label>Tipo</label><select id="cli-tipo"><option value="cliente">Cliente</option><option value="ambos">Cliente e Fornecedor</option></select></div>
-        <div class="fg"><label>Telefone</label><input type="text" id="cli-tel" placeholder="(00) 00000-0000"></div>
-        <div class="fg"><label>E-mail</label><input type="email" id="cli-email" placeholder="email@empresa.com.br"></div>
-        <div class="fg"><label>Cidade / Estado</label><input type="text" id="cli-cidade" placeholder="Ex: Blumenau / SC"></div>
-        <div class="fg full"><label>Endereço</label><input type="text" id="cli-end" placeholder="Rua, número, bairro..."></div>
-        <div class="fg full"><label>Observação</label><input type="text" id="cli-obs" placeholder="Observações gerais"></div>
-      </div>
-      <div class="form-actions">
-        <button class="btn btn-s" onclick="limparCliente()">Limpar</button>
-        <button class="btn btn-p" onclick="salvarCliente()">💾 Salvar Cliente</button>
-      </div>
+    <div class="filters" style="margin-bottom:12px">
+      <button class="btn btn-p" onclick="abrirModalCliente()">+ Novo Cliente</button>
     </div>
     <div class="filters">
       <input class="fi fi-search" placeholder="🔍 Buscar cliente..." oninput="renderClientes(this.value)">
@@ -914,25 +885,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--preto);color:var(--txt);m
 
   <!-- ========= FORNECEDORES ========= -->
   <div class="page" id="page-fornecedores">
-    <div class="form-card">
-      <h3>🚚 Cadastro de Fornecedor</h3>
-      <div class="form-grid">
-        <div class="fg"><label>Razão Social / Nome *</label><input type="text" id="forn-nome" placeholder="Nome do fornecedor"></div>
-        <div class="fg"><label>CNPJ / CPF</label><input type="text" id="forn-doc" placeholder="00.000.000/0000-00"></div>
-        <div class="fg"><label>Contato / Responsável</label><input type="text" id="forn-contato" placeholder="Nome do contato"></div>
-        <div class="fg"><label>Telefone</label><input type="text" id="forn-tel" placeholder="(00) 00000-0000"></div>
-        <div class="fg"><label>E-mail</label><input type="email" id="forn-email" placeholder="email@fornecedor.com.br"></div>
-        <div class="fg"><label>Cidade / Estado</label><input type="text" id="forn-cidade" placeholder="Ex: Joinville / SC"></div>
-        <div class="fg"><label>Materiais Fornecidos</label><input type="text" id="forn-materiais" placeholder="Ex: Papelão, PET, PP..."></div>
-        <div class="fg"><label>Prazo de Entrega (dias)</label><input type="number" id="forn-prazo" min="0" placeholder="0"></div>
-        <div class="fg"><label>Condição de Pagamento</label><input type="text" id="forn-pagto" placeholder="Ex: 30/60/90 dias"></div>
-        <div class="fg full"><label>Endereço</label><input type="text" id="forn-end" placeholder="Rua, número, bairro..."></div>
-        <div class="fg full"><label>Observação</label><input type="text" id="forn-obs" placeholder="Observações gerais"></div>
-      </div>
-      <div class="form-actions">
-        <button class="btn btn-s" onclick="limparForn()">Limpar</button>
-        <button class="btn btn-p" onclick="salvarForn()">💾 Salvar Fornecedor</button>
-      </div>
+    <div class="filters" style="margin-bottom:12px">
+      <button class="btn btn-p" onclick="abrirModalForn()">+ Novo Fornecedor</button>
     </div>
     <div class="filters">
       <input class="fi fi-search" placeholder="🔍 Buscar fornecedor..." oninput="renderForn(this.value)">
@@ -944,17 +898,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--preto);color:var(--txt);m
 
   <!-- ========= SUBFAMÍLIAS ========= -->
   <div class="page" id="page-subfamilias">
-    <div class="form-card">
-      <h3>🗂️ Cadastro de Subfamília</h3>
-      <div class="form-grid-2">
-        <div class="fg"><label>Nome *</label><input type="text" id="sf-nome" placeholder="Ex: Matéria Prima"></div>
-        <div class="fg"><label>Tipo</label><select id="sf-tipo"><option value="materia_prima">Matéria Prima</option><option value="produto_acabado">Produto Acabado</option><option value="produto_intermediario">Produto Intermediário</option><option value="embalagem">Embalagem</option><option value="consumivel">Consumível</option><option value="sucata">Sucata / Refugo</option><option value="outro">Outro</option></select></div>
-        <div class="fg full"><label>Descrição</label><input type="text" id="sf-desc" placeholder="Descrição da subfamília"></div>
-      </div>
-      <div class="form-actions">
-        <button class="btn btn-s" onclick="limparSF()">Limpar</button>
-        <button class="btn btn-p" onclick="salvarSF()">💾 Salvar Subfamília</button>
-      </div>
+    <div class="filters" style="margin-bottom:12px">
+      <button class="btn btn-p" onclick="abrirModalSF()">+ Nova Subfamília</button>
     </div>
     <div class="table-card">
       <div class="table-wrap"><table><thead><tr><th>Nome</th><th>Tipo</th><th>Descrição</th><th>Qtd Produtos</th><th>Ações</th></tr></thead><tbody id="tb-sf"></tbody></table></div>
@@ -1089,52 +1034,144 @@ body{font-family:'DM Sans',sans-serif;background:var(--preto);color:var(--txt);m
 
   <!-- ========= USUÁRIOS ========= -->
   <div class="page" id="page-usuarios">
-    <div class="form-card">
-      <h3>🔑 Cadastro de Usuário</h3>
-      <div class="form-grid">
-        <div class="fg"><label>Nome *</label><input type="text" id="usr-nome" placeholder="Nome completo"></div>
-        <div class="fg"><label>Login *</label><input type="text" id="usr-login" placeholder="Login de acesso"></div>
-        <div class="fg">
-          <label>Senha *</label>
-          <div style="position:relative">
-            <input type="password" id="usr-senha" placeholder="Senha" style="width:100%;padding-right:38px">
-            <span onclick="toggleSenha('usr-senha','olho-usr')" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);cursor:pointer;color:var(--fraco);font-size:16px;user-select:none" id="olho-usr">👁</span>
-          </div>
-        </div>
-        <div class="fg">
-          <label>Confirmar Senha *</label>
-          <div style="position:relative">
-            <input type="password" id="usr-senha2" placeholder="Repita a senha" style="width:100%;padding-right:38px" oninput="verificarSenhas()">
-            <span onclick="toggleSenha('usr-senha2','olho-usr2')" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);cursor:pointer;color:var(--fraco);font-size:16px;user-select:none" id="olho-usr2">👁</span>
-          </div>
-          <div id="msg-senha" style="font-size:11px;margin-top:4px;display:none"></div>
-        </div>
-        <div class="fg"><label>Perfil</label>
-          <select id="usr-perfil" onchange="atualizarPermissoesDefault()">
-            <option value="admin">Administrador</option>
-            <option value="operador">Operador</option>
-            <option value="consulta">Somente Consulta</option>
-            <option value="custom">Personalizado</option>
-          </select>
-        </div>
-      </div>
-      <!-- PERMISSÕES POR TELA -->
-      <div id="bloco-permissoes" style="margin-top:16px;padding:14px;background:var(--cm);border-radius:10px;border:1px solid var(--borda)">
-        <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--fraco);margin-bottom:12px">🔐 Permissões por Tela</div>
-        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px" id="grid-permissoes">
-          <!-- gerado por JS -->
-        </div>
-      </div>
-      <div class="form-actions" style="margin-top:14px">
-        <button class="btn btn-s" onclick="limparUsr()">Limpar</button>
-        <button class="btn btn-p" onclick="salvarUsr()">💾 Salvar Usuário</button>
-      </div>
+    <div class="filters" style="margin-bottom:12px">
+      <button class="btn btn-p" onclick="abrirModalUsr()">+ Novo Usuário</button>
     </div>
     <div class="table-card">
       <div class="table-wrap"><table><thead><tr><th>Nome</th><th>Login</th><th>Perfil</th><th>Telas Liberadas</th><th>Ações</th></tr></thead><tbody id="tb-usr"></tbody></table></div>
     </div>
   </div>
 
+
+<!-- ========= MODAL PRODUTO ========= -->
+<div class="modal-ov" id="modal-produto">
+  <div class="modal" style="width:680px">
+    <h3 id="modal-produto-titulo">🏷️ Novo Produto</h3>
+    <div class="form-grid">
+      <div class="fg"><label>Código</label><input type="text" id="prod-cod" readonly style="opacity:.5" placeholder="Auto gerado"></div>
+      <div class="fg"><label>Descrição *</label><input type="text" id="prod-desc" placeholder="Nome do produto"></div>
+      <div class="fg"><label>Subfamília</label><select id="prod-sf"></select></div>
+      <div class="fg"><label>Estoque Mínimo</label><input type="number" id="prod-min" min="0" placeholder="0"></div>
+      <div class="fg"><label>Localização</label><select id="prod-loc-sel"></select></div>
+      <div class="fg"><label>Custo Base (R$) <span style="color:var(--fraco);font-size:10px;font-weight:400">(CMP calculado auto)</span></label><input type="number" id="prod-custo" min="0" step="0.01" placeholder="0,00"></div>
+      <div class="fg"><label>Atributo 1</label><input type="text" id="prod-at1" placeholder="Opcional"></div>
+      <div class="fg"><label>Atributo 2</label><input type="text" id="prod-at2" placeholder="Opcional"></div>
+      <div class="fg"><label>Atributo 3</label><input type="text" id="prod-at3" placeholder="Opcional"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-s" onclick="limparProduto()">Limpar</button>
+      <button class="btn btn-s" onclick="closeModal('modal-produto')">Cancelar</button>
+      <button class="btn btn-p" onclick="salvarProduto()">💾 Salvar Produto</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========= MODAL CLIENTE ========= -->
+<div class="modal-ov" id="modal-cliente">
+  <div class="modal" style="width:680px">
+    <h3 id="modal-cliente-titulo">👤 Novo Cliente</h3>
+    <div class="form-grid">
+      <div class="fg"><label>Razão Social / Nome *</label><input type="text" id="cli-nome" placeholder="Nome do cliente"></div>
+      <div class="fg"><label>CNPJ / CPF</label><input type="text" id="cli-doc" placeholder="00.000.000/0000-00"></div>
+      <div class="fg"><label>Tipo</label><select id="cli-tipo"><option value="cliente">Cliente</option><option value="ambos">Cliente e Fornecedor</option></select></div>
+      <div class="fg"><label>Telefone</label><input type="text" id="cli-tel" placeholder="(00) 00000-0000"></div>
+      <div class="fg"><label>E-mail</label><input type="email" id="cli-email" placeholder="email@empresa.com.br"></div>
+      <div class="fg"><label>Cidade / Estado</label><input type="text" id="cli-cidade" placeholder="Ex: Blumenau / SC"></div>
+      <div class="fg full"><label>Endereço</label><input type="text" id="cli-end" placeholder="Rua, número, bairro..."></div>
+      <div class="fg full"><label>Observação</label><input type="text" id="cli-obs" placeholder="Observações gerais"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-s" onclick="limparCliente()">Limpar</button>
+      <button class="btn btn-s" onclick="closeModal('modal-cliente')">Cancelar</button>
+      <button class="btn btn-p" onclick="salvarCliente()">💾 Salvar Cliente</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========= MODAL FORNECEDOR ========= -->
+<div class="modal-ov" id="modal-fornecedor">
+  <div class="modal" style="width:720px">
+    <h3 id="modal-forn-titulo">🚚 Novo Fornecedor</h3>
+    <div class="form-grid">
+      <div class="fg"><label>Razão Social / Nome *</label><input type="text" id="forn-nome" placeholder="Nome do fornecedor"></div>
+      <div class="fg"><label>CNPJ / CPF</label><input type="text" id="forn-doc" placeholder="00.000.000/0000-00"></div>
+      <div class="fg"><label>Contato / Responsável</label><input type="text" id="forn-contato" placeholder="Nome do contato"></div>
+      <div class="fg"><label>Telefone</label><input type="text" id="forn-tel" placeholder="(00) 00000-0000"></div>
+      <div class="fg"><label>E-mail</label><input type="email" id="forn-email" placeholder="email@fornecedor.com.br"></div>
+      <div class="fg"><label>Cidade / Estado</label><input type="text" id="forn-cidade" placeholder="Ex: Joinville / SC"></div>
+      <div class="fg"><label>Materiais Fornecidos</label><input type="text" id="forn-materiais" placeholder="Ex: Papelão, PET, PP..."></div>
+      <div class="fg"><label>Prazo de Entrega (dias)</label><input type="number" id="forn-prazo" min="0" placeholder="0"></div>
+      <div class="fg"><label>Condição de Pagamento</label><input type="text" id="forn-pagto" placeholder="Ex: 30/60/90 dias"></div>
+      <div class="fg full"><label>Endereço</label><input type="text" id="forn-end" placeholder="Rua, número, bairro..."></div>
+      <div class="fg full"><label>Observação</label><input type="text" id="forn-obs" placeholder="Observações gerais"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-s" onclick="limparForn()">Limpar</button>
+      <button class="btn btn-s" onclick="closeModal('modal-fornecedor')">Cancelar</button>
+      <button class="btn btn-p" onclick="salvarForn()">💾 Salvar Fornecedor</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========= MODAL SUBFAMÍLIA ========= -->
+<div class="modal-ov" id="modal-subfamilia">
+  <div class="modal" style="width:560px">
+    <h3 id="modal-sf-titulo">🗂️ Nova Subfamília</h3>
+    <div class="form-grid">
+      <div class="fg"><label>Nome *</label><input type="text" id="sf-nome" placeholder="Ex: Matéria Prima"></div>
+      <div class="fg"><label>Tipo</label><select id="sf-tipo"><option value="materia_prima">Matéria Prima</option><option value="produto_acabado">Produto Acabado</option><option value="produto_intermediario">Produto Intermediário</option><option value="embalagem">Embalagem</option><option value="consumivel">Consumível</option><option value="sucata">Sucata / Refugo</option><option value="outro">Outro</option></select></div>
+      <div class="fg full"><label>Descrição</label><input type="text" id="sf-desc" placeholder="Descrição da subfamília"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-s" onclick="limparSF()">Limpar</button>
+      <button class="btn btn-s" onclick="closeModal('modal-subfamilia')">Cancelar</button>
+      <button class="btn btn-p" onclick="salvarSF()">💾 Salvar Subfamília</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========= MODAL USUÁRIO ========= -->
+<div class="modal-ov" id="modal-usuario">
+  <div class="modal" style="width:680px">
+    <h3 id="modal-usr-titulo">🔑 Novo Usuário</h3>
+    <div class="form-grid">
+      <div class="fg"><label>Nome *</label><input type="text" id="usr-nome" placeholder="Nome completo"></div>
+      <div class="fg"><label>Login *</label><input type="text" id="usr-login" placeholder="Login de acesso"></div>
+      <div class="fg">
+        <label>Senha *</label>
+        <div style="position:relative">
+          <input type="password" id="usr-senha" placeholder="Senha" style="width:100%;padding-right:38px">
+          <span onclick="toggleSenha('usr-senha','olho-usr')" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);cursor:pointer;color:var(--fraco);font-size:16px;user-select:none" id="olho-usr">👁</span>
+        </div>
+      </div>
+      <div class="fg">
+        <label>Confirmar Senha *</label>
+        <div style="position:relative">
+          <input type="password" id="usr-senha2" placeholder="Repita a senha" style="width:100%;padding-right:38px" oninput="verificarSenhas()">
+          <span onclick="toggleSenha('usr-senha2','olho-usr2')" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);cursor:pointer;color:var(--fraco);font-size:16px;user-select:none" id="olho-usr2">👁</span>
+        </div>
+        <div id="msg-senha" style="font-size:11px;margin-top:4px;display:none"></div>
+      </div>
+      <div class="fg"><label>Perfil</label>
+        <select id="usr-perfil" onchange="atualizarPermissoesDefault()">
+          <option value="admin">Administrador</option>
+          <option value="operador">Operador</option>
+          <option value="consulta">Somente Consulta</option>
+          <option value="custom">Personalizado</option>
+        </select>
+      </div>
+    </div>
+    <div id="bloco-permissoes" style="margin-top:16px;padding:14px;background:var(--cm);border-radius:10px;border:1px solid var(--borda)">
+      <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--fraco);margin-bottom:12px">🔐 Permissões por Tela</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px" id="grid-permissoes"></div>
+    </div>
+    <div class="modal-foot" style="margin-top:14px">
+      <button class="btn btn-s" onclick="limparUsr()">Limpar</button>
+      <button class="btn btn-s" onclick="closeModal('modal-usuario')">Cancelar</button>
+      <button class="btn btn-p" onclick="salvarUsr()">💾 Salvar Usuário</button>
+    </div>
+  </div>
+</div>
 </div><!-- /main-content -->
 </div><!-- /layout -->
 </div><!-- /app -->
@@ -1289,9 +1326,9 @@ async function sbReq(tabela, metodo='GET', corpo=null, filtro=''){
   if(corpo) opts.body = JSON.stringify(corpo);
   try {
     const r = await fetch(url, opts);
-    if(!r.ok){ console.error('Supabase', metodo, tabela, r.status, await r.text()); return null; }
+    const statusTxt = await r.text(); if(!r.ok){ console.error('Supabase ERR', metodo, tabela, r.status, statusTxt); return null; } console.log('Supabase OK', metodo, tabela, r.status);
     if(metodo === 'DELETE') return true;
-    const txt = await r.text();
+    const txt = statusTxt;
     return txt ? JSON.parse(txt) : true;
   } catch(e){ console.error('Fetch error', e); return null; }
 }
@@ -1345,13 +1382,13 @@ function mapSF(r){ return{id:r.id,nome:r.nome,tipo:r.tipo,desc:r.descricao||''};
 function mapLoc(r){ return{id:r.id,nome:r.nome,tipo:r.tipo,cap:r.capacidade||0,desc:r.descricao||''}; }
 function mapForn(r){ return{id:r.id,nome:r.nome,doc:r.doc||'',contato:r.contato||'',tel:r.tel||'',email:r.email||'',cidade:r.cidade||'',end:r.endereco||'',materiais:r.materiais||'',prazo:r.prazo_entrega||0,pagto:r.cond_pagamento||'',obs:r.obs||''}; }
 function mapCli(r){ return{id:r.id,nome:r.nome,doc:r.doc||'',tipo:r.tipo||'cliente',tel:r.tel||'',email:r.email||'',cidade:r.cidade||'',end:r.endereco||'',obs:r.obs||''}; }
-function mapEnt(r){ return{id:r.id,data:r.data,prodId:r.produto_id,qt:Number(r.quantidade),custo:Number(r.custo_unitario),fornId:r.fornecedor_id,nf:r.nota_fiscal||'',resp:r.responsavel||'',obs:r.obs||'',mes:r.mes,ano:r.ano}; }
-function mapSai(r){ return{id:r.id,data:r.data,prodId:r.produto_id,qt:Number(r.quantidade),cliId:r.cliente_id,resp:r.responsavel||'',valor:Number(r.valor_total),obs:r.obs||'',mes:r.mes,ano:r.ano}; }
-function mapLanc(r){ return{id:r.id,data:r.data,prodId:r.produto_id,situacao:r.situacao,cliId:r.cliente_id,qt:Number(r.quantidade),custo:Number(r.custo_producao||0),origem:r.origem||'manual',obs:r.obs||'',mes:r.mes,ano:r.ano}; }
+function mapEnt(r){ const pts=r.data?r.data.split('-'):[]; const mes=r.mes||parseInt(pts[1])||0; const ano=r.ano||parseInt(pts[0])||0; return{id:r.id,data:r.data,prodId:r.produto_id,qt:Number(r.quantidade),custo:Number(r.custo_unitario),fornId:r.fornecedor_id,nf:r.nota_fiscal||'',resp:r.responsavel||'',obs:r.obs||'',mes,ano}; }
+function mapSai(r){ const pts=r.data?r.data.split('-'):[]; const mes=r.mes||parseInt(pts[1])||0; const ano=r.ano||parseInt(pts[0])||0; return{id:r.id,data:r.data,prodId:r.produto_id,qt:Number(r.quantidade),cliId:r.cliente_id,resp:r.responsavel||'',valor:Number(r.valor_total),obs:r.obs||'',mes,ano}; }
+function mapLanc(r){ const pts=r.data?r.data.split("-"):[]; const mes=r.mes||parseInt(pts[1])||0; const ano=r.ano||parseInt(pts[0])||0; return{id:r.id,data:r.data,prodId:r.produto_id,situacao:r.situacao,cliId:r.cliente_id,qt:Number(r.quantidade),custo:Number(r.custo_producao||0),origem:r.origem||'manual',obs:r.obs||'',mes,ano}; }
 function mapFT(r){ return{id:r.id,acabadoId:r.produto_acabado_id,mpId:r.materia_prima_id,qtMP:Number(r.quantidade_mp)}; }
 function mapRecurso(r){ return{id:r.id,nome:r.nome,desc:r.descricao||'',ativo:r.ativo!==false}; }
 function mapTP(r){ return{id:r.id,nome:r.nome,desc:r.descricao||''}; }
-function mapParada(r){ return{id:r.id,data:r.data,recursoId:r.recurso_id,tipoId:r.tipo_parada_id,inicio:r.hora_inicio,fim:r.hora_fim,tempo:Number(r.tempo_parada||0),obs:r.obs||'',mes:r.mes,ano:r.ano}; }
+function mapParada(r){ const pts=r.data?r.data.split('-'):[]; const mes=r.mes||parseInt(pts[1])||0; const ano=r.ano||parseInt(pts[0])||0; return{id:r.id,data:r.data,recursoId:r.recurso_id,tipoId:r.tipo_parada_id,inicio:r.hora_inicio,fim:r.hora_fim,tempo:Number(r.tempo_parada||0),obs:r.obs||'',mes,ano}; }
 function mapMetaH(r){ const pts=r.data?r.data.split('-'):[]; const mes=r.mes||parseInt(pts[1])||0; const ano=r.ano||parseInt(pts[0])||0; return{id:r.id,data:r.data,horas:Number(r.horas),mes,ano}; }
 function mapMetaP(r){ const pts=r.data?r.data.split("-"):[]; const mes=r.mes||parseInt(pts[1])||0; const ano=r.ano||parseInt(pts[0])||0; return{id:r.id,data:r.data,qt:Number(r.quantidade),mes,ano}; }
 function mapOeeQ(r){ return{id:r.id,mes:r.mes,ano:r.ano,qualidade:Number(r.qualidade)}; }
@@ -1496,6 +1533,14 @@ function verificarSenhas(){
     msg.textContent='✗ Senhas não conferem';
   }
 }
+
+
+// ══════ ABRIR MODAIS DE CADASTRO ══════
+function abrirModalProduto(){limparProduto();document.getElementById('modal-produto-titulo').textContent='🏷️ Novo Produto';openModal('modal-produto');}
+function abrirModalCliente(){limparCliente();document.getElementById('modal-cliente-titulo').textContent='👤 Novo Cliente';openModal('modal-cliente');}
+function abrirModalForn(){limparForn();document.getElementById('modal-forn-titulo').textContent='🚚 Novo Fornecedor';openModal('modal-fornecedor');}
+function abrirModalSF(){limparSF();document.getElementById('modal-sf-titulo').textContent='🗂️ Nova Subfamília';openModal('modal-subfamilia');}
+function abrirModalUsr(){limparUsr();document.getElementById('modal-usr-titulo').textContent='🔑 Novo Usuário';openModal('modal-usuario');}
 
 // MODALS
 function openModal(id){document.getElementById(id).classList.add('open')}
@@ -2090,7 +2135,8 @@ function editProd(id){
   document.getElementById('prod-at1').value=p.at1||'';
   document.getElementById('prod-at2').value=p.at2||'';
   document.getElementById('prod-at3').value=p.at3||'';
-  document.querySelector('#page-produtos').scrollTop=0;
+  document.getElementById('modal-produto-titulo').textContent='🏷️ Editar Produto';
+  openModal('modal-produto');
 }
 async function salvarProduto(){
   const desc=document.getElementById('prod-desc').value.trim();
@@ -2104,7 +2150,7 @@ async function salvarProduto(){
     else d.id=nId(produtos);
     produtos.push(d);
   }
-  limparProduto();renderProdutos();
+  limparProduto();closeModal('modal-produto');renderProdutos();
 }
 async function delProd(id){if(!confirm('Excluir produto?'))return;if(sbOnline)await sbDelete('produtos',id);produtos=produtos.filter(p=>p.id!==id);renderProdutos();}
 
@@ -2121,7 +2167,7 @@ function renderClientes(busca=''){
   fillAllSelects();
 }
 function limparCliente(){editCliId=null;['cli-nome','cli-doc','cli-tel','cli-email','cli-cidade','cli-end','cli-obs'].forEach(id=>document.getElementById(id).value='');document.getElementById('cli-tipo').value='cliente';}
-function editCli(id){const c=gCli(id);if(!c)return;editCliId=id;document.getElementById('cli-nome').value=c.nome;document.getElementById('cli-doc').value=c.doc||'';document.getElementById('cli-tipo').value=c.tipo||'cliente';document.getElementById('cli-tel').value=c.tel||'';document.getElementById('cli-email').value=c.email||'';document.getElementById('cli-cidade').value=c.cidade||'';document.getElementById('cli-end').value=c.end||'';document.getElementById('cli-obs').value=c.obs||'';document.querySelector('#page-clientes').scrollTop=0;}
+function editCli(id){const c=gCli(id);if(!c)return;editCliId=id;document.getElementById('cli-nome').value=c.nome;document.getElementById('cli-doc').value=c.doc||'';document.getElementById('cli-tipo').value=c.tipo||'cliente';document.getElementById('cli-tel').value=c.tel||'';document.getElementById('cli-email').value=c.email||'';document.getElementById('cli-cidade').value=c.cidade||'';document.getElementById('cli-end').value=c.end||'';document.getElementById('cli-obs').value=c.obs||'';document.getElementById('modal-cliente-titulo').textContent='👤 Editar Cliente';openModal('modal-cliente');}
 async function salvarCliente(){
   const nome=document.getElementById('cli-nome').value.trim();if(!nome)return alert('Nome é obrigatório.');
   const d={nome,doc:document.getElementById('cli-doc').value,tipo:document.getElementById('cli-tipo').value,tel:document.getElementById('cli-tel').value,email:document.getElementById('cli-email').value,cidade:document.getElementById('cli-cidade').value,end:document.getElementById('cli-end').value,obs:document.getElementById('cli-obs').value};
@@ -2133,7 +2179,7 @@ async function salvarCliente(){
     else d.id=nId(clientes);
     clientes.push(d);
   }
-  limparCliente();renderClientes();
+  limparCliente();closeModal('modal-cliente');renderClientes();
 }
 async function delCli(id){if(!confirm('Excluir cliente?'))return;if(sbOnline)await sbDelete('clientes',id);clientes=clientes.filter(c=>c.id!==id);renderClientes();}
 
@@ -2162,7 +2208,8 @@ function limparForn(){editFornId=null;['forn-nome','forn-doc','forn-contato','fo
 function editForn(id){
   const f=gForn(id);if(!f)return;editFornId=id;
   document.getElementById('forn-nome').value=f.nome;document.getElementById('forn-doc').value=f.doc||'';document.getElementById('forn-contato').value=f.contato||'';document.getElementById('forn-tel').value=f.tel||'';document.getElementById('forn-email').value=f.email||'';document.getElementById('forn-cidade').value=f.cidade||'';document.getElementById('forn-end').value=f.end||'';document.getElementById('forn-materiais').value=f.materiais||'';document.getElementById('forn-prazo').value=f.prazo||'';document.getElementById('forn-pagto').value=f.pagto||'';document.getElementById('forn-obs').value=f.obs||'';
-  document.querySelector('#page-fornecedores').scrollTop=0;
+  document.getElementById('modal-forn-titulo').textContent='🚚 Editar Fornecedor';
+  openModal('modal-fornecedor');
 }
 async function salvarForn(){
   const nome=document.getElementById('forn-nome').value.trim();if(!nome)return alert('Nome é obrigatório.');
@@ -2175,7 +2222,7 @@ async function salvarForn(){
     else d.id=nId(fornecedores);
     fornecedores.push(d);
   }
-  limparForn();renderForn();
+  limparForn();closeModal('modal-fornecedor');renderForn();
 }
 async function delForn(id){if(!confirm('Excluir fornecedor?'))return;if(sbOnline)await sbDelete('fornecedores',id);fornecedores=fornecedores.filter(f=>f.id!==id);renderForn();}
 
@@ -2190,11 +2237,11 @@ function renderSF(){
   fillAllSelects();
 }
 function limparSF(){document.getElementById('sf-nome').value='';document.getElementById('sf-tipo').value='materia_prima';document.getElementById('sf-desc').value='';}
-async function editSF(id){const sf=gSF(id);if(!sf)return;document.getElementById('sf-nome').value=sf.nome;document.getElementById('sf-tipo').value=sf.tipo;document.getElementById('sf-desc').value=sf.desc||'';subfamilias=subfamilias.filter(s=>s.id!==id);renderSF();}
+async function editSF(id){const sf=gSF(id);if(!sf)return;document.getElementById('sf-nome').value=sf.nome;document.getElementById('sf-tipo').value=sf.tipo;document.getElementById('sf-desc').value=sf.desc||'';subfamilias=subfamilias.filter(s=>s.id!==id);renderSF();document.getElementById('modal-sf-titulo').textContent='🗂️ Editar Subfamília';openModal('modal-subfamilia');}
 async function salvarSF(){const nome=document.getElementById('sf-nome').value.trim();if(!nome)return alert('Nome é obrigatório.');const sfD={nome,tipo:document.getElementById('sf-tipo').value,desc:document.getElementById('sf-desc').value};
   if(sbOnline){const db=await sbSave('subfamilias',{nome:sfD.nome,tipo:sfD.tipo,descricao:sfD.desc});if(db)sfD.id=db.id;}
   else sfD.id=nId(subfamilias);
-  subfamilias.push(sfD);limparSF();renderSF();}
+  subfamilias.push(sfD);limparSF();closeModal('modal-subfamilia');renderSF();}
 async function delSF(id){if(produtos.some(p=>p.subfam===id))return alert('Há produtos vinculados.');if(!confirm('Excluir subfamília?'))return;subfamilias=subfamilias.filter(s=>s.id!==id);save();renderSF();}
 
 // ===== LOCALIZAÇÕES =====
@@ -2326,6 +2373,8 @@ function editUsr(i){
     const cb = document.getElementById('perm-'+t.key);
     if(cb) cb.checked = perms.includes(t.key);
   });
+  document.getElementById('modal-usr-titulo').textContent='🔑 Editar Usuário';
+  openModal('modal-usuario');
 }
 function salvarUsr(){
   const nome=document.getElementById('usr-nome').value.trim();
@@ -2338,7 +2387,7 @@ function salvarUsr(){
   const permissoes=getPermissoesSelecionadas();
   const d={nome,login,senha,perfil,permissoes};
   if(editUsrIdx!==null)usuarios[editUsrIdx]=d;else usuarios.push(d);
-  limparUsr();renderUsr();
+  limparUsr();closeModal('modal-usuario');renderUsr();
 }
 function delUsr(i){if(!confirm('Excluir usuário?'))return;usuarios.splice(i,1);save();renderUsr();}
 
@@ -3365,21 +3414,22 @@ function preencherMetasHorasPadrao(){
 
 async function salvarTodasMetasHoras(){
   const inputs = document.querySelectorAll('.mh-input');
-  let salvos=0;
+  let salvos=0, erros=0;
   for(const inp of inputs){
     const horas=parseFloat(inp.value)||0;
     const data=inp.dataset.data;
     if(!data) continue;
     const exist=metasHoras.find(m=>m.data===data);
     if(exist){
-      const r=await sbUpdate('metas_horas',exist.id,{horas});
-      if(r){exist.horas=horas;salvos++;}
+      const r=await sbReq('metas_horas','PATCH',{horas},`?id=eq.${exist.id}`);
+      if(r!==null){exist.horas=horas;salvos++;}else{erros++;console.error('Erro update metas_horas id',exist.id);}
     } else if(horas>0){
-      const r=await sbSave('metas_horas',{data,horas});
-      if(r){metasHoras.push(mapMetaH(Array.isArray(r)?r[0]:r));salvos++;}
+      const r=await sbReq('metas_horas','POST',{data,horas});
+      if(r){const obj=Array.isArray(r)?r[0]:r; metasHoras.push(mapMetaH({...obj,data,horas})); salvos++;}else{erros++;console.error('Erro insert metas_horas data',data);}
     }
   }
-  alert(`${salvos} meta(s) de horas salva(s)!`);
+  if(erros>0) alert(`${salvos} salva(s), ${erros} erro(s) — veja o console.`);
+  else alert(`${salvos} meta(s) de horas salva(s)!`);
 }
 
 // ══════ METAS DE PRODUÇÃO ══════
@@ -3416,21 +3466,26 @@ function preencherMetasProducaoPadrao(){
 
 async function salvarTodasMetasProducao(){
   const inputs=document.querySelectorAll('.mp-input');
-  let salvos=0;
+  let salvos=0, erros=0;
+  console.log('salvarTodasMetasProducao iniciado, inputs:', inputs.length, 'metasProducao carregadas:', metasProducao.length);
   for(const inp of inputs){
     const qt=parseFloat(inp.value)||0;
     const data=inp.dataset.data;
     if(!data) continue;
+    if(qt===0) continue;
     const exist=metasProducao.find(m=>m.data===data);
+    console.log('data:', data, 'qt:', qt, 'exist:', exist ? 'id='+exist.id : 'novo');
     if(exist){
-      const r=await sbUpdate('metas_producao',exist.id,{quantidade:qt});
-      if(r){exist.qt=qt;salvos++;}
-    } else if(qt>0){
-      const r=await sbSave('metas_producao',{data,quantidade:qt});
-      if(r){metasProducao.push(mapMetaP(Array.isArray(r)?r[0]:r));salvos++;}
+      const r=await sbReq('metas_producao','PATCH',{quantidade:qt},`?id=eq.${exist.id}`);
+      if(r!==null){exist.qt=qt;salvos++;}else{erros++;console.error('Erro update metas_producao id',exist.id);}
+    } else {
+      const r=await sbReq('metas_producao','POST',{data,quantidade:qt});
+      if(r){const obj=Array.isArray(r)?r[0]:r; metasProducao.push(mapMetaP({...obj,data,quantidade:qt})); salvos++;}else{erros++;console.error('Erro insert metas_producao data',data);}
     }
   }
-  alert(`${salvos} meta(s) de produção salva(s)!`);
+  console.log('Fim: salvos=',salvos,'erros=',erros);
+  if(erros>0) alert(`${salvos} salva(s), ${erros} erro(s) — veja o console.`);
+  else alert(`${salvos} meta(s) de produção salva(s)!`);
 }
 
 // ══════ OEE ══════
@@ -3458,10 +3513,21 @@ function calcDisponibilidadeMes(mes, ano){
 }
 
 function calcEficienciaMes(mes, ano){
+  const hoje = new Date();
+  const isMesAtual = mes===hoje.getMonth()+1 && ano===hoje.getFullYear();
+  const diaCorte = isMesAtual ? hoje.getDate() : diasNoMes(mes,ano);
   // produção real do mês (PRODUCAO)
-  const prodReal = lancamentosProducao.filter(l=>l.mes===mes&&l.ano===ano&&l.situacao==='PRODUCAO').reduce((a,b)=>a+b.qt,0);
-  // meta produção do mês
-  const metaProd = metasProducao.filter(m=>m.mes===mes&&m.ano===ano).reduce((a,b)=>a+b.qt,0);
+  const prodReal = lancamentosProducao.filter(l=>{
+    if(l.situacao!=='PRODUCAO') return false;
+    const [ly,lm,ld]=l.data.split('-').map(Number);
+    return lm===mes&&ly===ano&&ld<=diaCorte;
+  }).reduce((a,b)=>a+b.qt,0);
+  // meta acumulada até diaCorte
+  const metaProd = metasProducao.filter(m=>{
+    if(m.mes!==mes||m.ano!==ano) return false;
+    const d=parseInt(m.data.split('-')[2]);
+    return d<=diaCorte;
+  }).reduce((a,b)=>a+b.qt,0);
   if(!metaProd) return null;
   return (prodReal/metaProd)*100;
 }
@@ -3476,8 +3542,8 @@ function renderOEE(){
     const disp=calcDisponibilidadeMes(m,ano);
     const efic=calcEficienciaMes(m,ano);
     const qualObj=oeeQualidade.find(o=>o.mes===m&&o.ano===ano);
-    const qual=qualObj?qualObj.qualidade:null;
-    const oee=(disp!==null&&efic!==null&&qual!==null)?(disp/100*efic/100*qual/100*100):null;
+    const qual=qualObj?qualObj.qualidade:99;
+    const oee=(disp!==null&&efic!==null)?(disp/100*efic/100*qual/100*100):null;
     dados.push({m,mes:MESES_ABREV_OEE[m-1],disp,efic,qual,oee});
   }
 
@@ -3627,7 +3693,7 @@ function renderIndicadores(){
     const isFut=d>diaAtual;
     const metaDia=metaPorDia[d]||0;
     const prodDia=prodPorDia[d]||0;
-    metaAcum+=metaDia;
+    if(!isFut) metaAcum+=metaDia;
     prodAcum+=prodDia;
     const pctDia=metaAcum>0?(prodAcum/metaAcum*100):null;
 
