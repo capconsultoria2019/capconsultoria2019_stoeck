@@ -317,11 +317,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--preto);color:var(--txt);m
       </select>
       <select class="fi" id="fe-sf" onchange="renderEstoque()"><option value="">Todas subfamílias</option></select>
       <select class="fi" id="fe-loc" onchange="renderEstoque()"><option value="">Todas localizações</option></select>
-      <select class="fi" id="fe-status" onchange="renderEstoque()"><option value="">Todos os status</option><option value="ok">OK</option><option value="crit">Crítico</option></select>
     </div>
     <div class="table-card">
       <div class="tc-head"><div class="tc-title" id="estoque-count">Estoque</div></div>
-      <div class="table-wrap"><table><thead><tr><th>Cód.</th><th>Produto</th><th>Subfamília</th><th>Localização</th><th>Estoque Mín.</th><th>Entradas</th><th>Saídas</th><th>Saldo</th><th>Custo Médio</th><th>Valor Estoque</th><th>Status</th></tr></thead><tbody id="tb-estoque"></tbody></table></div>
+      <div class="table-wrap"><table><thead><tr><th>Cód.</th><th>Produto</th><th>Subfamília</th><th>Localização</th><th>Estoque Mín.</th><th>Entradas</th><th>Saídas</th><th>Saldo</th><th>Custo Médio</th><th>Valor Estoque</th></tr></thead><tbody id="tb-estoque"></tbody></table></div>
     </div>
   </div>
 
@@ -1172,6 +1171,42 @@ body{font-family:'DM Sans',sans-serif;background:var(--preto);color:var(--txt);m
     </div>
   </div>
 </div>
+
+<!-- ========= MODAL DETALHE CRÍTICO ========= -->
+<div class="modal-ov" id="modal-crit-detalhe">
+  <div class="modal" style="width:480px">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px">
+      <span style="font-size:24px">⚠️</span>
+      <div>
+        <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:700" id="crit-modal-nome">—</div>
+        <div style="font-size:11px;color:var(--fraco)" id="crit-modal-sub">—</div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px">
+      <div style="background:var(--cm);border-radius:10px;padding:14px;border:1px solid var(--borda)">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--fraco);margin-bottom:4px">Saldo Atual</div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:700;color:var(--verm)" id="crit-modal-saldo">—</div>
+      </div>
+      <div style="background:var(--cm);border-radius:10px;padding:14px;border:1px solid var(--borda)">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--fraco);margin-bottom:4px">Estoque Mínimo</div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:700;color:var(--amar)" id="crit-modal-min">—</div>
+      </div>
+      <div style="background:var(--cm);border-radius:10px;padding:14px;border:1px solid var(--borda)">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--fraco);margin-bottom:4px">Total Entradas</div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;color:var(--verde)" id="crit-modal-ent">—</div>
+      </div>
+      <div style="background:var(--cm);border-radius:10px;padding:14px;border:1px solid var(--borda)">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--fraco);margin-bottom:4px">Total Saídas</div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;color:var(--verm)" id="crit-modal-sai">—</div>
+      </div>
+    </div>
+    <div style="background:rgba(231,76,60,.08);border:1px solid rgba(231,76,60,.25);border-radius:10px;padding:12px 16px;font-size:13px;color:var(--verm);margin-bottom:16px" id="crit-modal-alerta">—</div>
+    <div class="modal-foot">
+      <button class="btn btn-s" onclick="closeModal('modal-crit-detalhe')">Fechar</button>
+      <button class="btn btn-p" onclick="closeModal('modal-crit-detalhe');goPage('entradas')">+ Registrar Entrada</button>
+    </div>
+  </div>
+</div>
 </div><!-- /main-content -->
 </div><!-- /layout -->
 </div><!-- /app -->
@@ -1535,6 +1570,27 @@ function verificarSenhas(){
 }
 
 
+
+// ══════ DETALHE CRÍTICO ══════
+function abrirDetalhesCrit(prodId, mesF, anoF){
+  const p = gP(prodId); if(!p) return;
+  const sf = gSF(p.subfam); const loc = gLoc(p.locId);
+  const est = estItemPeriodo(prodId, mesF, anoF);
+  const falta = p.min - est.saldo;
+  const periodoTxt = (mesF||anoF) ? `${mesF?MESES[parseInt(mesF)-1]:''}${mesF&&anoF?' ':''}${anoF||''}` : 'acumulado';
+
+  document.getElementById('crit-modal-nome').textContent = p.desc;
+  document.getElementById('crit-modal-sub').textContent = `${sf?sf.nome:'—'} · ${loc?loc.nome:'—'} · Período: ${periodoTxt}`;
+  document.getElementById('crit-modal-saldo').textContent = fN(est.saldo);
+  document.getElementById('crit-modal-min').textContent = fN(p.min);
+  document.getElementById('crit-modal-ent').textContent = fN(est.e);
+  document.getElementById('crit-modal-sai').textContent = fN(est.s);
+  document.getElementById('crit-modal-alerta').textContent = est.saldo < 0
+    ? `Saldo negativo! Faltam ${fN(Math.abs(est.saldo))} unidades para zerar o estoque.`
+    : `Abaixo do mínimo. Necessário repor pelo menos ${fN(falta)} unidade(s) para atingir o estoque mínimo.`;
+  openModal('modal-crit-detalhe');
+}
+
 // ══════ ABRIR MODAIS DE CADASTRO ══════
 function abrirModalProduto(){limparProduto();document.getElementById('modal-produto-titulo').textContent='🏷️ Novo Produto';openModal('modal-produto');}
 function abrirModalCliente(){limparCliente();document.getElementById('modal-cliente-titulo').textContent='👤 Novo Cliente';openModal('modal-cliente');}
@@ -1723,7 +1779,6 @@ function renderEstoque(){
   const anoF   = document.getElementById('fe-ano')?.value||'';
   const sfF    = document.getElementById('fe-sf')?.value||'';
   const locF   = document.getElementById('fe-loc')?.value||'';
-  const stF    = document.getElementById('fe-status')?.value||'';
   let rows='', count=0;
   produtos.filter(p=>{
     const est = estItemPeriodo(p.id, mesF, anoF);
@@ -1731,15 +1786,16 @@ function renderEstoque(){
     return(!search||p.desc.toLowerCase().includes(search)||p.id.toString()===search)
       &&(!sfF||String(p.subfam)===sfF)
       &&(!locF||String(p.locId)===locF)
-      &&(!stF||(stF==='ok'&&!isCrit)||(stF==='crit'&&isCrit));
+
   }).forEach(p=>{
     count++;
     const sf=gSF(p.subfam); const loc=gLoc(p.locId);
     const est=estItemPeriodo(p.id, mesF, anoF);
     const isCrit=est.saldo<=p.min||est.saldo<0;
-    const badge=isCrit?'<span class="badge badge-crit">⚠ Crítico</span>':'<span class="badge badge-ok">✓ OK</span>';
+    const critIcon = isCrit ? `<span onclick="abrirDetalhesCrit(${p.id},'${mesF}','${anoF}')" title="Ver detalhes críticos" style="cursor:pointer;font-size:16px;margin-left:6px" >⚠️</span>` : '';
     const periodoLabel = (mesF||anoF) ? ' <span style="font-size:10px;color:var(--amar)">(período)</span>' : '';
-    rows+=`<tr><td>${p.id}</td><td class="fw">${p.desc}</td><td>${sf?sf.nome:'—'}</td><td>${loc?loc.nome:'—'}</td><td>${fN(p.min)}</td><td class="txt-v">${fN(est.e)}</td><td class="txt-r">${fN(est.s)}</td><td class="fw ${est.saldo<0?'txt-r':''}">${fN(est.saldo)}${periodoLabel}</td><td class="txt-f">${fR(est.cmp)}</td><td>${fR(Math.max(0,est.saldo)*est.cmp)}</td><td>${badge}</td></tr>`;
+    const saldoClass = isCrit ? 'txt-r' : (est.saldo<0?'txt-r':'');
+    rows+=`<tr><td>${p.id}</td><td class="fw">${p.desc}</td><td>${sf?sf.nome:'—'}</td><td>${loc?loc.nome:'—'}</td><td>${fN(p.min)}</td><td class="txt-v">${fN(est.e)}</td><td class="txt-r">${fN(est.s)}</td><td class="fw ${saldoClass}">${fN(est.saldo)}${periodoLabel}${critIcon}</td><td class="txt-f">${fR(est.cmp)}</td><td>${fR(Math.max(0,est.saldo)*est.cmp)}</td></tr>`;
   });
   const periodoTxt = (mesF||anoF) ? ` — ${mesF?MESES[parseInt(mesF)-1]:''}${mesF&&anoF?' ':''}${anoF||''}` : '';
   document.getElementById('estoque-count').textContent=`Estoque${periodoTxt} — ${count} itens`;
