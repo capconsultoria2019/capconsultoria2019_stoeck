@@ -234,6 +234,14 @@ body{font-family:'DM Sans',sans-serif;background:var(--preto);color:var(--txt);m
     <div class="nav-sec">Produção</div>
     <div class="nav-item" onclick="goPage('producao')"><span class="ic">🏭</span> Lançamentos</div>
     <div class="nav-item" onclick="goPage('fichatecnica')"><span class="ic">📋</span> Ficha Técnica</div>
+    <div class="nav-item" onclick="goPage('indicadores')"><span class="ic">📊</span> Indicadores</div>
+    <div class="nav-item" onclick="goPage('paradas')"><span class="ic">⛔</span> Paradas</div>
+    <div class="nav-item" onclick="goPage('oee')"><span class="ic">🎯</span> OEE</div>
+    <div class="nav-sec">Cadastros Produção</div>
+    <div class="nav-item" onclick="goPage('recursos')"><span class="ic">⚙️</span> Recursos</div>
+    <div class="nav-item" onclick="goPage('tiposparada')"><span class="ic">🔴</span> Tipos de Parada</div>
+    <div class="nav-item" onclick="goPage('metashoras')"><span class="ic">⏱️</span> Metas de Horas</div>
+    <div class="nav-item" onclick="goPage('metasproducao')"><span class="ic">📦</span> Metas de Produção</div>
     <div class="nav-sec">Cadastros</div>
     <div class="nav-item" onclick="goPage('produtos')"><span class="ic">🏷️</span> Produtos</div>
     <div class="nav-item" onclick="goPage('clientes')"><span class="ic">👤</span> Clientes</div>
@@ -319,75 +327,32 @@ body{font-family:'DM Sans',sans-serif;background:var(--preto);color:var(--txt);m
 
   <!-- ========= PRODUÇÃO ========= -->
   <div class="page" id="page-producao">
-    <div class="form-card">
-      <h3>🏭 Registrar Lançamento de Produção</h3>
-      <div class="form-grid">
-        <div class="fg">
-          <label>Data *</label>
-          <input type="date" id="prod-data">
-        </div>
-        <div class="fg">
-          <label>Situação *</label>
-          <select id="prod-situacao" onchange="onProdSituacaoChange()">
-            <option value="">Selecione...</option>
-            <option value="PRODUCAO">🏭 PRODUÇÃO</option>
-            <option value="VENDA">💚 VENDA</option>
-            <option value="PRE_VENDA">🟡 PRÉ-VENDA</option>
-          </select>
-        </div>
-        <div class="fg">
-          <label>Produto *</label>
-          <select id="prod-produto" onchange="onProdProdutoChange()"><option value="">Selecione...</option></select>
-        </div>
-        <div class="fg">
-          <label>Quantidade *</label>
-          <input type="number" id="prod-qt" min="0.001" step="0.001" placeholder="0" oninput="onProdQtChange()">
-        </div>
-        <div class="fg">
-          <label>Cliente</label>
-          <select id="prod-cliente"><option value="">— Sem vínculo —</option></select>
-        </div>
-        <div class="fg">
-          <label>Custo de Produção (R$)</label>
-          <input type="number" id="prod-custo" min="0" step="0.01" placeholder="0,00" readonly style="opacity:.7;cursor:not-allowed">
-        </div>
-        <div class="fg" id="prod-mp-info" style="display:none">
-          <label>Matéria-Prima (baixa automática)</label>
-          <input type="text" id="prod-mp-txt" readonly style="opacity:.7;cursor:not-allowed;color:var(--amar)">
-        </div>
-        <div class="fg full">
-          <label>Observação</label>
-          <input type="text" id="prod-obs" placeholder="Observação">
-        </div>
-      </div>
-      <div class="form-actions">
-        <button class="btn btn-s" onclick="limparProducao()">Limpar</button>
-        <button class="btn btn-p" id="btn-salvar-prod" onclick="salvarProducao()">💾 Registrar Lançamento</button>
-      </div>
-    </div>
     <div class="table-card">
       <div class="tc-head">
         <div class="tc-title" id="prod-count">Lançamentos de Produção</div>
-        <div class="filters" style="margin:0;flex-wrap:nowrap">
-          <select class="fi" id="fp-mes" onchange="renderProducao()">
-            <option value="">Todos os meses</option>
-            <option value="1">Janeiro</option><option value="2">Fevereiro</option><option value="3">Março</option>
-            <option value="4">Abril</option><option value="5">Maio</option><option value="6">Junho</option>
-            <option value="7">Julho</option><option value="8">Agosto</option><option value="9">Setembro</option>
-            <option value="10">Outubro</option><option value="11">Novembro</option><option value="12">Dezembro</option>
-          </select>
-          <select class="fi" id="fp-ano" onchange="renderProducao()">
-            <option value="">Todos os anos</option>
-            <option value="2024">2024</option><option value="2025">2025</option><option value="2026">2026</option>
-          </select>
-          <select class="fi" id="fp-situacao" onchange="renderProducao()">
-            <option value="">Todas as situações</option>
-            <option value="PRODUCAO">PRODUÇÃO</option>
-            <option value="VENDA">VENDA</option>
-            <option value="PRE_VENDA">PRÉ-VENDA</option>
-          </select>
-          <select class="fi" id="fp-sf" onchange="onFpSfChange()"><option value="">Todas subfamílias</option></select>
-          <select class="fi" id="fp-prod-f" onchange="renderProducao()"><option value="">Todos produtos</option></select>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <div class="filters" style="margin:0;flex-wrap:nowrap">
+            <select class="fi" id="fp-mes" onchange="renderProducao()">
+              <option value="">Todos os meses</option>
+              <option value="1">Janeiro</option><option value="2">Fevereiro</option><option value="3">Março</option>
+              <option value="4">Abril</option><option value="5">Maio</option><option value="6">Junho</option>
+              <option value="7">Julho</option><option value="8">Agosto</option><option value="9">Setembro</option>
+              <option value="10">Outubro</option><option value="11">Novembro</option><option value="12">Dezembro</option>
+            </select>
+            <select class="fi" id="fp-ano" onchange="renderProducao()">
+              <option value="">Todos os anos</option>
+              <option value="2024">2024</option><option value="2025">2025</option><option value="2026">2026</option>
+            </select>
+            <select class="fi" id="fp-situacao" onchange="renderProducao()">
+              <option value="">Todas as situações</option>
+              <option value="PRODUCAO">PRODUÇÃO</option>
+              <option value="VENDA">VENDA</option>
+              <option value="PRE_VENDA">PRÉ-VENDA</option>
+            </select>
+            <select class="fi" id="fp-sf" onchange="onFpSfChange()"><option value="">Todas subfamílias</option></select>
+            <select class="fi" id="fp-prod-f" onchange="renderProducao()"><option value="">Todos produtos</option></select>
+          </div>
+          <button class="btn btn-p" onclick="abrirModalProducao()">＋ Novo Lançamento</button>
         </div>
       </div>
       <div class="table-wrap">
@@ -429,6 +394,311 @@ body{font-family:'DM Sans',sans-serif;background:var(--preto);color:var(--txt);m
           <tbody id="tb-ft"></tbody>
         </table>
       </div>
+    </div>
+  </div>
+
+  <!-- ========= INDICADORES ========= -->
+  <div class="page" id="page-indicadores">
+
+    <!-- CONFIGURAÇÃO -->
+    <div class="form-card" style="padding:14px 18px;margin-bottom:16px">
+      <div style="display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap">
+        <div class="fg" style="min-width:80px">
+          <label>Mês</label>
+          <select class="fi" id="ind-mes" onchange="renderIndicadores()">
+            <option value="1">Janeiro</option><option value="2">Fevereiro</option><option value="3">Março</option>
+            <option value="4">Abril</option><option value="5">Maio</option><option value="6">Junho</option>
+            <option value="7">Julho</option><option value="8">Agosto</option><option value="9">Setembro</option>
+            <option value="10">Outubro</option><option value="11">Novembro</option><option value="12">Dezembro</option>
+          </select>
+        </div>
+        <div class="fg" style="min-width:80px">
+          <label>Ano</label>
+          <select class="fi" id="ind-ano" onchange="renderIndicadores()">
+            <option value="2024">2024</option><option value="2025">2025</option><option value="2026" selected>2026</option>
+          </select>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <label style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--fraco);font-weight:500">Sábados trabalhados</label>
+          <div id="ind-sabados-wrap" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+        </div>
+        <span style="font-size:12px;color:var(--fraco);align-self:center">Meta vem de <b style="color:var(--vm)">Cadastros Produção → Metas de Produção</b></span>
+      </div>
+    </div>
+
+    <!-- KPIs -->
+    <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:16px">
+      <div class="kpi-card green"><div class="kpi-label">Dias Úteis no Mês</div><div class="kpi-value" id="ind-kpi-du">0</div><div class="kpi-sub">dias trabalhados</div></div>
+      <div class="kpi-card ok"><div class="kpi-label">Meta Total Mês (kg)</div><div class="kpi-value" id="ind-kpi-meta" style="font-size:22px">0</div><div class="kpi-sub">meta × dias úteis</div></div>
+      <div class="kpi-card warn"><div class="kpi-label">Produção Total (kg)</div><div class="kpi-value" id="ind-kpi-prod" style="font-size:22px">0</div><div class="kpi-sub">acumulado no mês</div></div>
+      <div class="kpi-card" id="ind-kpi-card-pct"><div class="kpi-label">% Atingido</div><div class="kpi-value" id="ind-kpi-pct" style="font-size:26px">0%</div><div class="kpi-sub">meta acumulada até hoje</div></div>
+    </div>
+
+    <!-- TABELA DIÁRIA -->
+    <div class="table-card">
+      <div class="tc-head">
+        <div class="tc-title" id="ind-titulo">Indicador de Desempenho</div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Dia</th>
+              <th>Meta Dia (kg)</th>
+              <th>Prod. Dia (kg)</th>
+              <th>Meta Acum. (kg)</th>
+              <th>Prod. Acum. (kg)</th>
+              <th>% Atingido</th>
+              <th>Observação</th>
+            </tr>
+          </thead>
+          <tbody id="tb-indicadores"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========= PARADAS ========= -->
+  <div class="page" id="page-paradas">
+
+    <!-- CONFIGURAÇÃO DO PERÍODO E UNIDADE -->
+    <div class="form-card" style="padding:12px 18px;margin-bottom:16px">
+      <div style="display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap">
+        <div class="fg" style="min-width:80px">
+          <label>Mês</label>
+          <select class="fi" id="fpar-mes" onchange="renderParadas()">
+            <option value="">Todos</option>
+            <option value="1">Janeiro</option><option value="2">Fevereiro</option><option value="3">Março</option>
+            <option value="4">Abril</option><option value="5">Maio</option><option value="6">Junho</option>
+            <option value="7">Julho</option><option value="8">Agosto</option><option value="9">Setembro</option>
+            <option value="10">Outubro</option><option value="11">Novembro</option><option value="12">Dezembro</option>
+          </select>
+        </div>
+        <div class="fg" style="min-width:80px">
+          <label>Ano</label>
+          <select class="fi" id="fpar-ano" onchange="renderParadas()">
+            <option value="">Todos</option>
+            <option value="2024">2024</option><option value="2025">2025</option><option value="2026" selected>2026</option>
+          </select>
+        </div>
+        <div class="fg" style="min-width:120px">
+          <label>Recurso</label>
+          <select class="fi" id="fpar-recurso" onchange="renderParadas()"><option value="">Todos</option></select>
+        </div>
+        <div class="fg" style="min-width:140px">
+          <label>Tipo de Parada</label>
+          <select class="fi" id="fpar-tipo" onchange="renderParadas()"><option value="">Todos</option></select>
+        </div>
+        <div class="fg" style="min-width:120px">
+          <label>Exibir tempo em</label>
+          <select class="fi" id="fpar-unidade" onchange="renderParadas()">
+            <option value="min">Minutos</option>
+            <option value="h">Horas</option>
+          </select>
+        </div>
+        <div class="fg" style="min-width:140px">
+          <label>Horas previstas/dia</label>
+          <input type="number" class="fi" id="fpar-hprev" min="0" step="0.5" value="8" oninput="renderParadas()" style="min-width:100px">
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <label style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--fraco);font-weight:500">Sábados trabalhados</label>
+          <div id="fpar-sabados-wrap" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+        </div>
+        <button class="btn btn-p" onclick="abrirModalParada()" style="margin-left:auto">＋ Nova Parada</button>
+      </div>
+    </div>
+
+    <!-- KPIs linha 1 -->
+    <div class="kpi-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:16px">
+      <div class="kpi-card"><div class="kpi-label">Total Previsto do Mês</div><div class="kpi-value" id="par-kpi-prev" style="font-size:22px">—</div><div class="kpi-sub" id="par-kpi-prev-sub">selecione mês e ano</div></div>
+      <div class="kpi-card warn"><div class="kpi-label">Total Tempo Parado</div><div class="kpi-value" id="par-kpi-tempo" style="font-size:22px">0</div><div class="kpi-sub" id="par-kpi-tempo-sub">horas paradas</div></div>
+      <div class="kpi-card" id="par-kpi-disp-card"><div class="kpi-label">% Disponibilidade</div><div class="kpi-value" id="par-kpi-disp" style="font-size:26px">—</div><div class="kpi-sub">(Prev − Parado) / Prev</div></div>
+    </div>
+
+    <!-- GRÁFICOS: barras + pizza -->
+    <div style="display:grid;grid-template-columns:1fr 340px;gap:14px;margin-bottom:16px">
+      <div class="table-card" style="margin:0">
+        <div class="tc-head"><div class="tc-title">Paradas por Tipo — Tempo</div></div>
+        <div id="par-chart-tipos" style="padding:14px 18px;display:flex;flex-direction:column;gap:8px"></div>
+      </div>
+      <div class="table-card" style="margin:0">
+        <div class="tc-head"><div class="tc-title">Participação %</div></div>
+        <div style="padding:14px;display:flex;flex-direction:column;align-items:center;gap:10px">
+          <svg id="par-pizza" width="200" height="200" viewBox="0 0 200 200"></svg>
+          <div id="par-pizza-legend" style="display:flex;flex-direction:column;gap:4px;width:100%;font-size:11px"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TABELA DIÁRIA -->
+    <div class="table-card" style="margin-bottom:16px">
+      <div class="tc-head"><div class="tc-title" id="par-diario-title">Paradas por Dia</div></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>Dia</th>
+            <th>Prev. Dia</th>
+            <th>Prev. Acum.</th>
+            <th>Paradas Dia</th>
+            <th>Paradas Acum.</th>
+            <th>% Acum./Prev.</th>
+          </tr></thead>
+          <tbody id="tb-par-diario"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TABELA DE LANÇAMENTOS -->
+    <div class="table-card">
+      <div class="tc-head">
+        <div class="tc-title" id="par-count">Lançamentos de Parada</div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Data</th><th>Recurso</th><th>Tipo Parada</th><th>Início</th><th>Fim</th><th>Tempo</th><th>Obs.</th><th>Ações</th></tr></thead>
+          <tbody id="tb-paradas"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========= RECURSOS ========= -->
+  <div class="page" id="page-recursos">
+    <div class="table-card">
+      <div class="tc-head">
+        <div class="tc-title">Recursos</div>
+        <button class="btn btn-p" onclick="abrirModalRecurso()">＋ Novo Recurso</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Nome</th><th>Descrição</th><th>Status</th><th>Ações</th></tr></thead>
+          <tbody id="tb-recursos"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========= TIPOS DE PARADA ========= -->
+  <div class="page" id="page-tiposparada">
+    <div class="table-card">
+      <div class="tc-head">
+        <div class="tc-title">Tipos de Parada</div>
+        <button class="btn btn-p" onclick="abrirModalTP()">＋ Novo Tipo</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Nome</th><th>Descrição</th><th>Ações</th></tr></thead>
+          <tbody id="tb-tiposparada"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========= METAS DE HORAS ========= -->
+  <div class="page" id="page-metashoras">
+    <div class="form-card" style="padding:14px 18px;margin-bottom:16px">
+      <div style="display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap">
+        <div class="fg" style="min-width:80px">
+          <label>Mês</label>
+          <select class="fi" id="mh-mes" onchange="renderMetasHoras()">
+            <option value="1">Janeiro</option><option value="2">Fevereiro</option><option value="3">Março</option>
+            <option value="4">Abril</option><option value="5">Maio</option><option value="6">Junho</option>
+            <option value="7">Julho</option><option value="8">Agosto</option><option value="9">Setembro</option>
+            <option value="10">Outubro</option><option value="11">Novembro</option><option value="12">Dezembro</option>
+          </select>
+        </div>
+        <div class="fg" style="min-width:80px">
+          <label>Ano</label>
+          <select class="fi" id="mh-ano" onchange="renderMetasHoras()">
+            <option value="2024">2024</option><option value="2025">2025</option><option value="2026" selected>2026</option>
+          </select>
+        </div>
+        <div class="fg" style="min-width:120px">
+          <label>Horas padrão/dia útil</label>
+          <input type="number" class="fi" id="mh-padrao" min="0" step="0.5" value="8" placeholder="8" style="min-width:80px">
+        </div>
+        <button class="btn btn-s" onclick="preencherMetasHorasPadrao()">⚡ Preencher dias úteis</button>
+        <button class="btn btn-p" onclick="salvarTodasMetasHoras()">💾 Salvar Todas</button>
+      </div>
+    </div>
+    <div class="table-card">
+      <div class="tc-head"><div class="tc-title" id="mh-titulo">Metas de Horas Previstas</div></div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Dia</th><th>Data</th><th>Dia Semana</th><th>Horas Previstas</th></tr></thead>
+        <tbody id="tb-mh"></tbody>
+      </table></div>
+    </div>
+  </div>
+
+  <!-- ========= METAS DE PRODUÇÃO ========= -->
+  <div class="page" id="page-metasproducao">
+    <div class="form-card" style="padding:14px 18px;margin-bottom:16px">
+      <div style="display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap">
+        <div class="fg" style="min-width:80px">
+          <label>Mês</label>
+          <select class="fi" id="mp-mes" onchange="renderMetasProducao()">
+            <option value="1">Janeiro</option><option value="2">Fevereiro</option><option value="3">Março</option>
+            <option value="4">Abril</option><option value="5">Maio</option><option value="6">Junho</option>
+            <option value="7">Julho</option><option value="8">Agosto</option><option value="9">Setembro</option>
+            <option value="10">Outubro</option><option value="11">Novembro</option><option value="12">Dezembro</option>
+          </select>
+        </div>
+        <div class="fg" style="min-width:80px">
+          <label>Ano</label>
+          <select class="fi" id="mp-ano" onchange="renderMetasProducao()">
+            <option value="2024">2024</option><option value="2025">2025</option><option value="2026" selected>2026</option>
+          </select>
+        </div>
+        <div class="fg" style="min-width:130px">
+          <label>Meta padrão/dia útil (kg)</label>
+          <input type="number" class="fi" id="mp-padrao" min="0" step="1" value="1000" placeholder="1000" style="min-width:90px">
+        </div>
+        <button class="btn btn-s" onclick="preencherMetasProducaoPadrao()">⚡ Preencher dias úteis</button>
+        <button class="btn btn-p" onclick="salvarTodasMetasProducao()">💾 Salvar Todas</button>
+      </div>
+    </div>
+    <div class="table-card">
+      <div class="tc-head"><div class="tc-title" id="mp-titulo">Metas de Produção</div></div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Dia</th><th>Data</th><th>Dia Semana</th><th>Meta (kg)</th></tr></thead>
+        <tbody id="tb-mp"></tbody>
+      </table></div>
+    </div>
+  </div>
+
+  <!-- ========= OEE ========= -->
+  <div class="page" id="page-oee">
+    <div class="form-card" style="padding:12px 18px;margin-bottom:16px">
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        <div class="fg" style="min-width:80px">
+          <label>Ano</label>
+          <select class="fi" id="oee-ano" onchange="renderOEE()">
+            <option value="2024">2024</option><option value="2025">2025</option><option value="2026" selected>2026</option>
+          </select>
+        </div>
+        <span style="font-size:12px;color:var(--fraco)">OEE = Disponibilidade × Eficiência × Qualidade</span>
+      </div>
+    </div>
+    <!-- KPI OEE anual -->
+    <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:16px">
+      <div class="kpi-card green"><div class="kpi-label">OEE Médio do Ano</div><div class="kpi-value" id="oee-kpi-medio" style="font-size:26px">—</div><div class="kpi-sub">média dos meses</div></div>
+      <div class="kpi-card ok"><div class="kpi-label">Melhor Mês</div><div class="kpi-value" id="oee-kpi-melhor" style="font-size:22px">—</div><div class="kpi-sub" id="oee-kpi-melhor-sub">—</div></div>
+      <div class="kpi-card warn"><div class="kpi-label">Pior Mês</div><div class="kpi-value" id="oee-kpi-pior" style="font-size:22px">—</div><div class="kpi-sub" id="oee-kpi-pior-sub">—</div></div>
+      <div class="kpi-card"><div class="kpi-label">Meses com Dados</div><div class="kpi-value" id="oee-kpi-meses">0</div><div class="kpi-sub">de 12 meses</div></div>
+    </div>
+    <!-- gráfico OEE -->
+    <div class="table-card" style="margin-bottom:16px">
+      <div class="tc-head"><div class="tc-title" id="oee-chart-title">OEE por Mês</div></div>
+      <div id="oee-chart" style="padding:18px;display:flex;align-items:flex-end;gap:6px;height:200px;border-bottom:1px solid var(--borda)"></div>
+      <div id="oee-chart-labels" style="padding:4px 18px;display:flex;gap:6px"></div>
+    </div>
+    <!-- tabela OEE -->
+    <div class="table-card">
+      <div class="tc-head"><div class="tc-title">Detalhamento Mensal</div></div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Mês/Ano</th><th>Disponibilidade</th><th>Eficiência</th><th>Qualidade</th><th>OEE</th><th>Editar Qualidade</th></tr></thead>
+        <tbody id="tb-oee"></tbody>
+      </table></div>
     </div>
   </div>
 
@@ -910,6 +1180,85 @@ body{font-family:'DM Sans',sans-serif;background:var(--preto);color:var(--txt);m
   </div>
 </div>
 
+<!-- MODAL LANÇAMENTO PRODUÇÃO -->
+<div class="modal-ov" id="modal-producao">
+  <div class="modal" style="width:640px">
+    <h3 id="modal-prod-title">🏭 Novo Lançamento de Produção</h3>
+    <div class="form-grid">
+      <div class="fg"><label>Data *</label><input type="date" id="prod-data"></div>
+      <div class="fg">
+        <label>Situação *</label>
+        <select id="prod-situacao" onchange="onProdSituacaoChange()">
+          <option value="">Selecione...</option>
+          <option value="PRODUCAO">🏭 PRODUÇÃO</option>
+          <option value="VENDA">💚 VENDA</option>
+          <option value="PRE_VENDA">🟡 PRÉ-VENDA</option>
+        </select>
+      </div>
+      <div class="fg"><label>Produto *</label><select id="prod-produto" onchange="onProdProdutoChange()"><option value="">Selecione...</option></select></div>
+      <div class="fg"><label>Quantidade *</label><input type="number" id="prod-qt" min="0.001" step="0.001" placeholder="0" oninput="onProdQtChange()"></div>
+      <div class="fg"><label>Cliente</label><select id="prod-cliente"><option value="">— Sem vínculo —</option></select></div>
+      <div class="fg"><label>Custo de Produção (R$)</label><input type="number" id="prod-custo" min="0" step="0.01" placeholder="0,00" readonly style="opacity:.7;cursor:not-allowed"></div>
+      <div class="fg full" id="prod-mp-info" style="display:none"><label>Matéria-Prima (baixa automática)</label><input type="text" id="prod-mp-txt" readonly style="opacity:.7;cursor:not-allowed;color:var(--amar)"></div>
+      <div class="fg full"><label>Observação</label><input type="text" id="prod-obs" placeholder="Observação"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-s" onclick="closeModal('modal-producao')">Cancelar</button>
+      <button class="btn btn-p" id="btn-salvar-prod" onclick="salvarProducao()">💾 Registrar Lançamento</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL PARADA -->
+<div class="modal-ov" id="modal-parada">
+  <div class="modal" style="width:600px">
+    <h3 id="modal-par-title">⛔ Nova Parada</h3>
+    <div class="form-grid">
+      <div class="fg"><label>Data *</label><input type="date" id="par-data"></div>
+      <div class="fg"><label>Recurso *</label><select id="par-recurso"><option value="">Selecione...</option></select></div>
+      <div class="fg"><label>Tipo de Parada *</label><select id="par-tipo"><option value="">Selecione...</option></select></div>
+      <div class="fg"><label>Hora Início *</label><input type="time" id="par-inicio" oninput="calcTempoParada()"></div>
+      <div class="fg"><label>Hora Fim *</label><input type="time" id="par-fim" oninput="calcTempoParada()"></div>
+      <div class="fg"><label>Tempo de Parada</label><input type="text" id="par-tempo" readonly style="opacity:.7;cursor:not-allowed;color:var(--amar)"></div>
+      <div class="fg full"><label>Observação</label><input type="text" id="par-obs" placeholder="Motivo, detalhes..."></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-s" onclick="closeModal('modal-parada')">Cancelar</button>
+      <button class="btn btn-p" id="btn-salvar-par" onclick="salvarParada()">💾 Registrar Parada</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL RECURSO -->
+<div class="modal-ov" id="modal-recurso">
+  <div class="modal" style="width:480px">
+    <h3 id="modal-rec-title">⚙️ Novo Recurso</h3>
+    <div class="form-grid" style="grid-template-columns:1fr 1fr">
+      <div class="fg"><label>Nome *</label><input type="text" id="rec-nome" placeholder="Ex: Linha 1, Prensa A..."></div>
+      <div class="fg"><label>Descrição</label><input type="text" id="rec-desc" placeholder="Opcional"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-s" onclick="closeModal('modal-recurso')">Cancelar</button>
+      <button class="btn btn-p" id="btn-salvar-rec" onclick="salvarRecurso()">💾 Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL TIPO PARADA -->
+<div class="modal-ov" id="modal-tipoparada">
+  <div class="modal" style="width:480px">
+    <h3 id="modal-tp-title">🔴 Novo Tipo de Parada</h3>
+    <div class="form-grid" style="grid-template-columns:1fr 1fr">
+      <div class="fg"><label>Nome *</label><input type="text" id="tp-nome" placeholder="Ex: Manutenção, Setup..."></div>
+      <div class="fg"><label>Descrição</label><input type="text" id="tp-desc" placeholder="Opcional"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-s" onclick="closeModal('modal-tipoparada')">Cancelar</button>
+      <button class="btn btn-p" id="btn-salvar-tp" onclick="salvarTP()">💾 Salvar</button>
+    </div>
+  </div>
+</div>
+
 <script>
 const MESES=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
 const TIPOS_SF={materia_prima:'Matéria Prima',produto_acabado:'Produto Acabado',produto_intermediario:'Produto Intermediário',embalagem:'Embalagem',consumivel:'Consumível',sucata:'Sucata / Refugo',outro:'Outro'};
@@ -976,8 +1325,17 @@ let entradas   = [];
 let saidas     = [];
 let lancamentosProducao = [];
 let fichasTecnicas = [];
+let paradas = [];
+let recursos = [];
+let tiposParada = [];
+let metasHoras = [];      // [{id, data, horas, mes, ano}]
+let metasProducao = [];   // [{id, data, quantidade, mes, ano}]
+let oeeQualidade = [];    // [{id, mes, ano, qualidade}]
 
 let editProdLancId = null;
+let editParadaId = null;
+let editRecursoId = null;
+let editTPId = null;
 
 let currentUser=null,editProdId=null,editCliId=null,editFornId=null,editLocId=null,editUsrIdx=null,editEntId=null,editSaiId=null;
 
@@ -991,11 +1349,19 @@ function mapEnt(r){ return{id:r.id,data:r.data,prodId:r.produto_id,qt:Number(r.q
 function mapSai(r){ return{id:r.id,data:r.data,prodId:r.produto_id,qt:Number(r.quantidade),cliId:r.cliente_id,resp:r.responsavel||'',valor:Number(r.valor_total),obs:r.obs||'',mes:r.mes,ano:r.ano}; }
 function mapLanc(r){ return{id:r.id,data:r.data,prodId:r.produto_id,situacao:r.situacao,cliId:r.cliente_id,qt:Number(r.quantidade),custo:Number(r.custo_producao||0),origem:r.origem||'manual',obs:r.obs||'',mes:r.mes,ano:r.ano}; }
 function mapFT(r){ return{id:r.id,acabadoId:r.produto_acabado_id,mpId:r.materia_prima_id,qtMP:Number(r.quantidade_mp)}; }
+function mapRecurso(r){ return{id:r.id,nome:r.nome,desc:r.descricao||'',ativo:r.ativo!==false}; }
+function mapTP(r){ return{id:r.id,nome:r.nome,desc:r.descricao||''}; }
+function mapParada(r){ return{id:r.id,data:r.data,recursoId:r.recurso_id,tipoId:r.tipo_parada_id,inicio:r.hora_inicio,fim:r.hora_fim,tempo:Number(r.tempo_parada||0),obs:r.obs||'',mes:r.mes,ano:r.ano}; }
+function mapMetaH(r){ const pts=r.data?r.data.split('-'):[]; const mes=r.mes||parseInt(pts[1])||0; const ano=r.ano||parseInt(pts[0])||0; return{id:r.id,data:r.data,horas:Number(r.horas),mes,ano}; }
+function mapMetaP(r){ const pts=r.data?r.data.split("-"):[]; const mes=r.mes||parseInt(pts[1])||0; const ano=r.ano||parseInt(pts[0])||0; return{id:r.id,data:r.data,qt:Number(r.quantidade),mes,ano}; }
+function mapOeeQ(r){ return{id:r.id,mes:r.mes,ano:r.ano,qualidade:Number(r.qualidade)}; }
+function gRec(id){ return recursos.find(r=>r.id===parseInt(id)); }
+function gTP(id){ return tiposParada.find(t=>t.id===parseInt(id)); }
 
 async function carregarTudo(silent=false){
   setSyncStatus('connecting');
   if(!silent) showLoader(true);
-  const [sf, locs, prods, clis, forns, ents, sais, lancs, fts] = await Promise.all([
+  const [sf, locs, prods, clis, forns, ents, sais, lancs, fts, recs, tps, pars, mh, mp, oq] = await Promise.all([
     sbReq('subfamilias','GET',null,'?order=id'),
     sbReq('localizacoes','GET',null,'?order=id'),
     sbReq('produtos','GET',null,'?order=id'),
@@ -1005,6 +1371,12 @@ async function carregarTudo(silent=false){
     sbReq('saidas','GET',null,'?order=data'),
     sbReq('lancamentos_producao','GET',null,'?order=data'),
     sbReq('ficha_tecnica','GET',null,'?order=id'),
+    sbReq('recursos','GET',null,'?order=id'),
+    sbReq('tipos_parada','GET',null,'?order=id'),
+    sbReq('paradas','GET',null,'?order=data'),
+    sbReq('metas_horas','GET',null,'?order=data'),
+    sbReq('metas_producao','GET',null,'?order=data'),
+    sbReq('oee_qualidade','GET',null,'?order=ano,mes'),
   ]);
   if(sf) subfamilias   = sf.map(mapSF);
   if(locs) localizacoes= locs.map(mapLoc);
@@ -1015,6 +1387,12 @@ async function carregarTudo(silent=false){
   if(sais) saidas      = sais.map(mapSai);
   if(lancs) lancamentosProducao = lancs.map(mapLanc);
   if(fts) fichasTecnicas = fts.map(mapFT);
+  if(recs) recursos    = recs.map(mapRecurso);
+  if(tps) tiposParada  = tps.map(mapTP);
+  if(pars) paradas     = pars.map(mapParada);
+  if(mh) metasHoras    = mh.map(mapMetaH);
+  if(mp) metasProducao = mp.map(mapMetaP);
+  if(oq) oeeQualidade  = oq.map(mapOeeQ);
   setSyncStatus('ok');
   if(!silent) showLoader(false);
   fillAllSelects();
@@ -1149,7 +1527,7 @@ function logout(){
 }
 
 // ══════ NAV ══════
-const PT={dashboard:'Dashboard',estoque:'Estoque Atual',entradas:'Entradas',saidas:'Saídas',variacao:'Variação Mensal',movimentacao:'Movimentação do Estoque',producao:'Lançamentos de Produção',fichatecnica:'Ficha Técnica',produtos:'Cadastro de Produtos',clientes:'Cadastro de Clientes',fornecedores:'Cadastro de Fornecedores',subfamilias:'Subfamílias',localizacoes:'Localizações',usuarios:'Usuários'};
+const PT={dashboard:'Dashboard',estoque:'Estoque Atual',entradas:'Entradas',saidas:'Saídas',variacao:'Variação Mensal',movimentacao:'Movimentação do Estoque',producao:'Lançamentos de Produção',fichatecnica:'Ficha Técnica',indicadores:'Indicador de Desempenho',paradas:'Paradas de Recurso',recursos:'Cadastro de Recursos',tiposparada:'Tipos de Parada',metashoras:'Metas de Horas Previstas',metasproducao:'Metas de Produção',oee:'OEE — Indicador Global',produtos:'Cadastro de Produtos',clientes:'Cadastro de Clientes',fornecedores:'Cadastro de Fornecedores',subfamilias:'Subfamílias',localizacoes:'Localizações',usuarios:'Usuários'};
 // ── FILTRO GLOBAL (subfamília + produto) ──
 let _gFiltroSF = '';
 let _gFiltroProd = '';
@@ -1198,9 +1576,11 @@ function goPage(id){
     aplicarFiltroGlobal('var-sf','var-prod',renderVariacao,onVarSfChange);
   } else if(id==='movimentacao'){
     aplicarFiltroGlobal('mov-sf','mov-prod',renderMovimentacao,onMovSfChange);
+  } else if(id==='paradas'){
+    carregarFiltrosParadas();
   }
 
-  const renders={dashboard:renderDash,estoque:renderEstoque,entradas:renderEntradas,saidas:renderSaidas,variacao:renderVariacao,movimentacao:renderMovimentacao,producao:renderProducao,fichatecnica:renderFT,produtos:renderProdutos,clientes:renderClientes,fornecedores:renderForn,subfamilias:renderSF,localizacoes:renderLoc,usuarios:renderUsr};
+  const renders={dashboard:renderDash,estoque:renderEstoque,entradas:renderEntradas,saidas:renderSaidas,variacao:renderVariacao,movimentacao:renderMovimentacao,producao:renderProducao,fichatecnica:renderFT,indicadores:renderIndicadores,paradas:renderParadas,recursos:renderRecursos,tiposparada:renderTP,metashoras:renderMetasHoras,metasproducao:renderMetasProducao,oee:renderOEE,produtos:renderProdutos,clientes:renderClientes,fornecedores:renderForn,subfamilias:renderSF,localizacoes:renderLoc,usuarios:renderUsr};
   if(renders[id])renders[id]();
 }
 
@@ -1221,9 +1601,13 @@ function fillAllSelects(){
   fillSel('fe-sai-prod',produtos,'id',p=>p.desc,'Todos produtos');
   fillSel('prod-produto',produtos,'id',p=>p.desc,'Selecione...');
   fillSel('fp-prod-f',produtos,'id',p=>p.desc,'Todos produtos');
-  // ficha técnica
   fillSel('ft-acabado',produtos,'id',p=>p.desc,'Selecione...');
   fillSel('ft-mp',produtos,'id',p=>p.desc,'Selecione...');
+  // paradas
+  fillSel('par-recurso',recursos,'id',r=>r.nome,'Selecione...');
+  fillSel('par-tipo',tiposParada,'id',t=>t.nome,'Selecione...');
+  fillSel('fpar-recurso',recursos,'id',r=>r.nome,'Todos os recursos');
+  fillSel('fpar-tipo',tiposParada,'id',t=>t.nome,'Todos os tipos');
 }
 // ===== DASHBOARD =====
 function renderDash(){
@@ -2291,6 +2675,7 @@ async function salvarProducao(){
 
   if(ok){
     limparProducao();
+    closeModal('modal-producao');
     renderProducao();
     renderDash();
     renderEstoque();
@@ -2303,18 +2688,18 @@ function editarProducao(id){
   const l = lancamentosProducao.find(x=>x.id===id);
   if(!l) return;
   editProdLancId = id;
+  fillAllSelects();
   document.getElementById('prod-data').value = l.data;
   document.getElementById('prod-situacao').value = l.situacao;
-  fillSel('prod-produto',produtos,'id',p=>p.desc,'Selecione...');
   document.getElementById('prod-produto').value = l.prodId;
   document.getElementById('prod-qt').value = l.qt;
   document.getElementById('prod-custo').value = l.custo;
-  fillSel('prod-cliente',clientes,'id',c=>c.nome,'— Sem vínculo —');
   document.getElementById('prod-cliente').value = l.cliId||'';
   document.getElementById('prod-obs').value = l.obs;
+  document.getElementById('modal-prod-title').textContent = '✏️ Editar Lançamento';
   document.getElementById('btn-salvar-prod').textContent = '💾 Atualizar Lançamento';
   onProdProdutoChange();
-  document.getElementById('page-producao').scrollTop = 0;
+  openModal('modal-producao');
 }
 
 async function excluirProducao(id){
@@ -2369,7 +2754,9 @@ function renderProducao(){
     const prod = gP(l.prodId);
     const cli  = gCli(l.cliId);
     const [y,m,d] = l.data.split('-');
-    rows += '<tr>'
+    const rowBg = l.situacao==='VENDA' ? ' style="background:rgba(243,156,18,.08)"'
+                : l.situacao==='PRE_VENDA' ? ' style="background:rgba(243,156,18,.04)"' : '';
+    rows += '<tr'+rowBg+'>'
       + '<td>'+d+'/'+m+'/'+y+'</td>'
       + '<td class="fw">'+(prod?prod.desc:'—')+'</td>'
       + '<td>'+badgeSit(l.situacao)+'</td>'
@@ -2476,11 +2863,826 @@ function renderFT(){
   document.getElementById('tb-ft').innerHTML = rows || '<tr><td colspan="4" class="empty">Nenhuma ficha técnica cadastrada.</td></tr>';
 }
 
+function abrirModalProducao(){
+  limparProducao();
+  fillAllSelects();
+  document.getElementById('modal-prod-title').textContent = '🏭 Novo Lançamento de Produção';
+  document.getElementById('btn-salvar-prod').textContent = '💾 Registrar Lançamento';
+  openModal('modal-producao');
+}
+
+function abrirModalParada(){
+  limparParada();
+  fillAllSelects();
+  document.getElementById('modal-par-title').textContent = '⛔ Nova Parada';
+  document.getElementById('btn-salvar-par').textContent = '💾 Registrar Parada';
+  openModal('modal-parada');
+}
+
+function abrirModalRecurso(){
+  limparRecurso();
+  document.getElementById('modal-rec-title').textContent = '⚙️ Novo Recurso';
+  document.getElementById('btn-salvar-rec').textContent = '💾 Salvar Recurso';
+  openModal('modal-recurso');
+}
+
+function abrirModalTP(){
+  limparTP();
+  document.getElementById('modal-tp-title').textContent = '🔴 Novo Tipo de Parada';
+  document.getElementById('btn-salvar-tp').textContent = '💾 Salvar Tipo';
+  openModal('modal-tipoparada');
+}
+
+function salvarFiltrosParadas(){
+  const f={
+    mes:document.getElementById('fpar-mes')?.value||'',
+    ano:document.getElementById('fpar-ano')?.value||'',
+    recurso:document.getElementById('fpar-recurso')?.value||'',
+    tipo:document.getElementById('fpar-tipo')?.value||'',
+    unidade:document.getElementById('fpar-unidade')?.value||'min',
+    hprev:document.getElementById('fpar-hprev')?.value||'8'
+  };
+  try{localStorage.setItem('stoeck_filtros_paradas',JSON.stringify(f));}catch(e){}
+}
+
+function carregarFiltrosParadas(){
+  try{
+    const f=JSON.parse(localStorage.getItem('stoeck_filtros_paradas')||'{}');
+    if(f.mes){ const el=document.getElementById('fpar-mes'); if(el) el.value=f.mes; }
+    if(f.ano){ const el=document.getElementById('fpar-ano'); if(el) el.value=f.ano; }
+    if(f.unidade){ const el=document.getElementById('fpar-unidade'); if(el) el.value=f.unidade; }
+    if(f.hprev){ const el=document.getElementById('fpar-hprev'); if(el) el.value=f.hprev; }
+    // recurso e tipo após fillAllSelects
+    if(f.recurso) window._savedParRecurso=f.recurso;
+    if(f.tipo) window._savedParTipo=f.tipo;
+  }catch(e){}
+}
+
+// ══════ PARADAS ══════
+
+function calcTempoParada(){
+  const ini = document.getElementById('par-inicio').value;
+  const fim = document.getElementById('par-fim').value;
+  if(!ini||!fim){ document.getElementById('par-tempo').value=''; return; }
+  const [h1,m1] = ini.split(':').map(Number);
+  const [h2,m2] = fim.split(':').map(Number);
+  let mins = (h2*60+m2) - (h1*60+m1);
+  if(mins < 0) mins += 1440; // passou da meia-noite
+  const h = Math.floor(mins/60);
+  const m = mins%60;
+  document.getElementById('par-tempo').value = h>0 ? `${h}h ${m}min (${mins} min)` : `${mins} min`;
+}
+
+function limparParada(){
+  editParadaId = null;
+  document.getElementById('par-data').value = today();
+  document.getElementById('par-recurso').value = '';
+  document.getElementById('par-tipo').value = '';
+  document.getElementById('par-inicio').value = '';
+  document.getElementById('par-fim').value = '';
+  document.getElementById('par-tempo').value = '';
+  document.getElementById('par-obs').value = '';
+  document.getElementById('btn-salvar-par').textContent = '💾 Registrar Parada';
+}
+
+function minutosDiff(ini, fim){
+  const [h1,m1] = ini.split(':').map(Number);
+  const [h2,m2] = fim.split(':').map(Number);
+  let mins = (h2*60+m2) - (h1*60+m1);
+  if(mins < 0) mins += 1440;
+  return mins;
+}
+
+async function salvarParada(){
+  const data      = document.getElementById('par-data').value;
+  const recursoId = parseInt(document.getElementById('par-recurso').value)||null;
+  const tipoId    = parseInt(document.getElementById('par-tipo').value)||null;
+  const inicio    = document.getElementById('par-inicio').value;
+  const fim       = document.getElementById('par-fim').value;
+  const obs       = document.getElementById('par-obs').value.trim();
+
+  if(!data||!recursoId||!tipoId||!inicio||!fim){ alert('Preencha Data, Recurso, Tipo, Hora Início e Hora Fim.'); return; }
+
+  const corpo = {data, recurso_id:recursoId, tipo_parada_id:tipoId, hora_inicio:inicio, hora_fim:fim, obs};
+
+  if(editParadaId){
+    const r = await sbUpdate('paradas', editParadaId, corpo);
+    if(r){
+      const idx = paradas.findIndex(p=>p.id===editParadaId);
+      if(idx>=0) paradas[idx] = mapParada({...corpo, id:editParadaId, tempo_parada:minutosDiff(inicio,fim)});
+    }
+  } else {
+    const r = await sbSave('paradas', corpo);
+    if(r) paradas.push(mapParada(Array.isArray(r)?r[0]:r));
+  }
+  limparParada();
+  closeModal('modal-parada');
+  renderParadas();
+}
+
+function editarParada(id){
+  const p = paradas.find(x=>x.id===id);
+  if(!p) return;
+  editParadaId = id;
+  fillAllSelects();
+  document.getElementById('par-data').value = p.data;
+  document.getElementById('par-recurso').value = p.recursoId;
+  document.getElementById('par-tipo').value = p.tipoId;
+  document.getElementById('par-inicio').value = p.inicio;
+  document.getElementById('par-fim').value = p.fim;
+  calcTempoParada();
+  document.getElementById('par-obs').value = p.obs;
+  document.getElementById('modal-par-title').textContent = '✏️ Editar Parada';
+  document.getElementById('btn-salvar-par').textContent = '💾 Atualizar Parada';
+  openModal('modal-parada');
+}
+
+async function excluirParada(id){
+  if(!confirm('Excluir esta parada?')) return;
+  const r = await sbDelete('paradas', id);
+  if(r!==null){ paradas = paradas.filter(p=>p.id!==id); renderParadas(); }
+}
+
+function fT(mins, unidade){
+  if(unidade==='h') return (mins/60).toFixed(2)+'h';
+  return Math.round(mins)+'min';
+}
+
+function buildPizzaSVG(dados){ // [{nome, mins, cor}]
+  const total = dados.reduce((a,b)=>a+b.mins,0);
+  if(!total) return '<text x="100" y="105" text-anchor="middle" fill="#888" font-size="13">Sem dados</text>';
+  let svg = ''; let ang = -Math.PI/2;
+  dados.forEach(d=>{
+    const frac = d.mins/total;
+    const a1 = ang, a2 = ang + frac*2*Math.PI;
+    const x1=100+90*Math.cos(a1), y1=100+90*Math.sin(a1);
+    const x2=100+90*Math.cos(a2), y2=100+90*Math.sin(a2);
+    const large = frac>0.5?1:0;
+    svg += `<path d="M100,100 L${x1.toFixed(1)},${y1.toFixed(1)} A90,90 0 ${large},1 ${x2.toFixed(1)},${y2.toFixed(1)} Z" fill="${d.cor}" stroke="#1e1e1e" stroke-width="1.5"/>`;
+    ang = a2;
+  });
+  return svg;
+}
+
+function renderParadas(){
+  const mes   = document.getElementById('fpar-mes')?.value||'';
+  const ano   = document.getElementById('fpar-ano')?.value||'';
+  const recF  = document.getElementById('fpar-recurso')?.value||'';
+  const tpF   = document.getElementById('fpar-tipo')?.value||'';
+  const unit  = document.getElementById('fpar-unidade')?.value||'min';
+  const hPrev = parseFloat(document.getElementById('fpar-hprev')?.value||8);
+  const minsPrev = hPrev * 60;
+
+  // restaurar selects salvos após fillAllSelects
+  fillAllSelects();
+  if(window._savedParRecurso){ const el=document.getElementById('fpar-recurso'); if(el){el.value=window._savedParRecurso; window._savedParRecurso=null;} }
+  if(window._savedParTipo){ const el=document.getElementById('fpar-tipo'); if(el){el.value=window._savedParTipo; window._savedParTipo=null;} }
+
+  // salvar filtros
+  salvarFiltrosParadas();
+
+  // sábados trabalhados (só faz sentido se tiver mês+ano)
+  const mesN = parseInt(mes)||0, anoN = parseInt(ano)||0;
+  const wrp = document.getElementById('fpar-sabados-wrap');
+  if(mesN && anoN && wrp){
+    const total = diasNoMes(mesN, anoN);
+    const sabados = [];
+    for(let d=1;d<=total;d++){ const dt=new Date(anoN,mesN-1,d); if(dt.getDay()===6) sabados.push(d); }
+    const prevSel = Array.from(wrp.querySelectorAll('input:checked')).map(c=>parseInt(c.value));
+    if(wrp.children.length!==sabados.length){
+      wrp.innerHTML = sabados.map(d=>`<label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;background:var(--card,var(--cm));border:1px solid var(--borda);border-radius:6px;padding:4px 8px"><input type="checkbox" value="${d}" ${prevSel.includes(d)?'checked':''} onchange="renderParadas()"> Sáb ${d}</label>`).join('');
+    }
+  } else if(wrp) wrp.innerHTML='';
+
+  const sabExtras = wrp ? Array.from(wrp.querySelectorAll('input:checked')).map(c=>parseInt(c.value)) : [];
+
+  // filtrar paradas
+  let lista = paradas.filter(p=>
+    (!mes||String(p.mes)===mes)
+    &&(!ano||String(p.ano)===ano)
+    &&(!recF||String(p.recursoId)===recF)
+    &&(!tpF||String(p.tipoId)===tpF)
+  );
+  lista.sort((a,b)=>b.data.localeCompare(a.data)||b.inicio.localeCompare(a.inicio));
+
+  const totalMin = lista.reduce((a,b)=>a+(b.tempo||minutosDiff(b.inicio,b.fim)),0);
+  const media = lista.length ? totalMin/lista.length : 0;
+
+  // tipo mais frequente
+  const freqTipo={};
+  lista.forEach(p=>{ const k=p.tipoId||0; freqTipo[k]=(freqTipo[k]||0)+1; });
+  const topTipoId = Object.entries(freqTipo).sort((a,b)=>b[1]-a[1])[0]?.[0];
+  const topTipo = topTipoId ? gTP(parseInt(topTipoId)) : null;
+
+  // KPIs linha 1 (3 caixas: previsto, parado, disponibilidade)
+  document.getElementById('par-kpi-tempo').textContent = fT(totalMin, unit);
+  document.getElementById('par-kpi-tempo-sub').textContent = unit==='h'?'horas paradas':'minutos parados';
+
+  // KPIs — previsto via metas_horas, parado real, disponibilidade
+  if(mesN && anoN){
+    const prevH = metasHoras.filter(m=>m.mes===mesN&&m.ano===anoN).reduce((a,b)=>a+b.horas,0);
+    const prevMin = prevH>0 ? prevH*60 : null;
+    const paradoMin = paradas.filter(p=>p.mes===mesN&&p.ano===anoN).reduce((a,b)=>a+(b.tempo||minutosDiff(b.inicio,b.fim)),0);
+    const disp = prevMin!==null&&prevMin>0 ? ((prevMin-paradoMin)/prevMin*100) : null;
+    document.getElementById('par-kpi-prev').textContent = prevMin!==null ? fT(prevMin,unit) : '—';
+    document.getElementById('par-kpi-prev-sub').textContent = prevMin!==null ? `${prevH}h previstas no mês` : 'cadastre metas de horas';
+    const dispEl=document.getElementById('par-kpi-disp');
+    const dispCard=document.getElementById('par-kpi-disp-card');
+    if(disp!==null){
+      dispEl.textContent=disp.toFixed(1)+'%';
+      dispCard.className='kpi-card '+(disp>=90?'green':disp>=75?'ok':disp>=50?'warn':'danger');
+    } else { dispEl.textContent='—'; dispCard.className='kpi-card'; }
+  } else {
+    document.getElementById('par-kpi-prev').textContent='—';
+    document.getElementById('par-kpi-prev-sub').textContent='selecione mês e ano';
+    document.getElementById('par-kpi-disp').textContent='—';
+    document.getElementById('par-kpi-disp-card').className='kpi-card';
+  }
+
+  // por tipo (barras + pizza)
+  const CORES=['#e74c3c','#f39c12','#3498db','#9b59b6','#1abc9c','#e67e22','#2ecc71','#e91e63','#00bcd4','#ff5722'];
+  const porTipo={};
+  lista.forEach(p=>{
+    const k=p.tipoId||0;
+    if(!porTipo[k]) porTipo[k]={nome:gTP(k)?.nome||'Sem tipo',count:0,mins:0};
+    porTipo[k].count++;
+    porTipo[k].mins += p.tempo||minutosDiff(p.inicio,p.fim);
+  });
+  const tiposOrd = Object.values(porTipo).sort((a,b)=>b.mins-a.mins);
+  const maxMins = tiposOrd[0]?.mins||1;
+  const tiposComCor = tiposOrd.map((t,i)=>({...t,cor:CORES[i%CORES.length]}));
+
+  // barras horizontais
+  document.getElementById('par-chart-tipos').innerHTML = tiposComCor.map(t=>`
+    <div style="display:flex;align-items:center;gap:10px">
+      <div style="width:180px;font-size:12px;text-align:right;flex-shrink:0;overflow:hidden;text-overflow:ellipsis">${t.nome}</div>
+      <div style="flex:1;background:var(--cm);border-radius:4px;height:22px;overflow:hidden">
+        <div style="width:${Math.round(t.mins/maxMins*100)}%;background:${t.cor};height:100%;border-radius:4px;min-width:4px"></div>
+      </div>
+      <div style="font-size:12px;color:var(--fraco);width:120px;flex-shrink:0">${fT(t.mins,unit)} · ${t.count}x</div>
+    </div>`).join('') || '<div style="color:var(--fraco);font-size:13px;text-align:center;padding:10px">Sem dados</div>';
+
+  // pizza SVG
+  document.getElementById('par-pizza').innerHTML = buildPizzaSVG(tiposComCor);
+  const legTotal = tiposComCor.reduce((a,b)=>a+b.mins,0)||1;
+  document.getElementById('par-pizza-legend').innerHTML = tiposComCor.map(t=>`
+    <div style="display:flex;align-items:center;gap:6px">
+      <div style="width:10px;height:10px;border-radius:2px;background:${t.cor};flex-shrink:0"></div>
+      <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.nome}</span>
+      <span style="color:var(--fraco);flex-shrink:0">${(t.mins/legTotal*100).toFixed(1)}%</span>
+    </div>`).join('');
+
+  // TABELA DIÁRIA (só se tiver mês e ano selecionados)
+  const diarioEl = document.getElementById('tb-par-diario');
+  const diarioTitle = document.getElementById('par-diario-title');
+  if(mesN && anoN){
+    const totalDias = diasNoMes(mesN, anoN);
+    const hoje = new Date();
+    const diaAtual = (mesN===hoje.getMonth()+1&&anoN===hoje.getFullYear()) ? hoje.getDate() : totalDias;
+
+    // minutos de parada por dia
+    const minsPorDia={};
+    paradas.filter(p=>p.mes===mesN&&p.ano===anoN&&(!recF||String(p.recursoId)===recF)&&(!tpF||String(p.tipoId)===tpF))
+      .forEach(p=>{ const d=parseInt(p.data.split('-')[2]); minsPorDia[d]=(minsPorDia[d]||0)+(p.tempo||minutosDiff(p.inicio,p.fim)); });
+
+    let prevAcum=0, parAcum=0, rowsD='';
+    for(let d=1;d<=totalDias;d++){
+      const dt = new Date(anoN,mesN-1,d);
+      const dow = dt.getDay();
+      const isUtil = dow!==0&&(dow!==6||sabExtras.includes(d));
+      const isDom  = dow===0;
+      const isFut  = d>diaAtual;
+      const prevDia = isUtil ? minsPrev : 0;
+      prevAcum += prevDia;
+      const parDia = minsPorDia[d]||0;
+      parAcum += parDia;
+      const pct = prevAcum>0 ? (parAcum/prevAcum*100) : null;
+      const diasemana=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'][dow];
+      const rowStyle = isDom?' style="opacity:.4"':(isFut?' style="opacity:.55"':'');
+      const pctCor = pct>=50?'var(--verm)':pct>=20?'var(--amar)':'var(--verde)';
+      const pctTxt = isFut?'—':(pct!==null?`<span style="color:${pctCor};font-weight:700">${pct.toFixed(1)}%</span>`:'—');
+      rowsD+=`<tr${rowStyle}>
+        <td><b>${d}</b> <span style="font-size:11px;color:var(--fraco)">${diasemana}</span></td>
+        <td class="txt-r">${isUtil?fT(prevDia,unit):'<span style="color:var(--fraco)">—</span>'}</td>
+        <td class="txt-r">${prevAcum>0?fT(prevAcum,unit):'—'}</td>
+        <td class="txt-r" style="color:${parDia>0?'var(--verm)':'var(--fraco)'};font-weight:${parDia>0?'700':'400'}">${parDia>0?fT(parDia,unit):'0'}</td>
+        <td class="txt-r" style="color:var(--verm);font-weight:600">${parAcum>0?fT(parAcum,unit):'—'}</td>
+        <td class="txt-r">${pctTxt}</td>
+      </tr>`;
+    }
+    // totalizador
+    const pctFinal = prevAcum>0?(parAcum/prevAcum*100):0;
+    rowsD+=`<tr style="border-top:2px solid var(--borda);font-weight:700">
+      <td>TOTAL</td><td class="txt-r">—</td>
+      <td class="txt-r">${fT(prevAcum,unit)}</td>
+      <td class="txt-r" style="color:var(--verm)">${fT(parAcum,unit)}</td>
+      <td class="txt-r" style="color:var(--verm)">${fT(parAcum,unit)}</td>
+      <td class="txt-r" style="color:${pctFinal>=50?'var(--verm)':pctFinal>=20?'var(--amar)':'var(--verde)'}">${pctFinal.toFixed(1)}%</td>
+    </tr>`;
+    diarioEl.innerHTML = rowsD;
+    diarioTitle.textContent = `Paradas por Dia — ${MESES_IND[mesN-1]}/${anoN}`;
+  } else {
+    diarioEl.innerHTML = '<tr><td colspan="6" class="empty">Selecione Mês e Ano para ver o resumo diário.</td></tr>';
+    diarioTitle.textContent = 'Paradas por Dia';
+  }
+
+  // TABELA DE LANÇAMENTOS
+  let rows='';
+  lista.forEach(p=>{
+    const rec=gRec(p.recursoId), tp=gTP(p.tipoId);
+    const [y,m,d]=p.data.split('-');
+    const mins=p.tempo||minutosDiff(p.inicio,p.fim);
+    rows+=`<tr>
+      <td>${d}/${m}/${y}</td>
+      <td class="fw">${rec?rec.nome:'—'}</td>
+      <td><span class="badge badge-prevenda">${tp?tp.nome:'—'}</span></td>
+      <td>${p.inicio}</td><td>${p.fim}</td>
+      <td style="color:var(--verm);font-weight:600">${fT(mins,unit)}</td>
+      <td style="max-width:130px;overflow:hidden;text-overflow:ellipsis">${p.obs||'—'}</td>
+      <td><div style="display:flex;gap:6px">
+        <button class="btn btn-s" style="padding:4px 10px;font-size:12px" onclick="editarParada(${p.id})">✏️</button>
+        <button class="btn btn-d" style="padding:4px 10px;font-size:12px" onclick="excluirParada(${p.id})">🗑</button>
+      </div></td>
+    </tr>`;
+  });
+  document.getElementById('tb-paradas').innerHTML = rows||'<tr><td colspan="8" class="empty">Nenhuma parada encontrada.</td></tr>';
+  document.getElementById('par-count').textContent = `Lançamentos (${lista.length}) — ${fT(totalMin,unit)} total`;
+}
+
+// ══════ RECURSOS ══════
+
+function limparRecurso(){
+  editRecursoId = null;
+  document.getElementById('rec-nome').value = '';
+  document.getElementById('rec-desc').value = '';
+  document.getElementById('btn-salvar-rec').textContent = '💾 Salvar Recurso';
+}
+
+async function salvarRecurso(){
+  const nome = document.getElementById('rec-nome').value.trim();
+  const desc = document.getElementById('rec-desc').value.trim();
+  if(!nome){ alert('Informe o nome do recurso.'); return; }
+  const corpo = {nome, descricao:desc, ativo:true};
+  if(editRecursoId){
+    const r = await sbUpdate('recursos', editRecursoId, corpo);
+    if(r){ const idx=recursos.findIndex(x=>x.id===editRecursoId); if(idx>=0) recursos[idx]=mapRecurso({...corpo,id:editRecursoId}); }
+  } else {
+    const r = await sbSave('recursos', corpo);
+    if(r) recursos.push(mapRecurso(Array.isArray(r)?r[0]:r));
+  }
+  limparRecurso();
+  closeModal('modal-recurso');
+  renderRecursos();
+}
+
+function editarRecurso(id){
+  const r = recursos.find(x=>x.id===id);
+  if(!r) return;
+  editRecursoId = id;
+  document.getElementById('rec-nome').value = r.nome;
+  document.getElementById('rec-desc').value = r.desc;
+  document.getElementById('modal-rec-title').textContent = '✏️ Editar Recurso';
+  document.getElementById('btn-salvar-rec').textContent = '💾 Atualizar Recurso';
+  openModal('modal-recurso');
+}
+
+async function excluirRecurso(id){
+  if(!confirm('Excluir este recurso?')) return;
+  const r = await sbDelete('recursos', id);
+  if(r!==null){ recursos = recursos.filter(x=>x.id!==id); renderRecursos(); }
+}
+
+function renderRecursos(){
+  let rows = '';
+  recursos.forEach(r=>{
+    rows += `<tr>
+      <td class="fw">${r.nome}</td>
+      <td>${r.desc||'—'}</td>
+      <td><span class="badge ${r.ativo?'badge-ok':'badge-crit'}">${r.ativo?'✓ Ativo':'✗ Inativo'}</span></td>
+      <td><div style="display:flex;gap:6px">
+        <button class="btn btn-s" style="padding:4px 10px;font-size:12px" onclick="editarRecurso(${r.id})">✏️ Editar</button>
+        <button class="btn btn-d" style="padding:4px 10px;font-size:12px" onclick="excluirRecurso(${r.id})">🗑</button>
+      </div></td>
+    </tr>`;
+  });
+  document.getElementById('tb-recursos').innerHTML = rows || '<tr><td colspan="4" class="empty">Nenhum recurso cadastrado.</td></tr>';
+}
+
+// ══════ TIPOS DE PARADA ══════
+
+function limparTP(){
+  editTPId = null;
+  document.getElementById('tp-nome').value = '';
+  document.getElementById('tp-desc').value = '';
+  document.getElementById('btn-salvar-tp').textContent = '💾 Salvar Tipo';
+}
+
+async function salvarTP(){
+  const nome = document.getElementById('tp-nome').value.trim();
+  const desc = document.getElementById('tp-desc').value.trim();
+  if(!nome){ alert('Informe o nome do tipo de parada.'); return; }
+  const corpo = {nome, descricao:desc};
+  if(editTPId){
+    const r = await sbUpdate('tipos_parada', editTPId, corpo);
+    if(r){ const idx=tiposParada.findIndex(x=>x.id===editTPId); if(idx>=0) tiposParada[idx]=mapTP({...corpo,id:editTPId}); }
+  } else {
+    const r = await sbSave('tipos_parada', corpo);
+    if(r) tiposParada.push(mapTP(Array.isArray(r)?r[0]:r));
+  }
+  limparTP();
+  closeModal('modal-tipoparada');
+  renderTP();
+}
+
+function editarTP(id){
+  const t = tiposParada.find(x=>x.id===id);
+  if(!t) return;
+  editTPId = id;
+  document.getElementById('tp-nome').value = t.nome;
+  document.getElementById('tp-desc').value = t.desc;
+  document.getElementById('modal-tp-title').textContent = '✏️ Editar Tipo de Parada';
+  document.getElementById('btn-salvar-tp').textContent = '💾 Atualizar Tipo';
+  openModal('modal-tipoparada');
+}
+
+async function excluirTP(id){
+  if(!confirm('Excluir este tipo de parada?')) return;
+  const r = await sbDelete('tipos_parada', id);
+  if(r!==null){ tiposParada = tiposParada.filter(x=>x.id!==id); renderTP(); }
+}
+
+function renderTP(){
+  let rows = '';
+  tiposParada.forEach(t=>{
+    rows += `<tr>
+      <td class="fw">${t.nome}</td>
+      <td>${t.desc||'—'}</td>
+      <td><div style="display:flex;gap:6px">
+        <button class="btn btn-s" style="padding:4px 10px;font-size:12px" onclick="editarTP(${t.id})">✏️ Editar</button>
+        <button class="btn btn-d" style="padding:4px 10px;font-size:12px" onclick="excluirTP(${t.id})">🗑</button>
+      </div></td>
+    </tr>`;
+  });
+  document.getElementById('tb-tiposparada').innerHTML = rows || '<tr><td colspan="3" class="empty">Nenhum tipo de parada cadastrado.</td></tr>';
+}
+
+// ══════ METAS DE HORAS ══════
+
+function getMetaHorasDia(data){ return metasHoras.find(m=>m.data===data)?.horas||0; }
+function getMetaProdDia(data){ return metasProducao.find(m=>m.data===data)?.qt||0; }
+
+function renderMetasHoras(){
+  const mes = parseInt(document.getElementById('mh-mes')?.value||new Date().getMonth()+1);
+  const ano = parseInt(document.getElementById('mh-ano')?.value||new Date().getFullYear());
+  const total = diasNoMes(mes,ano);
+  const DIAS=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+  let rows='';
+  for(let d=1;d<=total;d++){
+    const dt=new Date(ano,mes-1,d);
+    const dow=dt.getDay();
+    const dataStr=`${ano}-${String(mes).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const meta=getMetaHorasDia(dataStr);
+    const isUtil=dow!==0&&dow!==6;
+    rows+=`<tr style="${!isUtil?'opacity:.5':''}">
+      <td><b>${d}</b></td>
+      <td>${dataStr}</td>
+      <td>${DIAS[dow]}</td>
+      <td><input type="number" min="0" step="0.5" value="${meta||''}" placeholder="${isUtil?'8':'0'}" style="background:var(--cm);border:1px solid var(--borda);border-radius:6px;padding:6px 10px;color:var(--txt);font-size:13px;width:100px" data-data="${dataStr}" class="mh-input"></td>
+    </tr>`;
+  }
+  document.getElementById('tb-mh').innerHTML=rows;
+  document.getElementById('mh-titulo').textContent=`Metas de Horas — ${MESES_IND[mes-1]}/${ano}`;
+}
+
+function preencherMetasHorasPadrao(){
+  const padrao = parseFloat(document.getElementById('mh-padrao')?.value||8);
+  document.querySelectorAll('.mh-input').forEach(inp=>{
+    const [_a,_m,_d]=inp.dataset.data.split("-").map(Number); const dt=new Date(_a,_m-1,_d);
+    const dow=dt.getDay();
+    if(dow!==0&&dow!==6) inp.value=padrao;
+  });
+}
+
+async function salvarTodasMetasHoras(){
+  const inputs = document.querySelectorAll('.mh-input');
+  let salvos=0;
+  for(const inp of inputs){
+    const horas=parseFloat(inp.value)||0;
+    const data=inp.dataset.data;
+    if(!data) continue;
+    const exist=metasHoras.find(m=>m.data===data);
+    if(exist){
+      const r=await sbUpdate('metas_horas',exist.id,{horas});
+      if(r){exist.horas=horas;salvos++;}
+    } else if(horas>0){
+      const r=await sbSave('metas_horas',{data,horas});
+      if(r){metasHoras.push(mapMetaH(Array.isArray(r)?r[0]:r));salvos++;}
+    }
+  }
+  alert(`${salvos} meta(s) de horas salva(s)!`);
+}
+
+// ══════ METAS DE PRODUÇÃO ══════
+
+function renderMetasProducao(){
+  const mes=parseInt(document.getElementById('mp-mes')?.value||new Date().getMonth()+1);
+  const ano=parseInt(document.getElementById('mp-ano')?.value||new Date().getFullYear());
+  const total=diasNoMes(mes,ano);
+  const DIAS=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+  let rows='';
+  for(let d=1;d<=total;d++){
+    const dt=new Date(ano,mes-1,d);
+    const dow=dt.getDay();
+    const dataStr=`${ano}-${String(mes).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const meta=getMetaProdDia(dataStr);
+    const isUtil=dow!==0&&dow!==6;
+    rows+=`<tr style="${!isUtil?'opacity:.5':''}">
+      <td><b>${d}</b></td><td>${dataStr}</td><td>${DIAS[dow]}</td>
+      <td><input type="number" min="0" step="1" value="${meta||''}" placeholder="${isUtil?'1000':'0'}" style="background:var(--cm);border:1px solid var(--borda);border-radius:6px;padding:6px 10px;color:var(--txt);font-size:13px;width:120px" data-data="${dataStr}" class="mp-input"></td>
+    </tr>`;
+  }
+  document.getElementById('tb-mp').innerHTML=rows;
+  document.getElementById('mp-titulo').textContent=`Metas de Produção — ${MESES_IND[mes-1]}/${ano}`;
+}
+
+function preencherMetasProducaoPadrao(){
+  const padrao=parseFloat(document.getElementById('mp-padrao')?.value||1000);
+  document.querySelectorAll('.mp-input').forEach(inp=>{
+    const [_a,_m,_d]=inp.dataset.data.split("-").map(Number); const dt=new Date(_a,_m-1,_d);
+    const dow=dt.getDay();
+    if(dow!==0&&dow!==6) inp.value=padrao;
+  });
+}
+
+async function salvarTodasMetasProducao(){
+  const inputs=document.querySelectorAll('.mp-input');
+  let salvos=0;
+  for(const inp of inputs){
+    const qt=parseFloat(inp.value)||0;
+    const data=inp.dataset.data;
+    if(!data) continue;
+    const exist=metasProducao.find(m=>m.data===data);
+    if(exist){
+      const r=await sbUpdate('metas_producao',exist.id,{quantidade:qt});
+      if(r){exist.qt=qt;salvos++;}
+    } else if(qt>0){
+      const r=await sbSave('metas_producao',{data,quantidade:qt});
+      if(r){metasProducao.push(mapMetaP(Array.isArray(r)?r[0]:r));salvos++;}
+    }
+  }
+  alert(`${salvos} meta(s) de produção salva(s)!`);
+}
+
+// ══════ OEE ══════
+
+async function salvarQualidadeOEE(mes, ano, qualidade){
+  const exist=oeeQualidade.find(o=>o.mes===mes&&o.ano===ano);
+  if(exist){
+    const r=await sbUpdate('oee_qualidade',exist.id,{qualidade});
+    if(r){exist.qualidade=qualidade;}
+  } else {
+    const r=await sbSave('oee_qualidade',{mes,ano,qualidade});
+    if(r) oeeQualidade.push(mapOeeQ(Array.isArray(r)?r[0]:r));
+  }
+  renderOEE();
+}
+
+function calcDisponibilidadeMes(mes, ano){
+  // soma horas previstas do mês via metas_horas
+  const prevH = metasHoras.filter(m=>m.mes===mes&&m.ano===ano).reduce((a,b)=>a+b.horas,0);
+  if(!prevH) return null;
+  // total parado no mês em horas
+  const paradoMin = paradas.filter(p=>p.mes===mes&&p.ano===ano).reduce((a,b)=>a+(b.tempo||minutosDiff(b.inicio,b.fim)),0);
+  const paradoH = paradoMin/60;
+  return ((prevH-paradoH)/prevH)*100;
+}
+
+function calcEficienciaMes(mes, ano){
+  // produção real do mês (PRODUCAO)
+  const prodReal = lancamentosProducao.filter(l=>l.mes===mes&&l.ano===ano&&l.situacao==='PRODUCAO').reduce((a,b)=>a+b.qt,0);
+  // meta produção do mês
+  const metaProd = metasProducao.filter(m=>m.mes===mes&&m.ano===ano).reduce((a,b)=>a+b.qt,0);
+  if(!metaProd) return null;
+  return (prodReal/metaProd)*100;
+}
+
+function renderOEE(){
+  const ano=parseInt(document.getElementById('oee-ano')?.value||new Date().getFullYear());
+  const MESES_ABREV_OEE=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  const cores=['#e74c3c','#e67e22','#f39c12','#2ecc71','#27ae60','#1abc9c','#3498db','#2980b9','#9b59b6','#8e44ad','#e91e63','#00bcd4'];
+
+  const dados=[];
+  for(let m=1;m<=12;m++){
+    const disp=calcDisponibilidadeMes(m,ano);
+    const efic=calcEficienciaMes(m,ano);
+    const qualObj=oeeQualidade.find(o=>o.mes===m&&o.ano===ano);
+    const qual=qualObj?qualObj.qualidade:null;
+    const oee=(disp!==null&&efic!==null&&qual!==null)?(disp/100*efic/100*qual/100*100):null;
+    dados.push({m,mes:MESES_ABREV_OEE[m-1],disp,efic,qual,oee});
+  }
+
+  // KPIs
+  const comDados=dados.filter(d=>d.oee!==null);
+  const medioOEE=comDados.length?comDados.reduce((a,b)=>a+b.oee,0)/comDados.length:null;
+  const melhor=comDados.length?comDados.reduce((a,b)=>a.oee>b.oee?a:b):null;
+  const pior=comDados.length?comDados.reduce((a,b)=>a.oee<b.oee?a:b):null;
+  document.getElementById('oee-kpi-medio').textContent=medioOEE!==null?medioOEE.toFixed(2)+'%':'—';
+  document.getElementById('oee-kpi-melhor').textContent=melhor?melhor.oee.toFixed(2)+'%':'—';
+  document.getElementById('oee-kpi-melhor-sub').textContent=melhor?melhor.mes+'/'+ano:'—';
+  document.getElementById('oee-kpi-pior').textContent=pior?pior.oee.toFixed(2)+'%':'—';
+  document.getElementById('oee-kpi-pior-sub').textContent=pior?pior.mes+'/'+ano:'—';
+  document.getElementById('oee-kpi-meses').textContent=comDados.length;
+
+  // gráfico barras
+  const maxOEE=Math.max(...comDados.map(d=>d.oee),1);
+  const chartEl=document.getElementById('oee-chart');
+  const labelsEl=document.getElementById('oee-chart-labels');
+  chartEl.innerHTML=dados.map((d,i)=>{
+    const h=d.oee!==null?Math.round(d.oee/100*160):0;
+    const cor=d.oee===null?'#3a3a3a':d.oee>=70?'#27ae60':d.oee>=50?'#f39c12':'#e74c3c';
+    return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%">
+      ${d.oee!==null?`<div style="font-size:10px;color:${cor};margin-bottom:2px">${d.oee.toFixed(1)}%</div>`:''}
+      <div style="width:100%;background:${cor};height:${h}px;border-radius:3px 3px 0 0;min-height:${d.oee!==null?2:0}px"></div>
+    </div>`;
+  }).join('');
+  labelsEl.innerHTML=dados.map(d=>`<div style="flex:1;text-align:center;font-size:10px;color:var(--fraco);padding-top:4px">${d.mes}</div>`).join('');
+
+  // tabela
+  let rows='';
+  dados.forEach(d=>{
+    const qualVal=d.qual!==null?d.qual:99;
+    const oeeStr=d.oee!==null?`<span style="color:${d.oee>=70?'var(--verde)':d.oee>=50?'var(--amar)':'var(--verm)'};font-weight:700">${d.oee.toFixed(2)}%</span>`:'<span style="color:var(--fraco)">—</span>';
+    rows+=`<tr>
+      <td class="fw">${d.mes}/${ano}</td>
+      <td>${d.disp!==null?d.disp.toFixed(2)+'%':'<span style="color:var(--fraco)">sem dados</span>'}</td>
+      <td>${d.efic!==null?d.efic.toFixed(2)+'%':'<span style="color:var(--fraco)">sem dados</span>'}</td>
+      <td><div style="display:flex;align-items:center;gap:6px">
+        <input type="number" min="0" max="100" step="0.01" value="${qualVal}" style="background:var(--cm);border:1px solid var(--borda);border-radius:6px;padding:4px 8px;color:var(--txt);font-size:13px;width:80px" id="oee-qual-${d.m}">
+        <button class="btn btn-s" style="padding:4px 8px;font-size:11px" onclick="salvarQualOEEInline(${d.m},${ano})">✓</button>
+      </div></td>
+      <td>${oeeStr}</td>
+      <td></td>
+    </tr>`;
+  });
+  document.getElementById('tb-oee').innerHTML=rows;
+  document.getElementById('oee-chart-title').textContent=`OEE por Mês — ${ano}`;
+}
+
+async function salvarQualOEEInline(mes,ano){
+  const val=parseFloat(document.getElementById(`oee-qual-${mes}`)?.value)||99;
+  await salvarQualidadeOEE(mes,ano,val);
+}
+
+// ══════ INDICADORES ══════
+
+const MESES_IND = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+
+function diasNoMes(mes, ano){ return new Date(ano, mes, 0).getDate(); }
+
+function isDiaUtil(date){
+  const dow = date.getDay(); // 0=dom, 6=sab
+  return dow !== 0 && dow !== 6;
+}
+
+function getSabadosMarcados(){
+  const wrp = document.getElementById('ind-sabados-wrap');
+  if(!wrp) return [];
+  return Array.from(wrp.querySelectorAll('input[type=checkbox]:checked')).map(c=>parseInt(c.value));
+}
+
+function buildSabadosCheckboxes(mes, ano){
+  const wrp = document.getElementById('ind-sabados-wrap');
+  if(!wrp) return;
+  const total = diasNoMes(mes, ano);
+  const sabados = [];
+  for(let d=1; d<=total; d++){
+    const dt = new Date(ano, mes-1, d);
+    if(dt.getDay()===6) sabados.push(d);
+  }
+  // preservar seleção anterior
+  const prevSel = getSabadosMarcados();
+  wrp.innerHTML = sabados.map(d=>`
+    <label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;background:var(--card);border:1px solid var(--borda);border-radius:6px;padding:4px 8px">
+      <input type="checkbox" value="${d}" ${prevSel.includes(d)?'checked':''} onchange="renderIndicadores()"> Sáb ${d}
+    </label>`).join('');
+}
+
+function renderIndicadores(){
+  const mes  = parseInt(document.getElementById('ind-mes')?.value||new Date().getMonth()+1);
+  const ano  = parseInt(document.getElementById('ind-ano')?.value||new Date().getFullYear());
+
+  buildSabadosCheckboxes(mes, ano);
+  const sabadosExtras = getSabadosMarcados();
+
+  const total = diasNoMes(mes, ano);
+  const hoje  = new Date();
+  const diaAtual = (mes===hoje.getMonth()+1 && ano===hoje.getFullYear()) ? hoje.getDate() : total;
+
+  // produção real por dia
+  const prodPorDia = {};
+  lancamentosProducao.forEach(l=>{
+    if(l.situacao !== 'PRODUCAO') return;
+    const [ly,lm,ld] = l.data.split('-').map(Number);
+    if(lm!==mes||ly!==ano) return;
+    prodPorDia[ld] = (prodPorDia[ld]||0) + l.qt;
+  });
+
+  // meta por dia via metas_producao
+  const metaPorDia = {};
+  metasProducao.filter(m=>m.mes===mes&&m.ano===ano).forEach(m=>{
+    const d = parseInt(m.data.split('-')[2]);
+    metaPorDia[d] = m.qt;
+  });
+
+  // totais
+  let diasUteisTotal=0, metaTotal=0, metaAcumAteHoje=0;
+  for(let d=1;d<=total;d++){
+    const dt=new Date(ano,mes-1,d);
+    const isUtil=isDiaUtil(dt)||sabadosExtras.includes(d);
+    const mDia=metaPorDia[d]||0;
+    if(isUtil) diasUteisTotal++;
+    metaTotal+=mDia;
+    if(d<=diaAtual) metaAcumAteHoje+=mDia;
+  }
+
+  const prodTotal = Object.values(prodPorDia).reduce((a,b)=>a+b,0);
+  const pct = metaAcumAteHoje > 0 ? (prodTotal / metaAcumAteHoje * 100) : 0;
+
+  // KPIs
+  document.getElementById('ind-kpi-du').textContent    = diasUteisTotal;
+  document.getElementById('ind-kpi-meta').textContent  = fN(metaTotal);
+  document.getElementById('ind-kpi-prod').textContent  = fN(prodTotal);
+  document.getElementById('ind-kpi-pct').textContent   = pct.toFixed(1)+'%';
+  document.getElementById('ind-titulo').textContent    = `Indicador de Desempenho — ${MESES_IND[mes-1]}/${ano}`;
+  const kpiCard = document.getElementById('ind-kpi-card-pct');
+  kpiCard.className = 'kpi-card ' + (pct>=100?'green':pct>=80?'warn':'red');
+
+  // TABELA
+  let rows='', metaAcum=0, prodAcum=0;
+  for(let d=1;d<=total;d++){
+    const dt=new Date(ano,mes-1,d);
+    const dow=dt.getDay();
+    const isUtil=isDiaUtil(dt)||sabadosExtras.includes(d);
+    const isDom=dow===0;
+    const isFut=d>diaAtual;
+    const metaDia=metaPorDia[d]||0;
+    const prodDia=prodPorDia[d]||0;
+    metaAcum+=metaDia;
+    prodAcum+=prodDia;
+    const pctDia=metaAcum>0?(prodAcum/metaAcum*100):null;
+
+    // cor da linha
+    let rowStyle = '';
+    if(isDom) rowStyle = ' style="opacity:.45"';
+    else if(!isUtil && !isDom) rowStyle = ' style="opacity:.55"'; // sábado não marcado
+    else if(isFut) rowStyle = ' style="opacity:.6"';
+    else if(pctDia !== null && pctDia >= 100) rowStyle = ' style="background:rgba(39,174,96,.12)"';
+    else if(pctDia !== null && pctDia < 80)   rowStyle = ' style="background:rgba(231,76,60,.08)"';
+
+    const pctTxt = isFut ? '—' : (pctDia!==null ? `<span style="color:${pctDia>=100?'var(--verde)':pctDia>=80?'var(--amar)':'var(--verm)'};font-weight:700">${pctDia.toFixed(1)}%</span>` : '—');
+    const diasemana = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'][dow];
+
+    rows += `<tr${rowStyle}>
+      <td><b>${d}</b> <span style="font-size:11px;color:var(--fraco)">${diasemana}</span></td>
+      <td class="txt-r">${isUtil ? fN(metaDia) : '<span style="color:var(--fraco)">—</span>'}</td>
+      <td class="txt-r" style="color:var(--verde);font-weight:${prodDia>0?'700':'400'}">${prodDia>0?fN(prodDia):'<span style="color:var(--fraco)">0</span>'}</td>
+      <td class="txt-r">${metaAcum>0?fN(metaAcum):'—'}</td>
+      <td class="txt-r fw" style="color:var(--verde)">${prodAcum>0?fN(prodAcum):'—'}</td>
+      <td class="txt-r">${pctTxt}</td>
+      <td></td>
+    </tr>`;
+  }
+
+  // linha de total
+  const pctFinal = metaAcum>0?(prodAcum/metaAcum*100):0;
+  rows += `<tr style="border-top:2px solid var(--borda);font-weight:700">
+    <td>TOTAL</td>
+    <td class="txt-r">${fN(metaAcum)}</td>
+    <td class="txt-r">${fN(prodAcum)}</td>
+    <td class="txt-r">—</td>
+    <td class="txt-r">—</td>
+    <td class="txt-r" style="color:${pctFinal>=100?'var(--verde)':pctFinal>=80?'var(--amar)':'var(--verm)'}">${pctFinal.toFixed(1)}%</td>
+    <td></td>
+  </tr>`;
+
+  document.getElementById('tb-indicadores').innerHTML = rows;
+}
+
 // ===== INIT =====
 function init(){
   document.getElementById('ent-data').value=today();
   document.getElementById('sai-data').value=today();
   document.getElementById('prod-data').value=today();
+  document.getElementById('par-data').value=today();
+  // indicadores: setar mês/ano atual
+  const agora = new Date();
+  const selMes = document.getElementById('ind-mes');
+  const selAno = document.getElementById('ind-ano');
+  if(selMes) selMes.value = agora.getMonth()+1;
+  if(selAno) selAno.value = agora.getFullYear();
+  // metas
+  ['mh-mes','mp-mes'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=agora.getMonth()+1; });
+  ['mh-ano','mp-ano','oee-ano'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=agora.getFullYear(); });
   if(SB_URL && SB_KEY){
     testarConexao().then(ok=>{ if(ok)carregarTudo(); else { fillAllSelects(); renderDash(); } });
   } else {
