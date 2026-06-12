@@ -308,8 +308,13 @@ body{font-family:'DM Sans',sans-serif;background:var(--preto);color:var(--txt);m
       <select class="fi" id="fe-loc" onchange="renderEstoque()"><option value="">Todas localizações</option></select>
     </div>
     <div class="table-card">
-      <div class="tc-head"><div class="tc-title" id="estoque-count">Estoque</div></div>
-      <div class="table-wrap"><table><thead><tr><th>Cód.</th><th>Produto</th><th>Subfamília</th><th>Localização</th><th>Estoque Mín.</th><th>Entradas</th><th>Saídas</th><th>Saldo</th><th>Custo Médio</th><th>Valor Estoque</th></tr></thead><tbody id="tb-estoque"></tbody></table></div>
+      <div class="tc-head">
+        <div class="tc-title" id="estoque-count">Estoque</div>
+        <div id="btn-ajuste-saldo-area" style="display:none">
+          <span style="font-size:11px;color:var(--fraco);margin-right:8px">Admin:</span>
+        </div>
+      </div>
+      <div class="table-wrap"><table><thead><tr><th>Cód.</th><th>Produto</th><th>Subfamília</th><th>Localização</th><th>Estoque Mín.</th><th>Saldo Inicial</th><th>Entradas</th><th>Saídas</th><th>Saldo</th><th>Custo Médio</th><th>Valor Estoque</th><th id="th-ajuste-saldo" style="display:none">Ajuste</th></tr></thead><tbody id="tb-estoque"></tbody></table></div>
     </div>
   </div>
 
@@ -846,6 +851,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--preto);color:var(--txt);m
   <div class="page" id="page-produtos">
     <div class="filters" style="margin-bottom:12px">
       <button class="btn btn-p" onclick="abrirModalProduto()">+ Novo Produto</button>
+      <button class="btn btn-d" onclick="excluirDuplicados()" title="Exclui produtos com ID entre 17 e 32 (duplicados)">🗑️ Remover Duplicados (IDs 17–32)</button>
     </div>
     <div class="filters">
       <input class="fi fi-search" placeholder="🔍 Buscar..." oninput="renderProdutos(this.value)">
@@ -1196,6 +1202,45 @@ body{font-family:'DM Sans',sans-serif;background:var(--preto);color:var(--txt);m
     </div>
   </div>
 </div>
+
+<!-- MODAL AJUSTE SALDO (admin) -->
+<div class="modal-ov" id="modal-ajuste-saldo">
+  <div class="modal" style="width:480px">
+    <h3>⚖️ Ajustar Saldo Inicial</h3>
+    <div style="background:var(--cm);border-radius:10px;padding:14px;border:1px solid var(--borda);margin-bottom:16px">
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--fraco);margin-bottom:4px">Produto</div>
+      <div style="font-weight:600;font-size:14px" id="ajuste-prod-nome">—</div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+      <div style="background:var(--cm);border-radius:10px;padding:14px;border:1px solid var(--borda)">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--fraco);margin-bottom:4px">Saldo Atual</div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:700;color:var(--verde)" id="ajuste-saldo-atual">—</div>
+      </div>
+      <div style="background:var(--cm);border-radius:10px;padding:14px;border:1px solid var(--borda)">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--fraco);margin-bottom:4px">Saldo Inicial Atual</div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:700;color:var(--amar)" id="ajuste-saldo-inicial-atual">—</div>
+      </div>
+    </div>
+    <div class="form-grid-2" style="margin-bottom:16px">
+      <div class="fg">
+        <label>Novo Saldo Total Desejado *</label>
+        <input type="number" id="ajuste-novo-saldo" step="0.001" placeholder="0" oninput="calcAjuste()">
+      </div>
+      <div class="fg">
+        <label>Ajuste a ser aplicado</label>
+        <input type="text" id="ajuste-delta" readonly style="opacity:.7;cursor:not-allowed;color:var(--amar)">
+      </div>
+    </div>
+    <div style="background:rgba(243,156,18,.08);border:1px solid rgba(243,156,18,.3);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--amar);margin-bottom:16px">
+      💡 O <strong>Saldo Inicial</strong> é um valor base que soma ao total de entradas e saídas registradas. Use para corrigir o estoque quando há diferenças físicas vs sistema.
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-s" onclick="closeModal('modal-ajuste-saldo')">Cancelar</button>
+      <button class="btn btn-p" onclick="confirmarAjusteSaldo()">💾 Salvar Ajuste</button>
+    </div>
+  </div>
+</div>
+
 </div><!-- /main-content -->
 </div><!-- /layout -->
 </div><!-- /app -->
@@ -1405,7 +1450,7 @@ let editTPId = null;
 let currentUser=null,editProdId=null,editCliId=null,editFornId=null,editLocId=null,editUsrIdx=null,editEntId=null,editSaiId=null;
 
 // ══════ MAP Supabase → local ══════
-function mapProd(r){ return{id:r.id,desc:r.descricao,subfam:r.subfamilia_id,locId:r.localizacao_id,min:Number(r.estoque_minimo),custo:Number(r.custo_base),at1:r.atributo1||'',at2:r.atributo2||'',at3:r.atributo3||''}; }
+function mapProd(r){ return{id:r.id,desc:r.descricao,subfam:r.subfamilia_id,locId:r.localizacao_id,min:Number(r.estoque_minimo),custo:Number(r.custo_base),at1:r.atributo1||'',at2:r.atributo2||'',at3:r.atributo3||'',saldoInicial:Number(r.saldo_inicial||0)}; }
 function mapSF(r){ return{id:r.id,nome:r.nome,tipo:r.tipo,desc:r.descricao||''}; }
 function mapLoc(r){ return{id:r.id,nome:r.nome,tipo:r.tipo,cap:r.capacidade||0,desc:r.descricao||''}; }
 function mapForn(r){ return{id:r.id,nome:r.nome,doc:r.doc||'',contato:r.contato||'',tel:r.tel||'',email:r.email||'',cidade:r.cidade||'',end:r.endereco||'',materiais:r.materiais||'',prazo:r.prazo_entrega||0,pagto:r.cond_pagamento||'',obs:r.obs||''}; }
@@ -1426,22 +1471,24 @@ function gTP(id){ return tiposParada.find(t=>t.id===parseInt(id)); }
 async function carregarTudo(silent=false){
   setSyncStatus('connecting');
   if(!silent) showLoader(true);
+  // Filtro fixo: apenas junho/2026
+  const fMes = '&mes=eq.6&ano=eq.2026';
   const [sf, locs, prods, clis, forns, ents, sais, lancs, fts, recs, tps, pars, mh, mp, oq] = await Promise.all([
     sbReq('subfamilias','GET',null,'?order=id'),
     sbReq('localizacoes','GET',null,'?order=id'),
     sbReq('produtos','GET',null,'?order=id'),
     sbReq('clientes','GET',null,'?order=id'),
     sbReq('fornecedores','GET',null,'?order=id'),
-    sbReq('entradas','GET',null,'?order=data'),
-    sbReq('saidas','GET',null,'?order=data'),
-    sbReq('lancamentos_producao','GET',null,'?order=data'),
+    sbReq('entradas','GET',null,'?order=data'+fMes),
+    sbReq('saidas','GET',null,'?order=data'+fMes),
+    sbReq('lancamentos_producao','GET',null,'?order=data'+fMes),
     sbReq('ficha_tecnica','GET',null,'?order=id'),
     sbReq('recursos','GET',null,'?order=id'),
     sbReq('tipos_parada','GET',null,'?order=id'),
-    sbReq('paradas','GET',null,'?order=data'),
-    sbReq('metas_horas','GET',null,'?order=data'),
-    sbReq('metas_producao','GET',null,'?order=data'),
-    sbReq('oee_qualidade','GET',null,'?order=ano,mes'),
+    sbReq('paradas','GET',null,'?order=data'+fMes),
+    sbReq('metas_horas','GET',null,'?order=data'+fMes),
+    sbReq('metas_producao','GET',null,'?order=data'+fMes),
+    sbReq('oee_qualidade','GET',null,'?mes=eq.6&ano=eq.2026&order=ano,mes'),
   ]);
   if(sf) subfamilias   = sf.map(mapSF);
   if(locs) localizacoes= locs.map(mapLoc);
@@ -1526,12 +1573,14 @@ function getY(d){return parseInt(d.split('-')[0])}
 function save(){} // não usado mais — tudo vai direto ao Supabase
 
 function estItem(prodId){
+  const p=gP(prodId);
+  const saldoInicial=p?Number(p.saldoInicial||0):0;
   const ents=entradas.filter(x=>x.prodId===prodId);
   const e=ents.reduce((a,b)=>a+b.qt,0);
   const s=saidas.filter(x=>x.prodId===prodId).reduce((a,b)=>a+b.qt,0);
   const totalCusto=ents.reduce((a,b)=>a+(b.qt*(b.custo||0)),0);
-  const cmp=e>0?totalCusto/e:(gP(prodId)?.custo||0);
-  return{e,s,saldo:e-s,cmp};
+  const cmp=e>0?totalCusto/e:(p?.custo||0);
+  return{e,s,saldo:saldoInicial+e-s,cmp,saldoInicial};
 }
 
 // SENHA HELPERS
@@ -1744,13 +1793,16 @@ function renderDash(){
 }
 // ===== ESTOQUE =====
 function estItemPeriodo(prodId, mesF, anoF){
+  const p=gP(prodId);
+  // saldoInicial só é considerado quando não há filtro de período (visão acumulada)
+  const saldoInicial=(!mesF&&!anoF)?(p?Number(p.saldoInicial||0):0):0;
   const entsF = entradas.filter(x => x.prodId===prodId && (!mesF||String(x.mes)===mesF) && (!anoF||String(x.ano)===anoF));
   const saisF = saidas.filter(x  => x.prodId===prodId && (!mesF||String(x.mes)===mesF) && (!anoF||String(x.ano)===anoF));
   const e = entsF.reduce((a,b)=>a+b.qt,0);
   const s = saisF.reduce((a,b)=>a+b.qt,0);
   const totalCusto = entsF.reduce((a,b)=>a+(b.qt*(b.custo||0)),0);
-  const cmp = e>0 ? totalCusto/e : (gP(prodId)?.custo||0);
-  return {e, s, saldo:e-s, cmp};
+  const cmp = e>0 ? totalCusto/e : (p?.custo||0);
+  return {e, s, saldo:saldoInicial+e-s, cmp};
 }
 
 function renderEstoque(){
@@ -1776,11 +1828,18 @@ function renderEstoque(){
     const critIcon = isCrit ? `<span onclick="abrirDetalhesCrit(${p.id},'${mesF}','${anoF}')" title="Ver detalhes críticos" style="cursor:pointer;font-size:16px;margin-left:6px" >⚠️</span>` : '';
     const periodoLabel = (mesF||anoF) ? ' <span style="font-size:10px;color:var(--amar)">(período)</span>' : '';
     const saldoClass = isCrit ? 'txt-r' : (est.saldo<0?'txt-r':'');
-    rows+=`<tr><td>${p.id}</td><td class="fw">${p.desc}</td><td>${sf?sf.nome:'—'}</td><td>${loc?loc.nome:'—'}</td><td>${fN(p.min)}</td><td class="txt-v">${fN(est.e)}</td><td class="txt-r">${fN(est.s)}</td><td class="fw ${saldoClass}">${fN(est.saldo)}${periodoLabel}${critIcon}</td><td class="txt-f">${fR(est.cmp)}</td><td>${fR(Math.max(0,est.saldo)*est.cmp)}</td></tr>`;
+    const isAdmin=currentUser&&currentUser.perfil==='admin';
+    const ajusteBtn=isAdmin?`<span class="r-edit" onclick="abrirAjusteSaldo(${p.id})" title="Ajustar saldo inicial">⚖️</span>`:'';
+    const saldoInicialCell=`<td class="txt-f">${fN(p.saldoInicial||0)}</td>`;
+    const ajusteCell=isAdmin?`<td>${ajusteBtn}</td>`:'<td style="display:none"></td>';
+    rows+=`<tr><td>${p.id}</td><td class="fw">${p.desc}</td><td>${sf?sf.nome:'—'}</td><td>${loc?loc.nome:'—'}</td><td>${fN(p.min)}</td>${saldoInicialCell}<td class="txt-v">${fN(est.e)}</td><td class="txt-r">${fN(est.s)}</td><td class="fw ${saldoClass}">${fN(est.saldo)}${periodoLabel}${critIcon}</td><td class="txt-f">${fR(est.cmp)}</td><td>${fR(Math.max(0,est.saldo)*est.cmp)}</td>${ajusteCell}</tr>`;
   });
   const periodoTxt = (mesF||anoF) ? ` — ${mesF?MESES[parseInt(mesF)-1]:''}${mesF&&anoF?' ':''}${anoF||''}` : '';
   document.getElementById('estoque-count').textContent=`Estoque${periodoTxt} — ${count} itens`;
-  document.getElementById('tb-estoque').innerHTML=rows||'<tr><td colspan="11" class="empty">Nenhum item encontrado.</td></tr>';
+  const isAdmin=currentUser&&currentUser.perfil==='admin';
+  const colCount = isAdmin ? 12 : 11;
+  document.getElementById('tb-estoque').innerHTML=rows||`<tr><td colspan="${colCount}" class="empty">Nenhum item encontrado.</td></tr>`;
+  toggleAjusteColuna();
 }
 
 // ===== ENTRADAS =====
@@ -2178,10 +2237,13 @@ function editProd(id){
 async function salvarProduto(){
   const desc=document.getElementById('prod-desc').value.trim();
   if(!desc)return alert('Descrição é obrigatória.');
+  // Validar duplicata por descrição (case-insensitive)
+  const duplicado=produtos.find(p=>p.desc.trim().toLowerCase()===desc.toLowerCase()&&p.id!==editProdId);
+  if(duplicado)return alert('Já existe um produto com essa descrição:\n"'+duplicado.desc+'"\n\nVerifique antes de continuar.');
   const d={desc,subfam:parseInt(document.getElementById('prod-sf').value)||null,locId:parseInt(document.getElementById('prod-loc-sel').value)||null,min:parseFloat(document.getElementById('prod-min').value)||0,custo:parseFloat(document.getElementById('prod-custo').value)||0,at1:document.getElementById('prod-at1').value,at2:document.getElementById('prod-at2').value,at3:document.getElementById('prod-at3').value};
   if(editProdId){
     if(sbOnline)await sbUpdate('produtos',editProdId,{descricao:d.desc,subfamilia_id:d.subfam,localizacao_id:d.locId,estoque_minimo:d.min,custo_base:d.custo,atributo1:d.at1,atributo2:d.at2,atributo3:d.at3});
-    const i=produtos.findIndex(p=>p.id===editProdId);if(i>=0)produtos[i]={...produtos[i],...d};
+    const i=produtos.findIndex(p=>p.id===editProdId);if(i>=0){const si=produtos[i].saldoInicial||0;produtos[i]={...produtos[i],...d,saldoInicial:si};}
   } else {
     if(sbOnline){const db=await sbSave('produtos',{descricao:d.desc,subfamilia_id:d.subfam,localizacao_id:d.locId,estoque_minimo:d.min,custo_base:d.custo,atributo1:d.at1,atributo2:d.at2,atributo3:d.at3});if(db)d.id=db.id;}
     else d.id=nId(produtos);
@@ -2190,6 +2252,24 @@ async function salvarProduto(){
   limparProduto();closeModal('modal-produto');renderProdutos();
 }
 async function delProd(id){if(!confirm('Excluir produto?'))return;if(sbOnline)await sbDelete('produtos',id);produtos=produtos.filter(p=>p.id!==id);renderProdutos();}
+
+async function excluirDuplicados(){
+  const ids = [17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32];
+  const existentes = ids.filter(id => produtos.some(p=>p.id===id));
+  if(existentes.length===0){alert('Nenhum produto com IDs 17 a 32 encontrado no cadastro.');return;}
+  if(!confirm('Isso irá excluir permanentemente os produtos com IDs '+existentes.join(', ')+' do Supabase.\nTem certeza?'))return;
+  let erros=0;
+  for(const id of existentes){
+    if(sbOnline){
+      const ok = await sbDelete('produtos', id);
+      if(!ok) erros++;
+    }
+    produtos = produtos.filter(p=>p.id!==id);
+  }
+  renderProdutos();
+  if(erros>0) alert('Atenção: '+erros+' produto(s) não puderam ser excluídos do Supabase.');
+  else alert('Produtos duplicados (IDs '+existentes.join(', ')+') excluídos com sucesso!');
+}
 
 // ===== CLIENTES =====
 function renderClientes(busca=''){
@@ -3791,6 +3871,63 @@ function init(){
   } else {
     testarConexao().then(ok=>{ if(ok) carregarTudo(); else { fillAllSelects(); renderDash(); } });
   }
+}
+
+
+// ===== AJUSTE DE SALDO (admin) =====
+let _ajusteProdId = null;
+
+function abrirAjusteSaldo(prodId){
+  if(!currentUser||currentUser.perfil!=='admin'){alert('Acesso restrito ao Administrador.');return;}
+  _ajusteProdId = prodId;
+  const p = gP(prodId); if(!p) return;
+  const est = estItem(prodId);
+  document.getElementById('ajuste-prod-nome').textContent = p.desc;
+  document.getElementById('ajuste-saldo-atual').textContent = fN(est.saldo);
+  document.getElementById('ajuste-saldo-inicial-atual').textContent = fN(p.saldoInicial||0);
+  document.getElementById('ajuste-novo-saldo').value = est.saldo;
+  calcAjuste();
+  openModal('modal-ajuste-saldo');
+}
+
+function calcAjuste(){
+  const prodId = _ajusteProdId; if(!prodId) return;
+  const p = gP(prodId); if(!p) return;
+  const est = estItem(prodId);
+  const novoSaldo = parseFloat(document.getElementById('ajuste-novo-saldo').value)||0;
+  // novoSaldo = saldoInicial + e - s  =>  saldoInicial = novoSaldo - e + s
+  const novoSaldoInicial = novoSaldo - est.e + est.s;
+  const delta = novoSaldoInicial - (p.saldoInicial||0);
+  const el = document.getElementById('ajuste-delta');
+  el.value = (delta>=0?'+':'')+fN(delta)+' no Saldo Inicial';
+  el.style.color = delta>0?'var(--verde)':(delta<0?'var(--verm)':'var(--fraco)');
+}
+
+async function confirmarAjusteSaldo(){
+  const prodId = _ajusteProdId; if(!prodId) return;
+  const p = gP(prodId); if(!p) return;
+  const est = estItem(prodId);
+  const novoSaldo = parseFloat(document.getElementById('ajuste-novo-saldo').value);
+  if(isNaN(novoSaldo)){alert('Informe o novo saldo desejado.');return;}
+  const novoSaldoInicial = novoSaldo - est.e + est.s;
+  if(!confirm(`Confirmar ajuste?\n\nProduto: ${p.desc}\nSaldo Inicial: ${fN(p.saldoInicial||0)} → ${fN(novoSaldoInicial)}\nNovo Saldo Total: ${fN(novoSaldo)}`)) return;
+  if(sbOnline){
+    const ok = await sbUpdate('produtos', prodId, {saldo_inicial: novoSaldoInicial});
+    if(!ok){alert('Erro ao salvar no Supabase. Verifique se a coluna saldo_inicial existe na tabela produtos.');return;}
+  }
+  // Atualiza local
+  const idx = produtos.findIndex(x=>x.id===prodId);
+  if(idx>=0) produtos[idx].saldoInicial = novoSaldoInicial;
+  closeModal('modal-ajuste-saldo');
+  renderEstoque();
+  alert('Saldo ajustado com sucesso!');
+}
+
+// Mostrar/ocultar coluna de ajuste conforme perfil
+function toggleAjusteColuna(){
+  const isAdmin = currentUser && currentUser.perfil==='admin';
+  const th = document.getElementById('th-ajuste-saldo');
+  if(th) th.style.display = isAdmin ? '' : 'none';
 }
 
 </script>
