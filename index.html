@@ -13,6 +13,17 @@
   --verde: #27ae60; --verm: #e74c3c; --amar: #f39c12;
   --sw: 230px;
 }
+/* TEMA CLARO */
+[data-tema="claro"] {
+  --preto: #f0f2f5; --ce: #ffffff; --cm: #f5f5f5; --cc: #e0e0e0;
+  --borda: #d0d0d0; --txt: #1a1a1a; --fraco: #666;
+}
+[data-tema="claro"] .table-wrap thead th { background: var(--cm); }
+[data-tema="claro"] .table-wrap td { border-bottom-color: rgba(0,0,0,.06); }
+[data-tema="claro"] .table-wrap tr:hover td { background: rgba(0,0,0,.03); }
+[data-tema="claro"] .fg select option { background: #fff; color: #1a1a1a; }
+[data-tema="claro"] #login-screen { background: radial-gradient(ellipse at 60% 40%, #d4ead4 0%, var(--preto) 70%); }
+[data-tema="claro"] ::-webkit-scrollbar-thumb { background: var(--cc); }
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'DM Sans',sans-serif;background:var(--preto);color:var(--txt);min-height:100vh}
 
@@ -169,25 +180,25 @@ body{font-family:'DM Sans',sans-serif;background:var(--preto);color:var(--txt);m
 <body>
 
 <div id="config-screen" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9999;align-items:center;justify-content:center">
-  <div style="background:#1e1e1e;border:1px solid #3a3a3a;border-radius:16px;padding:36px;width:480px;max-width:95vw">
+  <div style="background:var(--ce);border:1px solid var(--borda);border-radius:16px;padding:36px;width:480px;max-width:95vw">
     <div style="text-align:center;margin-bottom:24px">
       <div style="font-size:28px;margin-bottom:8px">⚙️</div>
       <div style="font-family:Syne,sans-serif;font-size:16px;font-weight:700;color:#2e8b2e">Configurar Conexão Supabase</div>
-      <div style="font-size:12px;color:#888;margin-top:6px">Insira as credenciais do seu projeto para salvar na nuvem</div>
+      <div style="font-size:12px;color:var(--fraco);margin-top:6px">Insira as credenciais do seu projeto para salvar na nuvem</div>
     </div>
-    <label style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#888;display:block;margin-bottom:6px">URL do Projeto</label>
+    <label style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--fraco);display:block;margin-bottom:6px">URL do Projeto</label>
     <input id="cfg-url" type="text" placeholder="https://xxxxxxxxxxxx.supabase.co"
-      style="width:100%;background:#2d2d2d;border:1px solid #3a3a3a;border-radius:8px;padding:10px 12px;color:#e8e8e8;font-size:13px;outline:none;margin-bottom:14px;font-family:DM Sans,sans-serif">
-    <label style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#888;display:block;margin-bottom:6px">Chave Anon (anon public)</label>
+      style="width:100%;background:var(--cm);border:1px solid var(--borda);border-radius:8px;padding:10px 12px;color:var(--txt);font-size:13px;outline:none;margin-bottom:14px;font-family:DM Sans,sans-serif">
+    <label style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--fraco);display:block;margin-bottom:6px">Chave Anon (anon public)</label>
     <input id="cfg-key" type="text" placeholder="eyJhbGciOiJIUzI1NiIs..."
-      style="width:100%;background:#2d2d2d;border:1px solid #3a3a3a;border-radius:8px;padding:10px 12px;color:#e8e8e8;font-size:13px;outline:none;margin-bottom:20px;font-family:DM Sans,sans-serif">
-    <div style="font-size:12px;color:#666;margin-bottom:20px;line-height:1.5">
-      💡 Encontre em: <b style="color:#aaa">Supabase → Settings → API</b><br>
+      style="width:100%;background:var(--cm);border:1px solid var(--borda);border-radius:8px;padding:10px 12px;color:var(--txt);font-size:13px;outline:none;margin-bottom:20px;font-family:DM Sans,sans-serif">
+    <div style="font-size:12px;color:var(--fraco);margin-bottom:20px;line-height:1.5">
+      💡 Encontre em: <b style="color:var(--txt)">Supabase → Settings → API</b><br>
       As credenciais ficam salvas no navegador deste computador.
     </div>
     <div style="display:flex;gap:10px;justify-content:flex-end">
       <button onclick="document.getElementById('config-screen').style.display='none'" 
-        style="padding:9px 16px;background:#2d2d2d;border:1px solid #3a3a3a;border-radius:8px;color:#e8e8e8;cursor:pointer;font-family:DM Sans,sans-serif">Cancelar</button>
+        style="padding:9px 16px;background:var(--cm);border:1px solid var(--borda);border-radius:8px;color:var(--txt);cursor:pointer;font-family:DM Sans,sans-serif">Cancelar</button>
       <button onclick="salvarConfig()"
         style="padding:9px 20px;background:#2e8b2e;border:none;border-radius:8px;color:#fff;font-weight:600;cursor:pointer;font-family:DM Sans,sans-serif">✓ Salvar e Conectar</button>
     </div>
@@ -262,7 +273,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--preto);color:var(--txt);m
 <div class="main-content">
   <div class="topbar">
     <div class="topbar-title" id="page-title">Dashboard</div>
-    <div style="display:flex;align-items:center;gap:12px"><div id="sync-status" style="display:flex;align-items:center;gap:5px;font-size:11px;color:#888"><div id="sync-dot" style="width:7px;height:7px;border-radius:50%;background:#888"></div><span id="sync-txt">Offline</span></div><div style="font-size:12px;color:var(--fraco)" id="topbar-user"></div><button onclick="document.getElementById('config-screen').style.display='flex'" style="background:none;border:1px solid #3a3a3a;border-radius:6px;padding:4px 10px;color:#888;cursor:pointer;font-size:11px;font-family:DM Sans,sans-serif">⚙️ Supabase</button></div>
+    <div style="display:flex;align-items:center;gap:12px"><div id="sync-status" style="display:flex;align-items:center;gap:5px;font-size:11px;color:#888"><div id="sync-dot" style="width:7px;height:7px;border-radius:50%;background:#888"></div><span id="sync-txt">Offline</span></div><div style="font-size:12px;color:var(--fraco)" id="topbar-user"></div><button id="btn-tema" onclick="alternarTema()" title="Alternar tema claro/escuro" style="background:none;border:1px solid var(--borda);border-radius:6px;padding:4px 10px;color:var(--fraco);cursor:pointer;font-size:13px;font-family:DM Sans,sans-serif">🌙 Escuro</button><button onclick="document.getElementById('config-screen').style.display='flex'" style="background:none;border:1px solid var(--borda);border-radius:6px;padding:4px 10px;color:var(--fraco);cursor:pointer;font-size:11px;font-family:DM Sans,sans-serif">⚙️ Supabase</button></div>
   </div>
 
   <!-- ========= DASHBOARD ========= -->
@@ -320,6 +331,31 @@ body{font-family:'DM Sans',sans-serif;background:var(--preto);color:var(--txt);m
 
   <!-- ========= PRODUÇÃO ========= -->
   <div class="page" id="page-producao">
+
+    <!-- KPIs de Produção -->
+    <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr)">
+      <div class="kpi-card green" style="cursor:pointer" onclick="filtrarSit('')" title="Ver todos">
+        <div class="kpi-label">Total (filtro atual)</div>
+        <div class="kpi-value" id="pkpi-total">0</div>
+        <div class="kpi-sub" id="pkpi-total-lotes">0 lançamentos</div>
+      </div>
+      <div class="kpi-card" style="cursor:pointer;border-color:rgba(46,139,46,.4)" onclick="filtrarSit('PRODUCAO')" title="Filtrar por Produção">
+        <div class="kpi-label">🏭 Produção</div>
+        <div class="kpi-value" id="pkpi-prod" style="color:var(--vm)">0</div>
+        <div class="kpi-sub" id="pkpi-prod-lotes">0 lançamentos</div>
+      </div>
+      <div class="kpi-card ok" style="cursor:pointer;border-color:rgba(39,174,96,.4)" onclick="filtrarSit('VENDA')" title="Filtrar por Venda">
+        <div class="kpi-label">💚 Venda</div>
+        <div class="kpi-value" id="pkpi-venda">0</div>
+        <div class="kpi-sub" id="pkpi-venda-lotes">0 lançamentos</div>
+      </div>
+      <div class="kpi-card warn" style="cursor:pointer;border-color:rgba(243,156,18,.4)" onclick="filtrarSit('PRE_VENDA')" title="Filtrar por Pré-Venda">
+        <div class="kpi-label">🟡 Pré-Venda</div>
+        <div class="kpi-value" id="pkpi-prev">0</div>
+        <div class="kpi-sub" id="pkpi-prev-lotes">0 lançamentos</div>
+      </div>
+    </div>
+
     <div class="table-card">
       <div class="tc-head">
         <div class="tc-title" id="prod-count">Lançamentos de Produção</div>
@@ -717,6 +753,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--preto);color:var(--txt);m
     <div class="table-card">
       <div class="tc-head">
         <div class="tc-title">Histórico de Entradas</div>
+        <button class="btn btn-p" onclick="abrirModalProducao()" style="font-size:12px;padding:6px 14px;flex-shrink:0;background:var(--vmd)">🏭 + Lançamento Produção</button>
         <button class="btn btn-p" onclick="importarEntradasXlsx()" style="margin-left:auto;font-size:12px;padding:6px 14px;flex-shrink:0">📥 Importar Planilha (620 reg.)</button>
         <div class="filters" style="margin:0;flex-wrap:nowrap">
           <select class="fi" id="fe-ent-mes" onchange="renderEntradas()"><option value="">Todos os meses</option></select>
@@ -751,6 +788,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--preto);color:var(--txt);m
     <div class="table-card">
       <div class="tc-head">
         <div class="tc-title">Histórico de Saídas</div>
+        <button class="btn btn-p" onclick="abrirModalProducao()" style="font-size:12px;padding:6px 14px;flex-shrink:0;background:var(--vmd)">🏭 + Lançamento Produção</button>
         <button class="btn btn-p" onclick="importarSaidasXlsx()" style="margin-left:auto;font-size:12px;padding:6px 14px;flex-shrink:0">📤 Importar Planilha (83 reg.)</button>
         <div class="filters" style="margin:0;flex-wrap:nowrap">
           <select class="fi" id="fe-sai-mes" onchange="renderSaidas()"><option value="">Todos os meses</option></select>
@@ -1247,9 +1285,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--preto);color:var(--txt);m
 
 <!-- MODAL EDITAR ENTRADA -->
 <div class="modal-ov" id="modal-ent">
-  <div class="modal">
+  <div class="modal" style="width:min(720px,96vw)">
     <h3>✏️ Editar Entrada</h3>
-    <div class="form-grid">
+    <div class="form-grid-2">
       <div class="fg"><label>Data</label><input type="date" id="me-data"></div>
       <div class="fg"><label>Produto</label><select id="me-prod"></select></div>
       <div class="fg"><label>Quantidade</label><input type="number" id="me-qt" min="0"></div>
@@ -1268,16 +1306,16 @@ body{font-family:'DM Sans',sans-serif;background:var(--preto);color:var(--txt);m
 
 <!-- MODAL EDITAR SAÍDA -->
 <div class="modal-ov" id="modal-sai">
-  <div class="modal">
+  <div class="modal" style="width:min(720px,96vw)">
     <h3>✏️ Editar Saída</h3>
-    <div class="form-grid">
+    <div class="form-grid-2">
       <div class="fg"><label>Data</label><input type="date" id="ms-data"></div>
       <div class="fg"><label>Produto</label><select id="ms-prod"></select></div>
       <div class="fg"><label>Quantidade</label><input type="number" id="ms-qt" min="0"></div>
       <div class="fg"><label>Cliente / Destino</label><select id="ms-cli"><option value="">— Selecione —</option></select></div>
       <div class="fg"><label>Responsável</label><input type="text" id="ms-resp"></div>
       <div class="fg"><label>Valor Unitário</label><input type="number" id="ms-valor" min="0" step="0.01"></div>
-      <div class="fg"><label>Observação</label><input type="text" id="ms-obs"></div>
+      <div class="fg full"><label>Observação</label><input type="text" id="ms-obs"></div>
     </div>
     <div class="modal-foot">
       <button class="btn btn-s" onclick="closeModal('modal-sai')">Cancelar</button>
@@ -1288,9 +1326,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--preto);color:var(--txt);m
 
 <!-- MODAL LANÇAMENTO PRODUÇÃO -->
 <div class="modal-ov" id="modal-producao">
-  <div class="modal" style="width:640px">
+  <div class="modal" style="width:min(720px,96vw)">
     <h3 id="modal-prod-title">🏭 Novo Lançamento de Produção</h3>
-    <div class="form-grid">
+    <div class="form-grid-2">
       <div class="fg"><label>Data *</label><input type="date" id="prod-data"></div>
       <div class="fg">
         <label>Situação *</label>
@@ -1369,6 +1407,27 @@ body{font-family:'DM Sans',sans-serif;background:var(--preto);color:var(--txt);m
 const MESES=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
 const TIPOS_SF={materia_prima:'Matéria Prima',produto_acabado:'Produto Acabado',produto_intermediario:'Produto Intermediário',embalagem:'Embalagem',consumivel:'Consumível',sucata:'Sucata / Refugo',outro:'Outro'};
 const TIPOS_LOC={galpao:'Galpão',prateleira:'Prateleira',corredor:'Corredor',area:'Área',externo:'Externo',outro:'Outro'};
+
+// ══════ TEMA ══════
+function alternarTema(){
+  const atual = document.documentElement.getAttribute('data-tema') || 'escuro';
+  const novo  = atual === 'escuro' ? 'claro' : 'escuro';
+  aplicarTema(novo);
+  try { localStorage.setItem('stoeck_tema', novo); } catch(e){}
+}
+function aplicarTema(tema){
+  document.documentElement.setAttribute('data-tema', tema);
+  const btn = document.getElementById('btn-tema');
+  if(btn){
+    btn.textContent = tema === 'claro' ? '🌙 Escuro' : '☀️ Claro';
+    btn.title = tema === 'claro' ? 'Mudar para tema escuro' : 'Mudar para tema claro';
+  }
+}
+// Aplicar tema salvo ao carregar
+(function(){
+  const saved = (() => { try { return localStorage.getItem('stoeck_tema'); } catch(e){ return null; } })();
+  aplicarTema(saved || 'escuro');
+})();
 
 // ══════ SUPABASE CONFIG ══════
 let SB_URL = 'https://hjvprcestavatgkygfzz.supabase.co';
@@ -1471,24 +1530,22 @@ function gTP(id){ return tiposParada.find(t=>t.id===parseInt(id)); }
 async function carregarTudo(silent=false){
   setSyncStatus('connecting');
   if(!silent) showLoader(true);
-  // Filtro fixo: apenas junho/2026
-  const fMes = '&mes=eq.6&ano=eq.2026';
   const [sf, locs, prods, clis, forns, ents, sais, lancs, fts, recs, tps, pars, mh, mp, oq] = await Promise.all([
     sbReq('subfamilias','GET',null,'?order=id'),
     sbReq('localizacoes','GET',null,'?order=id'),
     sbReq('produtos','GET',null,'?order=id'),
     sbReq('clientes','GET',null,'?order=id'),
     sbReq('fornecedores','GET',null,'?order=id'),
-    sbReq('entradas','GET',null,'?order=data'+fMes),
-    sbReq('saidas','GET',null,'?order=data'+fMes),
-    sbReq('lancamentos_producao','GET',null,'?order=data'+fMes),
+    sbReq('entradas','GET',null,'?order=data'),
+    sbReq('saidas','GET',null,'?order=data'),
+    sbReq('lancamentos_producao','GET',null,'?order=data'),
     sbReq('ficha_tecnica','GET',null,'?order=id'),
     sbReq('recursos','GET',null,'?order=id'),
     sbReq('tipos_parada','GET',null,'?order=id'),
-    sbReq('paradas','GET',null,'?order=data'+fMes),
-    sbReq('metas_horas','GET',null,'?order=data'+fMes),
-    sbReq('metas_producao','GET',null,'?order=data'+fMes),
-    sbReq('oee_qualidade','GET',null,'?mes=eq.6&ano=eq.2026&order=ano,mes'),
+    sbReq('paradas','GET',null,'?order=data'),
+    sbReq('metas_horas','GET',null,'?order=data'),
+    sbReq('metas_producao','GET',null,'?order=data'),
+    sbReq('oee_qualidade','GET',null,'?order=ano,mes'),
   ]);
   if(sf) subfamilias   = sf.map(mapSF);
   if(locs) localizacoes= locs.map(mapLoc);
@@ -2898,6 +2955,12 @@ function badgeOrigem(orig){
   return '<span class="badge badge-manual">✍ Manual</span>';
 }
 
+function filtrarSit(sit){
+  const sel = document.getElementById('fp-situacao');
+  if(sel){ sel.value = sit; }
+  renderProducao();
+}
+
 function renderProducao(){
   fillAllSelects();
   const mes   = document.getElementById('fp-mes')?.value||'';
@@ -2905,12 +2968,35 @@ function renderProducao(){
   const sit   = document.getElementById('fp-situacao')?.value||'';
   const prodF = document.getElementById('fp-prod-f')?.value||'';
 
-  let lista = lancamentosProducao.filter(l=>{
+  // Lista base com filtros de data/produto (sem filtro de situação) para os KPIs
+  const listaBase = lancamentosProducao.filter(l=>{
     return (!mes||String(l.mes)===mes)
       && (!ano||String(l.ano)===ano)
-      && (!sit||l.situacao===sit)
       && (!prodF||String(l.prodId)===prodF);
   });
+
+  // KPIs — calculados sobre listaBase (sem filtro de situação)
+  const qtTot  = listaBase.reduce((a,b)=>a+b.qt,0);
+  const qtProd = listaBase.filter(l=>l.situacao==='PRODUCAO').reduce((a,b)=>a+b.qt,0);
+  const qtVenda= listaBase.filter(l=>l.situacao==='VENDA').reduce((a,b)=>a+b.qt,0);
+  const qtPrev = listaBase.filter(l=>l.situacao==='PRE_VENDA').reduce((a,b)=>a+b.qt,0);
+  const nTot   = listaBase.length;
+  const nProd  = listaBase.filter(l=>l.situacao==='PRODUCAO').length;
+  const nVenda = listaBase.filter(l=>l.situacao==='VENDA').length;
+  const nPrev  = listaBase.filter(l=>l.situacao==='PRE_VENDA').length;
+
+  const el = id => document.getElementById(id);
+  if(el('pkpi-total'))      el('pkpi-total').textContent      = fN(qtTot);
+  if(el('pkpi-total-lotes'))el('pkpi-total-lotes').textContent= nTot+' lançamento'+(nTot!==1?'s':'');
+  if(el('pkpi-prod'))       el('pkpi-prod').textContent       = fN(qtProd);
+  if(el('pkpi-prod-lotes')) el('pkpi-prod-lotes').textContent = nProd+' lançamento'+(nProd!==1?'s':'');
+  if(el('pkpi-venda'))      el('pkpi-venda').textContent      = fN(qtVenda);
+  if(el('pkpi-venda-lotes'))el('pkpi-venda-lotes').textContent= nVenda+' lançamento'+(nVenda!==1?'s':'');
+  if(el('pkpi-prev'))       el('pkpi-prev').textContent       = fN(qtPrev);
+  if(el('pkpi-prev-lotes')) el('pkpi-prev-lotes').textContent = nPrev+' lançamento'+(nPrev!==1?'s':'');
+
+  // Lista filtrada (inclui filtro de situação) para a tabela
+  let lista = listaBase.filter(l=>(!sit||l.situacao===sit));
 
   // ordenar por data desc
   lista.sort((a,b)=>b.data.localeCompare(a.data));
@@ -2920,8 +3006,14 @@ function renderProducao(){
     const prod = gP(l.prodId);
     const cli  = gCli(l.cliId);
     const [y,m,d] = l.data.split('-');
-    const rowBg = l.situacao==='VENDA' ? ' style="background:rgba(243,156,18,.08)"'
-                : l.situacao==='PRE_VENDA' ? ' style="background:rgba(243,156,18,.04)"' : '';
+    const rowBg = l.situacao==='VENDA' ? ' style="background:rgba(39,174,96,.07)"'
+                : l.situacao==='PRE_VENDA' ? ' style="background:rgba(243,156,18,.07)"' : '';
+
+    // Botão confirmar venda apenas para PRÉ-VENDA
+    const btnConfirmar = l.situacao==='PRE_VENDA'
+      ? '<button class="btn" style="padding:4px 10px;font-size:11px;background:rgba(39,174,96,.15);color:var(--verde);border:1px solid rgba(39,174,96,.35);white-space:nowrap" onclick="confirmarPreVenda('+l.id+')" title="Confirmar como Venda">✅ Confirmar</button>'
+      : '';
+
     rows += '<tr'+rowBg+'>'
       + '<td>'+d+'/'+m+'/'+y+'</td>'
       + '<td class="fw">'+(prod?prod.desc:'—')+'</td>'
@@ -2930,8 +3022,9 @@ function renderProducao(){
       + '<td>'+(cli?cli.nome:'—')+'</td>'
       + '<td>'+fR(l.custo)+'</td>'
       + '<td>'+badgeOrigem(l.origem)+'</td>'
-      + '<td style="max-width:160px;overflow:hidden;text-overflow:ellipsis">'+(l.obs||'—')+'</td>'
-      + '<td><div style="display:flex;gap:6px">'
+      + '<td style="max-width:140px;overflow:hidden;text-overflow:ellipsis">'+(l.obs||'—')+'</td>'
+      + '<td><div style="display:flex;gap:5px;align-items:center">'
+      + btnConfirmar
       + '<button class="btn btn-s" style="padding:4px 10px;font-size:12px" onclick="editarProducao('+l.id+')">✏️</button>'
       + '<button class="btn btn-d" style="padding:4px 10px;font-size:12px" onclick="excluirProducao('+l.id+')">🗑</button>'
       + '</div></td>'
@@ -2940,6 +3033,43 @@ function renderProducao(){
 
   document.getElementById('tb-producao').innerHTML = rows || '<tr><td colspan="9" class="empty">Nenhum lançamento encontrado.</td></tr>';
   document.getElementById('prod-count').textContent = 'Lançamentos de Produção (' + lista.length + ')';
+}
+
+async function confirmarPreVenda(id){
+  const l = lancamentosProducao.find(x=>x.id===id);
+  if(!l || l.situacao !== 'PRE_VENDA') return;
+
+  const prod = gP(l.prodId);
+  const cli  = gCli(l.cliId);
+  const msg  = `Confirmar VENDA?\n\nProduto: ${prod?prod.desc:'#'+l.prodId}\nQuantidade: ${fN(l.qt)}\nCliente: ${cli?cli.nome:'Sem vínculo'}\nData: ${l.data}\n\nIsso irá:\n• Alterar a situação para VENDA\n• Criar uma saída no estoque`;
+  if(!confirm(msg)) return;
+
+  // 1. Atualizar situação no Supabase
+  const r = await sbUpdate('lancamentos_producao', id, {situacao:'VENDA'});
+  if(!r){ alert('Erro ao atualizar lançamento.'); return; }
+
+  // 2. Atualizar localmente
+  const idx = lancamentosProducao.findIndex(x=>x.id===id);
+  if(idx>=0) lancamentosProducao[idx].situacao = 'VENDA';
+
+  // 3. Criar saída no estoque
+  const saiCorpo = {
+    data: l.data,
+    produto_id: l.prodId,
+    quantidade: l.qt,
+    cliente_id: l.cliId||null,
+    responsavel: 'Produção',
+    valor_total: l.custo * l.qt,
+    obs: 'Confirmação de Pré-Venda → Venda'
+  };
+  const saiR = await sbSave('saidas', saiCorpo);
+  if(saiR){ saidas.push(mapSai(Array.isArray(saiR)?saiR[0]:saiR)); }
+  else { console.warn('Lançamento atualizado mas falha ao criar saída.'); }
+
+  renderProducao();
+  renderDash();
+  renderEstoque();
+  alert('✅ Pré-Venda confirmada como Venda e saída registrada!');
 }
 
 // ══════ FICHA TÉCNICA ══════
