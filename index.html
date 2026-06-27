@@ -1709,6 +1709,12 @@ function closeModal(id){document.getElementById(id).classList.remove('open')}
 function doLogin(){
   const u=document.getElementById('login-user').value.trim();
   const p=document.getElementById('login-pass').value;
+  const lembrar=document.getElementById('remember-me').checked;
+  if(lembrar){
+    try{localStorage.setItem('stoeck_user',u);localStorage.setItem('stoeck_pass',p);}catch(e){}
+  } else {
+    try{localStorage.removeItem('stoeck_user');localStorage.removeItem('stoeck_pass');}catch(e){}
+  }
   const user=usuarios.find(x=>x.login===u&&x.senha===p);
   if(!user){document.getElementById('login-err').style.display='block';return}
   currentUser=user;
@@ -4064,6 +4070,19 @@ function toggleAjusteColuna(){
   if(th) th.style.display = isAdmin ? '' : 'none';
 }
 
+
+// ══════ LEMBRAR SENHA ══════
+(function(){
+  try{
+    const u=localStorage.getItem('stoeck_user');
+    const p=localStorage.getItem('stoeck_pass');
+    if(u&&p){
+      document.getElementById('login-user').value=u;
+      document.getElementById('login-pass').value=p;
+      document.getElementById('remember-me').checked=true;
+    }
+  }catch(e){}
+})();
 </script>
 
 </body>
