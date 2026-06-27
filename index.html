@@ -4,7 +4,178 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Stoeck | Controle de Estoque</title>
-<link rel="stylesheet" href="css/main.css">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&family=Barlow+Condensed:wght@300;400;600;700&display=swap');
+:root {
+  --vm: #2e8b2e; --vmc: #3dba3d; --vmd: #1f6b1f;
+  --preto: #111; --ce: #1e1e1e; --cm: #2d2d2d; --cc: #3d3d3d;
+  --borda: #3a3a3a; --txt: #e8e8e8; --fraco: #888;
+  --verde: #27ae60; --verm: #e74c3c; --amar: #f39c12;
+  --sw: 230px;
+}
+/* TEMA CLARO */
+[data-tema="claro"] {
+  --preto: #f0f2f5; --ce: #ffffff; --cm: #f5f5f5; --cc: #e0e0e0;
+  --borda: #d0d0d0; --txt: #1a1a1a; --fraco: #666;
+}
+[data-tema="claro"] .table-wrap thead th { background: var(--cm); }
+[data-tema="claro"] .table-wrap td { border-bottom-color: rgba(0,0,0,.06); }
+[data-tema="claro"] .table-wrap tr:hover td { background: rgba(0,0,0,.03); }
+[data-tema="claro"] .fg select option { background: #fff; color: #1a1a1a; }
+[data-tema="claro"] #login-screen { background: radial-gradient(ellipse at 60% 40%, #d4ead4 0%, var(--preto) 70%); }
+[data-tema="claro"] ::-webkit-scrollbar-thumb { background: var(--cc); }
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--preto);color:var(--txt);min-height:100vh}
+
+/* LOGIN */
+#login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:radial-gradient(ellipse at 60% 40%,#1a2e1a 0%,var(--preto) 70%)}
+.login-box{background:var(--ce);border:1px solid var(--borda);border-radius:20px;padding:48px 40px;width:400px;box-shadow:0 32px 80px rgba(0,0,0,.7)}
+.login-logo{text-align:center;margin-bottom:28px}
+.login-logo img{width:200px;margin-bottom:6px}
+.login-logo p{color:var(--fraco);font-size:12px;letter-spacing:1px;text-transform:uppercase}
+.login-box label{display:block;font-size:11px;font-weight:500;color:var(--fraco);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;margin-top:18px}
+.login-box input{width:100%;background:var(--cm);border:1px solid var(--borda);border-radius:8px;padding:12px 14px;color:var(--txt);font-size:14px;font-family:'DM Sans',sans-serif;outline:none;transition:border-color .2s}
+.login-box input:focus{border-color:var(--vm)}
+.btn-login{width:100%;margin-top:24px;background:var(--vm);border:none;border-radius:8px;padding:14px;color:#fff;font-family:'Syne',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:background .2s;letter-spacing:.5px}
+.btn-login:hover{background:var(--vmc)}
+.login-err{color:var(--verm);font-size:13px;text-align:center;margin-top:10px;display:none}
+
+/* LAYOUT */
+#app{display:none;height:100vh;overflow:hidden}
+.layout{display:flex;height:100vh}
+
+/* SIDEBAR */
+.sidebar{width:var(--sw);background:var(--ce);border-right:1px solid var(--borda);display:flex;flex-direction:column;flex-shrink:0}
+.sb-head{padding:16px 14px;border-bottom:1px solid var(--borda);display:flex;flex-direction:column;align-items:center;gap:4px}
+.sb-head img{width:120px;padding:8px;background:#fff;border-radius:10px}
+.sb-head .sub{font-size:10px;color:var(--fraco);letter-spacing:1px;text-transform:uppercase}
+.sb-nav{flex:1;padding:10px 8px;overflow-y:auto}
+.nav-sec{font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--fraco);padding:10px 8px 5px;font-weight:500}
+.nav-item{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:8px;cursor:pointer;font-size:13px;color:var(--fraco);transition:all .15s;margin-bottom:2px;white-space:nowrap}
+.nav-item:hover{background:var(--cm);color:var(--txt)}
+.nav-item.active{background:rgba(46,139,46,.18);color:var(--vm);font-weight:600}
+.nav-item .ic{font-size:15px;width:18px;text-align:center;flex-shrink:0}
+.sb-foot{padding:10px 8px;border-top:1px solid var(--borda)}
+.user-badge{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;cursor:pointer}
+.user-badge:hover{background:var(--cm)}
+.u-av{width:30px;height:30px;border-radius:50%;background:var(--vm);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0}
+
+/* MAIN */
+.main-content{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+.topbar{padding:14px 20px;border-bottom:1px solid var(--borda);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.topbar-title{font-family:'Syne',sans-serif;font-size:17px;font-weight:700}
+
+/* PAGE — cabeçalho da tabela congelado */
+.page{flex:1;overflow-y:auto;padding:20px;display:none}
+.page.active{display:block}
+
+/* TABLE com header fixo */
+.table-wrap{overflow:auto;max-height:420px;border-radius:0 0 12px 12px}
+.table-wrap table{width:100%;border-collapse:collapse;min-width:600px}
+.table-wrap thead th{
+  position:sticky;top:0;z-index:10;
+  font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--fraco);
+  font-weight:500;padding:10px 14px;text-align:left;
+  background:var(--cm);border-bottom:1px solid var(--borda);
+  white-space:nowrap
+}
+.table-wrap td{font-size:13px;padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.04);white-space:nowrap}
+.table-wrap tr:last-child td{border-bottom:none}
+.table-wrap tr:hover td{background:rgba(255,255,255,.025)}
+
+/* CARDS */
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}
+.kpi-card{background:var(--ce);border:1px solid var(--borda);border-radius:12px;padding:18px}
+.kpi-label{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--fraco);margin-bottom:6px}
+.kpi-value{font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:700;letter-spacing:-0.5px}
+.kpi-sub{font-size:12px;color:var(--fraco);margin-top:3px}
+.kpi-card.danger .kpi-value{color:var(--verm)}
+.kpi-card.ok .kpi-value{color:var(--verde)}
+.kpi-card.warn .kpi-value{color:var(--amar)}
+.kpi-card.green .kpi-value{color:var(--vm)}
+
+/* TABLE CARD */
+.table-card{background:var(--ce);border:1px solid var(--borda);border-radius:12px;overflow:hidden;margin-bottom:20px}
+.tc-head{padding:14px 18px;border-bottom:1px solid var(--borda);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;flex-shrink:0}
+.tc-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:700}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:500}
+.badge-ok{background:rgba(39,174,96,.15);color:var(--verde)}
+.badge-crit{background:rgba(231,76,60,.15);color:var(--verm)}
+.badge-warn{background:rgba(243,156,18,.15);color:var(--amar)}
+.badge-e{background:rgba(39,174,96,.15);color:var(--verde)}
+.badge-s{background:rgba(231,76,60,.15);color:var(--verm)}
+
+.badge-venda{background:rgba(39,174,96,.15);color:#27ae60}
+.badge-producao{background:rgba(46,139,46,.15);color:#2e8b2e}
+.badge-prevenda{background:rgba(243,156,18,.15);color:#f39c12}
+.badge-manual{background:rgba(136,136,136,.15);color:#888}
+.badge-ficha{background:rgba(52,152,219,.15);color:#3498db}
+
+
+.form-card{background:var(--ce);border:1px solid var(--borda);border-radius:12px;padding:20px;margin-bottom:20px}
+.form-card h3{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.form-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.form-grid-2{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+.form-grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.fg{display:flex;flex-direction:column;gap:5px}
+.fg.full{grid-column:1/-1}
+.fg label{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--fraco);font-weight:500}
+.fg input,.fg select,.fg textarea{background:var(--cm);border:1px solid var(--borda);border-radius:8px;padding:9px 12px;color:var(--txt);font-size:13px;font-family:'DM Sans',sans-serif;outline:none;transition:border-color .2s}
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--vm)}
+.fg select option{background:var(--cm)}
+.form-actions{display:flex;gap:10px;margin-top:16px;justify-content:flex-end}
+
+/* FILTROS BAR */
+.filters{display:flex;gap:8px;align-items:center;margin-bottom:14px;flex-wrap:wrap}
+.fi{background:var(--ce);border:1px solid var(--borda);border-radius:8px;padding:8px 12px;color:var(--txt);font-size:12px;font-family:'DM Sans',sans-serif;outline:none;min-width:120px}
+.fi:focus{border-color:var(--vm)}
+.fi-search{flex:1;min-width:180px}
+
+/* BTNS */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;border:none;font-family:'DM Sans',sans-serif;transition:all .15s}
+.btn-p{background:var(--vm);color:#fff}
+.btn-p:hover{background:var(--vmc)}
+.btn-s{background:var(--cm);color:var(--txt);border:1px solid var(--borda)}
+.btn-s:hover{background:var(--cc)}
+.btn-d{background:rgba(231,76,60,.12);color:var(--verm);border:1px solid rgba(231,76,60,.3)}
+.btn-d:hover{background:rgba(231,76,60,.22)}
+
+/* AÇÕES TABELA */
+.r-edit{color:var(--vm);cursor:pointer;font-size:14px;margin-right:6px}
+.r-del{color:var(--verm);cursor:pointer;font-size:14px}
+
+/* CHART */
+.chart-box{background:var(--ce);border:1px solid var(--borda);border-radius:12px;padding:18px;margin-bottom:20px}
+.bar-chart{display:flex;align-items:flex-end;gap:6px;height:160px;border-bottom:1px solid var(--borda)}
+.bg{flex:1;display:flex;flex-direction:column;align-items:center;height:100%}
+.bw{flex:1;display:flex;align-items:flex-end;gap:2px;width:100%}
+.b{flex:1;border-radius:3px 3px 0 0;min-height:2px;transition:opacity .2s;cursor:pointer}
+.b:hover{opacity:.75}
+.be{background:var(--verde)}
+.bs{background:var(--verm)}
+.var-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.var-card{background:var(--ce);border:1px solid var(--borda);border-radius:10px;padding:14px}
+.var-mes{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--fraco);margin-bottom:6px}
+.var-row{display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px}
+.var-saldo{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;margin-top:6px;border-top:1px solid var(--borda);padding-top:6px}
+
+/* MODAL */
+.modal-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:1000;align-items:center;justify-content:center}
+.modal-ov.open{display:flex}
+.modal{background:var(--ce);border:1px solid var(--borda);border-radius:16px;padding:28px;width:560px;max-width:96vw;max-height:90vh;overflow-y:auto}
+.modal h3{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;margin-bottom:18px}
+.modal-foot{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
+
+.table-wrap tfoot td{font-size:13px;padding:10px 14px;border-top:2px solid var(--borda);white-space:nowrap}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--cc);border-radius:3px}
+.txt-v{color:var(--verde)} .txt-r{color:var(--verm)} .txt-w{color:var(--amar)} .txt-f{color:var(--fraco)} .txt-g{color:var(--vm)}
+.fw{font-weight:600} .tc{text-align:center} .tr{text-align:right}
+.empty{text-align:center;padding:36px;color:var(--fraco);font-size:13px}
+</style>
 </head>
 <body>
 
@@ -47,6 +218,10 @@
   <div style="position:relative">
     <input type="password" id="login-pass" placeholder="Digite sua senha" onkeydown="if(event.key==='Enter')doLogin()" style="width:100%;background:var(--cm);border:1px solid var(--borda);border-radius:8px;padding:12px 40px 12px 14px;color:var(--txt);font-size:14px;font-family:'DM Sans',sans-serif;outline:none;transition:border-color .2s">
     <span onclick="toggleSenha('login-pass','olho-login')" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;color:var(--fraco);font-size:18px;user-select:none" id="olho-login">👁</span>
+  </div>
+  <div class="login-remember">
+    <input type="checkbox" id="remember-me">
+    <label for="remember-me">Lembrar senha</label>
   </div>
   <button class="btn-login" onclick="doLogin()">Entrar no Sistema</button>
   <div class="login-err" id="login-err">Usuário ou senha incorretos.</div>
