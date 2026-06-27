@@ -4071,18 +4071,19 @@ function toggleAjusteColuna(){
 }
 
 
+
 // ══════ LEMBRAR SENHA ══════
-(function(){
+window.addEventListener('load', function(){
   try{
     const u=localStorage.getItem('stoeck_user');
     const p=localStorage.getItem('stoeck_pass');
-    if(u&&p){
+    if(u && p){
       document.getElementById('login-user').value=u;
       document.getElementById('login-pass').value=p;
       document.getElementById('remember-me').checked=true;
     }
   }catch(e){}
-})();
+});
 </script>
 
 </body>
