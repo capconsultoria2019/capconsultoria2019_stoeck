@@ -5,8 +5,16 @@
 .login-logo img{width:200px;margin-bottom:6px}
 .login-logo p{color:var(--fraco);font-size:12px;letter-spacing:1px;text-transform:uppercase}
 .login-box label{display:block;font-size:11px;font-weight:500;color:var(--fraco);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;margin-top:18px}
-.login-box input{width:100%;background:var(--cm);border:1px solid var(--borda);border-radius:8px;padding:12px 14px;color:var(--txt);font-size:14px;font-family:'DM Sans',sans-serif;outline:none;transition:border-color .2s}
+.login-box input[type="text"],
+.login-box input[type="password"],
+.login-box input[type="email"]{width:100%;background:var(--cm);border:1px solid var(--borda);border-radius:8px;padding:12px 14px;color:var(--txt);font-size:14px;font-family:'DM Sans',sans-serif;outline:none;transition:border-color .2s}
 .login-box input:focus{border-color:var(--vm)}
+
+/* LEMBRAR SENHA */
+.login-remember{display:flex;align-items:center;gap:8px;margin-top:16px}
+.login-remember input[type="checkbox"]{width:16px;height:16px;accent-color:var(--vm);cursor:pointer;flex-shrink:0}
+.login-remember label{font-size:12px;color:var(--fraco);text-transform:none;letter-spacing:0;margin:0;cursor:pointer}
+
 .btn-login{width:100%;margin-top:24px;background:var(--vm);border:none;border-radius:8px;padding:14px;color:#fff;font-family:'Syne',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:background .2s;letter-spacing:.5px}
 .btn-login:hover{background:var(--vmc)}
 .login-err{color:var(--verm);font-size:13px;text-align:center;margin-top:10px;display:none}
