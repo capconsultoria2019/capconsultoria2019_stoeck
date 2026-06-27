@@ -1711,7 +1711,7 @@ function doLogin(){
   const p=document.getElementById('login-pass').value;
   const lembrar=document.getElementById('remember-me').checked;
   if(lembrar){
-    try{localStorage.setItem('stoeck_user',u);localStorage.setItem('stoeck_pass',p);}catch(e){}
+    try{localStorage.setItem('stoeck_user',u);localStorage.setItem('stoeck_pass',btoa(unescape(encodeURIComponent(p))));}catch(e){}
   } else {
     try{localStorage.removeItem('stoeck_user');localStorage.removeItem('stoeck_pass');}catch(e){}
   }
@@ -4079,7 +4079,7 @@ window.addEventListener('load', function(){
     const p=localStorage.getItem('stoeck_pass');
     if(u && p){
       document.getElementById('login-user').value=u;
-      document.getElementById('login-pass').value=p;
+      document.getElementById('login-pass').value=decodeURIComponent(escape(atob(p)));
       document.getElementById('remember-me').checked=true;
     }
   }catch(e){}
