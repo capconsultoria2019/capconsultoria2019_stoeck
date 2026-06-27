@@ -1,0 +1,35 @@
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&family=Barlow+Condensed:wght@300;400;600;700&display=swap');
+
+:root {
+  --vm: #2e8b2e; --vmc: #3dba3d; --vmd: #1f6b1f;
+  --preto: #111; --ce: #1e1e1e; --cm: #2d2d2d; --cc: #3d3d3d;
+  --borda: #3a3a3a; --txt: #e8e8e8; --fraco: #888;
+  --verde: #27ae60; --verm: #e74c3c; --amar: #f39c12;
+  --sw: 230px;
+}
+
+/* TEMA CLARO */
+[data-tema="claro"] {
+  --preto: #f0f2f5; --ce: #ffffff; --cm: #f5f5f5; --cc: #e0e0e0;
+  --borda: #d0d0d0; --txt: #1a1a1a; --fraco: #666;
+}
+[data-tema="claro"] .table-wrap thead th { background: var(--cm); }
+[data-tema="claro"] .table-wrap td { border-bottom-color: rgba(0,0,0,.06); }
+[data-tema="claro"] .table-wrap tr:hover td { background: rgba(0,0,0,.03); }
+[data-tema="claro"] .fg select option { background: #fff; color: #1a1a1a; }
+[data-tema="claro"] #login-screen { background: radial-gradient(ellipse at 60% 40%, #d4ead4 0%, var(--preto) 70%); }
+[data-tema="claro"] ::-webkit-scrollbar-thumb { background: var(--cc); }
+
+/* RESET GLOBAL */
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--preto);color:var(--txt);min-height:100vh}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--cc);border-radius:3px}
+
+/* UTILITÁRIOS */
+.txt-v{color:var(--verde)} .txt-r{color:var(--verm)} .txt-w{color:var(--amar)} .txt-f{color:var(--fraco)} .txt-g{color:var(--vm)}
+.fw{font-weight:600} .tc{text-align:center} .tr{text-align:right}
+.empty{text-align:center;padding:36px;color:var(--fraco);font-size:13px}

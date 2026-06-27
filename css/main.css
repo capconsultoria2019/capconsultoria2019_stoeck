@@ -1,0 +1,10 @@
+/* ===================================
+   STOECK - Sistema de Controle de Estoque
+   Arquivo principal de estilos
+   Importa todos os módulos CSS
+   =================================== */
+
+@import './variaveis.css';
+@import './login.css';
+@import './sidebar.css';
+@import './componentes.css';

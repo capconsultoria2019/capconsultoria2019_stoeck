@@ -1,0 +1,19 @@
+/* LAYOUT */
+#app{display:none;height:100vh;overflow:hidden}
+.layout{display:flex;height:100vh}
+
+/* SIDEBAR */
+.sidebar{width:var(--sw);background:var(--ce);border-right:1px solid var(--borda);display:flex;flex-direction:column;flex-shrink:0}
+.sb-head{padding:16px 14px;border-bottom:1px solid var(--borda);display:flex;flex-direction:column;align-items:center;gap:4px}
+.sb-head img{width:120px;padding:8px;background:#fff;border-radius:10px}
+.sb-head .sub{font-size:10px;color:var(--fraco);letter-spacing:1px;text-transform:uppercase}
+.sb-nav{flex:1;padding:10px 8px;overflow-y:auto}
+.nav-sec{font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--fraco);padding:10px 8px 5px;font-weight:500}
+.nav-item{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:8px;cursor:pointer;font-size:13px;color:var(--fraco);transition:all .15s;margin-bottom:2px;white-space:nowrap}
+.nav-item:hover{background:var(--cm);color:var(--txt)}
+.nav-item.active{background:rgba(46,139,46,.18);color:var(--vm);font-weight:600}
+.nav-item .ic{font-size:15px;width:18px;text-align:center;flex-shrink:0}
+.sb-foot{padding:10px 8px;border-top:1px solid var(--borda)}
+.user-badge{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;cursor:pointer}
+.user-badge:hover{background:var(--cm)}
+.u-av{width:30px;height:30px;border-radius:50%;background:var(--vm);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0}
