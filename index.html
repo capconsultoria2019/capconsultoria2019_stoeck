@@ -257,6 +257,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--preto);color:var(--txt);m
     <div class="nav-item" onclick="goPage('tiposparada')"><span class="ic">🔴</span> Tipos de Parada</div>
     <div class="nav-item" onclick="goPage('metashoras')"><span class="ic">⏱️</span> Metas de Horas</div>
     <div class="nav-item" onclick="goPage('metasproducao')"><span class="ic">📦</span> Metas de Produção</div>
+    <div class="nav-sec">Vendas</div>
+    <div class="nav-item" onclick="goPage('calendario')" data-page="calendario"><span class="ic">📅</span> Calendário de Entregas</div>
     <div class="nav-sec">Cadastros</div>
     <div class="nav-item" onclick="goPage('produtos')"><span class="ic">🏷️</span> Produtos</div>
     <div class="nav-item" onclick="goPage('clientes')"><span class="ic">👤</span> Clientes</div>
@@ -1068,6 +1070,79 @@ body{font-family:'DM Sans',sans-serif;background:var(--preto);color:var(--txt);m
   </div>
 
 
+  <!-- ========= CALENDÁRIO DE ENTREGAS ========= -->
+  <div class="page" id="page-calendario">
+    <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr)">
+      <div class="kpi-card">
+        <div class="kpi-label">📅 Este Mês</div>
+        <div class="kpi-value" id="cal-kpi-total" style="color:var(--vm)">0</div>
+        <div class="kpi-sub">pedidos no mês</div>
+      </div>
+      <div class="kpi-card ok">
+        <div class="kpi-label">✅ Entregues</div>
+        <div class="kpi-value" id="cal-kpi-entregue">0</div>
+        <div class="kpi-sub">concluídos</div>
+      </div>
+      <div class="kpi-card warn">
+        <div class="kpi-label">🕐 Pendentes</div>
+        <div class="kpi-value" id="cal-kpi-pendente">0</div>
+        <div class="kpi-sub">aguardando</div>
+      </div>
+      <div class="kpi-card danger">
+        <div class="kpi-label">⚠️ Atrasados</div>
+        <div class="kpi-value" id="cal-kpi-atrasado">0</div>
+        <div class="kpi-sub">após data prevista</div>
+      </div>
+    </div>
+
+    <div class="table-card">
+      <div class="tc-head">
+        <div style="display:flex;align-items:center;gap:12px">
+          <button class="btn btn-s" onclick="calMoverMes(-1)">‹</button>
+          <div class="tc-title" id="cal-titulo-mes" style="min-width:160px;text-align:center">—</div>
+          <button class="btn btn-s" onclick="calMoverMes(1)">›</button>
+          <button class="btn btn-s" onclick="calHoje()" style="font-size:11px">Hoje</button>
+        </div>
+        <button class="btn btn-p" onclick="goPage('producao')">＋ Novo Lançamento</button>
+      </div>
+      <!-- Grade do calendário -->
+      <div style="padding:14px">
+        <div id="cal-grid-dias" style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:8px">
+          <div style="text-align:center;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--fraco);padding:6px">Dom</div>
+          <div style="text-align:center;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--fraco);padding:6px">Seg</div>
+          <div style="text-align:center;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--fraco);padding:6px">Ter</div>
+          <div style="text-align:center;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--fraco);padding:6px">Qua</div>
+          <div style="text-align:center;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--fraco);padding:6px">Qui</div>
+          <div style="text-align:center;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--fraco);padding:6px">Sex</div>
+          <div style="text-align:center;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--fraco);padding:6px">Sáb</div>
+        </div>
+        <div id="cal-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px"></div>
+      </div>
+    </div>
+
+    <!-- Lista de pedidos do mês -->
+    <div class="table-card">
+      <div class="tc-head">
+        <div class="tc-title">📋 Pedidos do Mês</div>
+        <div class="filters" style="margin:0">
+          <select class="fi" id="cal-filtro-status" onchange="renderCalendario()">
+            <option value="">Todos os status</option>
+            <option value="pendente">Pendente</option>
+            <option value="entregue">Entregue</option>
+            <option value="atrasado">Atrasado</option>
+          </select>
+          <select class="fi" id="cal-filtro-cli" onchange="renderCalendario()"><option value="">Todos os clientes</option></select>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Data Entrega</th><th>Cliente</th><th>Produto</th><th>Qtd</th><th>Observação</th><th>Status</th><th>Ações</th></tr></thead>
+          <tbody id="tb-entregas"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
   <!-- ========= USUÁRIOS ========= -->
   <div class="page" id="page-usuarios">
     <div class="filters" style="margin-bottom:12px">
@@ -1078,6 +1153,19 @@ body{font-family:'DM Sans',sans-serif;background:var(--preto);color:var(--txt);m
     </div>
   </div>
 
+
+
+<!-- ========= MODAL DIA ENTREGAS ========= -->
+<div class="modal-ov" id="modal-dia-entregas">
+  <div class="modal" style="width:560px">
+    <h3 id="modal-dia-titulo">📅 Entregas do Dia</h3>
+    <div id="modal-dia-lista" style="display:flex;flex-direction:column;gap:10px;max-height:400px;overflow-y:auto"></div>
+    <div class="modal-foot">
+      <button class="btn btn-s" onclick="closeModal('modal-dia-entregas')">Fechar</button>
+      <button class="btn btn-p" onclick="closeModal('modal-dia-entregas');goPage('producao')">＋ Novo Lançamento</button>
+    </div>
+  </div>
+</div>
 
 <!-- ========= MODAL PRODUTO ========= -->
 <div class="modal-ov" id="modal-produto">
@@ -1737,7 +1825,7 @@ function logout(){
 }
 
 // ══════ NAV ══════
-const PT={dashboard:'Dashboard',estoque:'Estoque Atual',entradas:'Entradas',saidas:'Saídas',variacao:'Variação Mensal',movimentacao:'Movimentação do Estoque',producao:'Lançamentos de Produção',fichatecnica:'Ficha Técnica',indicadores:'Indicador de Desempenho',paradas:'Paradas de Recurso',recursos:'Cadastro de Recursos',tiposparada:'Tipos de Parada',metashoras:'Metas de Horas Previstas',metasproducao:'Metas de Produção',oee:'OEE — Indicador Global',produtos:'Cadastro de Produtos',clientes:'Cadastro de Clientes',fornecedores:'Cadastro de Fornecedores',subfamilias:'Subfamílias',localizacoes:'Localizações',usuarios:'Usuários'};
+const PT={dashboard:'Dashboard',estoque:'Estoque Atual',entradas:'Entradas',saidas:'Saídas',variacao:'Variação Mensal',movimentacao:'Movimentação do Estoque',producao:'Lançamentos de Produção',fichatecnica:'Ficha Técnica',indicadores:'Indicador de Desempenho',paradas:'Paradas de Recurso',recursos:'Cadastro de Recursos',tiposparada:'Tipos de Parada',metashoras:'Metas de Horas Previstas',metasproducao:'Metas de Produção',oee:'OEE — Indicador Global',produtos:'Cadastro de Produtos',clientes:'Cadastro de Clientes',fornecedores:'Cadastro de Fornecedores',subfamilias:'Subfamílias',localizacoes:'Localizações',usuarios:'Usuários',calendario:'Calendário de Entregas'};
 // ── FILTRO GLOBAL (subfamília + produto) ──
 let _gFiltroSF = '';
 let _gFiltroProd = '';
@@ -1790,7 +1878,7 @@ function goPage(id){
     carregarFiltrosParadas();
   }
 
-  const renders={dashboard:renderDash,estoque:renderEstoque,entradas:renderEntradas,saidas:renderSaidas,variacao:renderVariacao,movimentacao:renderMovimentacao,producao:renderProducao,fichatecnica:renderFT,indicadores:renderIndicadores,paradas:renderParadas,recursos:renderRecursos,tiposparada:renderTP,metashoras:renderMetasHoras,metasproducao:renderMetasProducao,oee:renderOEE,produtos:renderProdutos,clientes:renderClientes,fornecedores:renderForn,subfamilias:renderSF,localizacoes:renderLoc,usuarios:renderUsr};
+  const renders={dashboard:renderDash,estoque:renderEstoque,entradas:renderEntradas,saidas:renderSaidas,variacao:renderVariacao,movimentacao:renderMovimentacao,producao:renderProducao,fichatecnica:renderFT,indicadores:renderIndicadores,paradas:renderParadas,recursos:renderRecursos,tiposparada:renderTP,metashoras:renderMetasHoras,metasproducao:renderMetasProducao,oee:renderOEE,produtos:renderProdutos,clientes:renderClientes,fornecedores:renderForn,subfamilias:renderSF,localizacoes:renderLoc,usuarios:renderUsr,calendario:renderCalendario};
   if(renders[id])renders[id]();
 }
 
@@ -4071,6 +4159,240 @@ function toggleAjusteColuna(){
 }
 
 
+
+
+
+// ══════════════════════════════════════════════
+// ===== CALENDÁRIO DE ENTREGAS =====
+// ══════════════════════════════════════════════
+
+let calAnoAtual = new Date().getFullYear();
+let calMesAtual = new Date().getMonth() + 1;
+
+// Retorna os lançamentos de VENDA e PRÉ-VENDA do mês/ano atual do calendário
+function getEntregasCalendario() {
+  return lancamentosProducao.filter(l =>
+    (l.situacao === 'VENDA' || l.situacao === 'PRE_VENDA') &&
+    l.data && l.data.startsWith(calAnoAtual + '-' + String(calMesAtual).padStart(2,'0'))
+  );
+}
+
+function calHoje() {
+  const agora = new Date();
+  calAnoAtual = agora.getFullYear();
+  calMesAtual = agora.getMonth() + 1;
+  renderCalendario();
+}
+
+function calMoverMes(delta) {
+  calMesAtual += delta;
+  if (calMesAtual > 12) { calMesAtual = 1; calAnoAtual++; }
+  if (calMesAtual < 1)  { calMesAtual = 12; calAnoAtual--; }
+  renderCalendario();
+}
+
+function renderCalendario() {
+  // Atualizar selects de filtro
+  const selCli = document.getElementById('cal-filtro-cli');
+  if (selCli) {
+    const cur = selCli.value;
+    selCli.innerHTML = '<option value="">Todos os clientes</option>' +
+      clientes.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
+    selCli.value = cur;
+  }
+
+  const meses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  document.getElementById('cal-titulo-mes').textContent = meses[calMesAtual-1] + ' ' + calAnoAtual;
+
+  const hojeStr = new Date().toISOString().slice(0,10);
+  const entregasDoMes = getEntregasCalendario();
+
+  // KPIs
+  const total    = entregasDoMes.length;
+  const entregues = entregasDoMes.filter(l => l.situacao === 'VENDA').length;
+  const atrasados = entregasDoMes.filter(l => l.situacao === 'PRE_VENDA' && l.data < hojeStr).length;
+  const pendentes = entregasDoMes.filter(l => l.situacao === 'PRE_VENDA' && l.data >= hojeStr).length;
+
+  document.getElementById('cal-kpi-total').textContent = total;
+  document.getElementById('cal-kpi-entregue').textContent = entregues;
+  document.getElementById('cal-kpi-pendente').textContent = pendentes;
+  document.getElementById('cal-kpi-atrasado').textContent = atrasados;
+
+  // Agrupar por dia
+  const porDia = {};
+  entregasDoMes.forEach(l => {
+    const dia = parseInt(l.data.split('-')[2]);
+    if (!porDia[dia]) porDia[dia] = [];
+    porDia[dia].push(l);
+  });
+
+  // Montar grade
+  const primeiroDia = new Date(calAnoAtual, calMesAtual - 1, 1).getDay();
+  const totalDias   = new Date(calAnoAtual, calMesAtual, 0).getDate();
+  const grid = document.getElementById('cal-grid');
+  grid.innerHTML = '';
+
+  // Células vazias antes do primeiro dia
+  for (let i = 0; i < primeiroDia; i++) {
+    grid.innerHTML += `<div style="min-height:90px;border-radius:8px;background:var(--cm);opacity:.3"></div>`;
+  }
+
+  // Dias do mês
+  const dStr0 = (d) => `${calAnoAtual}-${String(calMesAtual).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+  for (let d = 1; d <= totalDias; d++) {
+    const dStr   = dStr0(d);
+    const isHoje = dStr === hojeStr;
+    const dow    = new Date(calAnoAtual, calMesAtual-1, d).getDay();
+    const isFds  = dow === 0 || dow === 6;
+    const lista  = porDia[d] || [];
+
+    let pcts = '';
+    lista.slice(0,3).forEach(l => {
+      const cli  = clientes.find(c => c.id === l.cliId);
+      const isPreVenda = l.situacao === 'PRE_VENDA';
+      const isAtrasado = isPreVenda && dStr < hojeStr;
+      const cor = !isPreVenda ? 'var(--verde)' : isAtrasado ? 'var(--verm)' : 'var(--amar)';
+      const bg  = !isPreVenda ? 'rgba(39,174,96,.15)' : isAtrasado ? 'rgba(231,76,60,.15)' : 'rgba(243,156,18,.15)';
+      const nome = cli ? cli.nome.split(' ')[0] : '?';
+      pcts += `<div style="font-size:10px;padding:2px 5px;border-radius:4px;background:${bg};color:${cor};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%" title="${cli?cli.nome:'?'} — ${fN(l.qt)} un.">${nome} <span style="opacity:.75">${fN(l.qt)}</span></div>`;
+    });
+    if (lista.length > 3) {
+      pcts += `<div style="font-size:10px;color:var(--fraco);padding:2px 4px">+${lista.length-3} mais</div>`;
+    }
+
+    const bgCell    = isHoje ? 'rgba(46,139,46,.18)' : isFds ? 'rgba(255,255,255,.02)' : 'var(--cm)';
+    const bgHover   = isHoje ? 'rgba(46,139,46,.28)' : 'var(--cc)';
+    const borderCell = isHoje ? 'var(--vm)' : 'var(--borda)';
+    const corDia    = isHoje ? 'var(--vm)' : isFds ? 'var(--fraco)' : 'var(--txt)';
+
+    grid.innerHTML += `
+      <div onclick="abrirDiaEntregas(${d})"
+        style="min-height:90px;border-radius:8px;padding:6px;cursor:pointer;
+          background:${bgCell};border:1px solid ${borderCell};transition:background .15s"
+        onmouseover="this.style.background='${bgHover}'"
+        onmouseout="this.style.background='${bgCell}'">
+        <div style="font-size:12px;font-weight:${isHoje?'700':'500'};color:${corDia};margin-bottom:4px">${d}</div>
+        <div style="display:flex;flex-direction:column;gap:2px">${pcts}</div>
+        ${lista.length > 0 ? `<div style="font-size:10px;color:var(--fraco);margin-top:3px">${lista.length} pedido${lista.length>1?'s':''}</div>` : ''}
+      </div>`;
+  }
+
+  // Lista de pedidos do mês com filtros
+  const filtrStatus = document.getElementById('cal-filtro-status')?.value || '';
+  const filtrCli    = document.getElementById('cal-filtro-cli')?.value || '';
+
+  let lista = entregasDoMes.filter(l => {
+    const isAtrasado = l.situacao === 'PRE_VENDA' && l.data < hojeStr;
+    const statusFiltro = l.situacao === 'VENDA' ? 'entregue' : isAtrasado ? 'atrasado' : 'pendente';
+    if (filtrStatus && statusFiltro !== filtrStatus) return false;
+    if (filtrCli && String(l.cliId) !== String(filtrCli)) return false;
+    return true;
+  });
+
+  lista.sort((a, b) => a.data.localeCompare(b.data));
+
+  const tb = document.getElementById('tb-entregas');
+  if (!lista.length) {
+    tb.innerHTML = `<tr><td colspan="7" class="empty">Nenhum pedido de venda ou pré-venda neste mês</td></tr>`;
+    return;
+  }
+
+  tb.innerHTML = lista.map(l => {
+    const cli  = clientes.find(c => c.id === l.cliId);
+    const prod = produtos.find(p => p.id === l.prodId);
+    const isAtrasado = l.situacao === 'PRE_VENDA' && l.data < hojeStr;
+    const badgeHtml = l.situacao === 'VENDA'
+      ? `<span class="badge badge-ok">💚 Venda</span>`
+      : isAtrasado
+        ? `<span class="badge badge-crit">⚠️ Pré-Venda Atrasada</span>`
+        : `<span class="badge badge-warn">🟡 Pré-Venda</span>`;
+
+    const [aa,mm,dd] = l.data.split('-');
+    const dataFmt = `${dd}/${mm}/${aa}`;
+
+    return `<tr>
+      <td><b>${dataFmt}</b></td>
+      <td>${cli ? cli.nome : '<span style="color:var(--fraco)">—</span>'}</td>
+      <td>${prod ? prod.desc : '<span style="color:var(--fraco)">—</span>'}</td>
+      <td>${fN(l.qt)}</td>
+      <td style="color:var(--fraco)">${l.obs||'—'}</td>
+      <td>${badgeHtml}</td>
+      <td>
+        ${l.situacao === 'PRE_VENDA'
+          ? `<span class="r-edit" onclick="confirmarVendaLanc('${l.id}')" title="Confirmar como Venda">✅</span>`
+          : ''}
+        <span class="r-edit" onclick="editLanc('${l.id}')" title="Editar lançamento">✏️</span>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function abrirDiaEntregas(dia) {
+  const hojeStr = new Date().toISOString().slice(0,10);
+  const dStr    = `${calAnoAtual}-${String(calMesAtual).padStart(2,'0')}-${String(dia).padStart(2,'0')}`;
+  const lista   = lancamentosProducao.filter(l =>
+    (l.situacao === 'VENDA' || l.situacao === 'PRE_VENDA') && l.data === dStr
+  );
+
+  const meses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  document.getElementById('modal-dia-titulo').textContent =
+    `📅 ${dia} de ${meses[calMesAtual-1]} — ${lista.length} pedido${lista.length!==1?'s':''}`;
+
+  const container = document.getElementById('modal-dia-lista');
+  if (!lista.length) {
+    container.innerHTML = `<div class="empty">Nenhum pedido neste dia.</div>`;
+  } else {
+    container.innerHTML = lista.map(l => {
+      const cli  = clientes.find(c => c.id === l.cliId);
+      const prod = produtos.find(p => p.id === l.prodId);
+      const isAtrasado = l.situacao === 'PRE_VENDA' && dStr < hojeStr;
+      const cor  = l.situacao === 'VENDA' ? 'var(--verde)' : isAtrasado ? 'var(--verm)' : 'var(--amar)';
+      const badgeTxt = l.situacao === 'VENDA' ? '💚 Venda' : isAtrasado ? '⚠️ Pré-Venda Atrasada' : '🟡 Pré-Venda';
+
+      return `<div style="background:var(--cm);border:1px solid var(--borda);border-radius:10px;padding:14px;display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
+        <div style="min-width:0">
+          <div style="font-weight:600;font-size:14px;color:${cor}">${cli ? cli.nome : 'Cliente não informado'}</div>
+          <div style="font-size:12px;color:var(--txt);margin-top:3px">${prod ? prod.desc : '—'} — <b>${fN(l.qt)}</b> un.</div>
+          <div style="font-size:11px;margin-top:4px"><span style="color:${cor}">${badgeTxt}</span></div>
+          ${l.obs ? `<div style="font-size:11px;color:var(--fraco);margin-top:4px">${l.obs}</div>` : ''}
+        </div>
+        <div style="display:flex;gap:6px;flex-shrink:0">
+          ${l.situacao === 'PRE_VENDA'
+            ? `<button class="btn btn-s" style="font-size:11px;padding:5px 9px" onclick="confirmarVendaLanc('${l.id}');closeModal('modal-dia-entregas')" title="Confirmar Venda">✅</button>`
+            : ''}
+          <button class="btn btn-s" style="font-size:11px;padding:5px 9px" onclick="closeModal('modal-dia-entregas');editLanc('${l.id}')">✏️</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+  openModal('modal-dia-entregas');
+}
+
+// Atalho: confirmar venda diretamente pelo calendário (usa função já existente)
+function confirmarVendaLanc(id) {
+  confirmarVenda(id);
+  setTimeout(renderCalendario, 300);
+}
+
+// Atalho: editar lançamento pelo calendário (usa função já existente)
+function editLanc(id) {
+  goPage('producao');
+  setTimeout(() => editLanc_interno(id), 200);
+}
+function editLanc_interno(id) {
+  const l = lancamentosProducao.find(x => x.id === id);
+  if (!l) return;
+  editProdLancId = id;
+  document.getElementById('modal-producao-titulo').textContent = '✏️ Editar Lançamento';
+  document.getElementById('prod-data').value = l.data;
+  document.getElementById('prod-situacao').value = l.situacao;
+  document.getElementById('prod-produto').value = l.prodId;
+  document.getElementById('prod-qt').value = l.qt;
+  document.getElementById('prod-cliente').value = l.cliId || '';
+  document.getElementById('prod-obs').value = l.obs;
+  document.getElementById('prod-custo-prod').value = l.custo || 0;
+  openModal('modal-producao');
+}
 
 // ══════ LEMBRAR SENHA ══════
 window.addEventListener('load', function(){
