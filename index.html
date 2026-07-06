@@ -319,7 +319,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--preto);color:var(--txt);m
       </select>
       <select class="fi" id="fe-ano" onchange="renderEstoque()">
         <option value="">Todos os anos</option>
-        <option value="2024">2024</option><option value="2025">2025</option><option value="2026">2026</option>
+        <option value="2024">2024</option><option value="2025">2025</option><option value="2026">2026</option><option value="2027">2027</option><option value="2028">2028</option><option value="2029">2029</option><option value="2030">2030</option><option value="2031">2031</option><option value="2032">2032</option>
       </select>
       <select class="fi" id="fe-sf" onchange="renderEstoque()"><option value="">Todas subfamílias</option></select>
       <select class="fi" id="fe-loc" onchange="renderEstoque()"><option value="">Todas localizações</option></select>
@@ -376,7 +376,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--preto);color:var(--txt);m
             </select>
             <select class="fi" id="fp-ano" onchange="renderProducao()">
               <option value="">Todos os anos</option>
-              <option value="2024">2024</option><option value="2025">2025</option><option value="2026">2026</option>
+              <option value="2024">2024</option><option value="2025">2025</option><option value="2026">2026</option><option value="2027">2027</option><option value="2028">2028</option><option value="2029">2029</option><option value="2030">2030</option><option value="2031">2031</option><option value="2032">2032</option>
             </select>
             <select class="fi" id="fp-situacao" onchange="renderProducao()">
               <option value="">Todas as situações</option>
@@ -450,7 +450,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--preto);color:var(--txt);m
         <div class="fg" style="min-width:80px">
           <label>Ano</label>
           <select class="fi" id="ind-ano" onchange="renderIndicadores()">
-            <option value="2024">2024</option><option value="2025">2025</option><option value="2026" selected>2026</option>
+            <option value="2024">2024</option><option value="2025">2025</option><option value="2026" selected>2026</option><option value="2027">2027</option><option value="2028">2028</option><option value="2029">2029</option><option value="2030">2030</option><option value="2031">2031</option><option value="2032">2032</option>
           </select>
         </div>
         <div style="display:flex;flex-direction:column;gap:4px">
@@ -513,7 +513,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--preto);color:var(--txt);m
           <label>Ano</label>
           <select class="fi" id="fpar-ano" onchange="renderParadas()">
             <option value="">Todos</option>
-            <option value="2024">2024</option><option value="2025">2025</option><option value="2026" selected>2026</option>
+            <option value="2024">2024</option><option value="2025">2025</option><option value="2026" selected>2026</option><option value="2027">2027</option><option value="2028">2028</option><option value="2029">2029</option><option value="2030">2030</option><option value="2031">2031</option><option value="2032">2032</option>
           </select>
         </div>
         <div class="fg" style="min-width:120px">
@@ -645,7 +645,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--preto);color:var(--txt);m
         <div class="fg" style="min-width:80px">
           <label>Ano</label>
           <select class="fi" id="mh-ano" onchange="renderMetasHoras()">
-            <option value="2024">2024</option><option value="2025">2025</option><option value="2026" selected>2026</option>
+            <option value="2024">2024</option><option value="2025">2025</option><option value="2026" selected>2026</option><option value="2027">2027</option><option value="2028">2028</option><option value="2029">2029</option><option value="2030">2030</option><option value="2031">2031</option><option value="2032">2032</option>
           </select>
         </div>
         <div class="fg" style="min-width:120px">
@@ -681,7 +681,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--preto);color:var(--txt);m
         <div class="fg" style="min-width:80px">
           <label>Ano</label>
           <select class="fi" id="mp-ano" onchange="renderMetasProducao()">
-            <option value="2024">2024</option><option value="2025">2025</option><option value="2026" selected>2026</option>
+            <option value="2024">2024</option><option value="2025">2025</option><option value="2026" selected>2026</option><option value="2027">2027</option><option value="2028">2028</option><option value="2029">2029</option><option value="2030">2030</option><option value="2031">2031</option><option value="2032">2032</option>
           </select>
         </div>
         <div class="fg" style="min-width:130px">
@@ -708,7 +708,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--preto);color:var(--txt);m
         <div class="fg" style="min-width:80px">
           <label>Ano</label>
           <select class="fi" id="oee-ano" onchange="renderOEE()">
-            <option value="2024">2024</option><option value="2025">2025</option><option value="2026" selected>2026</option>
+            <option value="2024">2024</option><option value="2025">2025</option><option value="2026" selected>2026</option><option value="2027">2027</option><option value="2028">2028</option><option value="2029">2029</option><option value="2030">2030</option><option value="2031">2031</option><option value="2032">2032</option>
           </select>
         </div>
         <span style="font-size:12px;color:var(--fraco)">OEE = Disponibilidade × Eficiência × Qualidade</span>
@@ -821,6 +821,12 @@ body{font-family:'DM Sans',sans-serif;background:var(--preto);color:var(--txt);m
               <option value="2024">2024</option>
               <option value="2025" selected>2025</option>
               <option value="2026">2026</option>
+              <option value="2027">2027</option>
+              <option value="2028">2028</option>
+              <option value="2029">2029</option>
+              <option value="2030">2030</option>
+              <option value="2031">2031</option>
+              <option value="2032">2032</option>
             </select>
           </div>
           <div class="fg" style="min-width:180px">
@@ -983,7 +989,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--preto);color:var(--txt);m
           <div class="fg" style="min-width:80px">
             <label>Ano Início</label>
             <select class="fi" id="mov-ano-ini" onchange="renderMovimentacao()">
-              <option value="2024">2024</option><option value="2025" selected>2025</option><option value="2026">2026</option>
+              <option value="2024">2024</option><option value="2025" selected>2025</option><option value="2026">2026</option><option value="2027">2027</option><option value="2028">2028</option><option value="2029">2029</option><option value="2030">2030</option><option value="2031">2031</option><option value="2032">2032</option>
             </select>
           </div>
           <div style="display:flex;align-items:flex-end;padding-bottom:2px;color:var(--fraco);font-size:18px">→</div>
@@ -999,7 +1005,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--preto);color:var(--txt);m
           <div class="fg" style="min-width:80px">
             <label>Ano Fim</label>
             <select class="fi" id="mov-ano-fim" onchange="renderMovimentacao()">
-              <option value="2024">2024</option><option value="2025">2025</option><option value="2026" selected>2026</option>
+              <option value="2024">2024</option><option value="2025">2025</option><option value="2026" selected>2026</option><option value="2027">2027</option><option value="2028">2028</option><option value="2029">2029</option><option value="2030">2030</option><option value="2031">2031</option><option value="2032">2032</option>
             </select>
           </div>
           <div class="fg" style="min-width:180px">
