@@ -279,7 +279,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--preto);color:var(--txt);m
 <div class="main-content">
   <div class="topbar">
     <div class="topbar-title" id="page-title">Dashboard</div>
-    <div style="display:flex;align-items:center;gap:12px"><div id="sync-status" style="display:flex;align-items:center;gap:5px;font-size:11px;color:#888"><div id="sync-dot" style="width:7px;height:7px;border-radius:50%;background:#888"></div><span id="sync-txt">Offline</span></div><div style="font-size:12px;color:var(--fraco)" id="topbar-user"></div><button id="btn-tema" onclick="alternarTema()" title="Alternar tema claro/escuro" style="background:none;border:1px solid var(--borda);border-radius:6px;padding:4px 10px;color:var(--fraco);cursor:pointer;font-size:13px;font-family:DM Sans,sans-serif">🌙 Escuro</button><button onclick="document.getElementById('config-screen').style.display='flex'" style="background:none;border:1px solid var(--borda);border-radius:6px;padding:4px 10px;color:var(--fraco);cursor:pointer;font-size:11px;font-family:DM Sans,sans-serif">⚙️ Supabase</button></div>
+    <div style="display:flex;align-items:center;gap:12px"><div id="sync-status" style="display:flex;align-items:center;gap:5px;font-size:11px;color:#888"><div id="sync-dot" style="width:7px;height:7px;border-radius:50%;background:#888"></div><span id="sync-txt">Offline</span></div><span id="ping-status" title="Ping ainda não executado" style="font-size:10px;color:#666;cursor:default">📶</span><div style="font-size:12px;color:var(--fraco)" id="topbar-user"></div><button id="btn-tema" onclick="alternarTema()" title="Alternar tema claro/escuro" style="background:none;border:1px solid var(--borda);border-radius:6px;padding:4px 10px;color:var(--fraco);cursor:pointer;font-size:13px;font-family:DM Sans,sans-serif">🌙 Escuro</button><button onclick="document.getElementById('config-screen').style.display='flex'" style="background:none;border:1px solid var(--borda);border-radius:6px;padding:4px 10px;color:var(--fraco);cursor:pointer;font-size:11px;font-family:DM Sans,sans-serif">⚙️ Supabase</button></div>
   </div>
 
   <!-- ========= DASHBOARD ========= -->
@@ -1546,11 +1546,14 @@ async function sbReq(tabela, metodo='GET', corpo=null, filtro=''){
   if(corpo) opts.body = JSON.stringify(corpo);
   try {
     const r = await fetch(url, opts);
-    const statusTxt = await r.text(); if(!r.ok){ console.error('Supabase ERR', metodo, tabela, r.status, statusTxt); return null; } console.log('Supabase OK', metodo, tabela, r.status);
+    const statusTxt = await r.text();
+    if(!r.ok){ console.error('Supabase ERR', metodo, tabela, r.status, statusTxt); window._sbLastError = statusTxt; return null; }
+    console.log('Supabase OK', metodo, tabela, r.status);
+    window._sbLastError = null;
     if(metodo === 'DELETE') return true;
     const txt = statusTxt;
     return txt ? JSON.parse(txt) : true;
-  } catch(e){ console.error('Fetch error', e); return null; }
+  } catch(e){ console.error('Fetch error', e); window._sbLastError = String(e); return null; }
 }
 
 async function testarConexao(){
@@ -1559,6 +1562,40 @@ async function testarConexao(){
   sbOnline = r !== null;
   setSyncStatus(sbOnline ? 'ok' : 'error');
   return sbOnline;
+}
+
+// ══════ KEEP-ALIVE PING (evita o projeto Supabase hibernar por inatividade) ══════
+// Faz uma requisição mínima em intervalos regulares, enquanto esta aba estiver aberta
+// (mesmo antes do login). Isso NÃO substitui um ping externo (cron) para quando
+// ninguém estiver com o app aberto — ver observação no chat.
+let _keepAliveInterval = null;
+const KEEP_ALIVE_MS = 4 * 60 * 1000; // 4 minutos
+
+async function pingKeepAlive(){
+  if(!SB_URL || !SB_KEY) return;
+  const el = document.getElementById('ping-status');
+  try{
+    const r = await fetch(`${SB_URL}/rest/v1/produtos?select=id&limit=1`, {
+      method: 'GET',
+      headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY }
+    });
+    const hora = new Date().toLocaleTimeString();
+    console.log('[keep-alive] ping Supabase', r.ok ? 'ok' : ('falhou: ' + r.status), hora);
+    if(el){ el.title = (r.ok ? 'Último ping OK às ' : 'Último ping falhou às ') + hora; el.style.color = r.ok ? '#2e8b2e' : '#e74c3c'; }
+  }catch(e){
+    console.warn('[keep-alive] ping falhou:', e);
+    if(el){ el.title = 'Ping falhou às ' + new Date().toLocaleTimeString(); el.style.color = '#e74c3c'; }
+  }
+}
+
+function iniciarKeepAlive(){
+  if(_keepAliveInterval) return; // já está rodando
+  pingKeepAlive(); // ping imediato ao iniciar
+  _keepAliveInterval = setInterval(pingKeepAlive, KEEP_ALIVE_MS);
+}
+
+function pararKeepAlive(){
+  if(_keepAliveInterval){ clearInterval(_keepAliveInterval); _keepAliveInterval = null; }
 }
 
 function setSyncStatus(s){
@@ -3358,18 +3395,26 @@ async function salvarParada(){
   if(!data||!recursoId||!tipoId||!inicio||!fim){ alert('Preencha Data, Recurso, Tipo, Hora Início e Hora Fim.'); return; }
 
   const tempoCalculado = minutosDiff(inicio, fim);
-  const corpo = {data, recurso_id:recursoId, tipo_parada_id:tipoId, hora_inicio:inicio, hora_fim:fim, obs, tempo_parada:tempoCalculado};
+  const corpo = {data, recurso_id:recursoId, tipo_parada_id:tipoId, hora_inicio:inicio, hora_fim:fim, obs};
 
+  let ok = false;
   if(editParadaId){
     const r = await sbUpdate('paradas', editParadaId, corpo);
     if(r){
       const idx = paradas.findIndex(p=>p.id===editParadaId);
-      if(idx>=0) paradas[idx] = mapParada({...corpo, id:editParadaId});
+      if(idx>=0) paradas[idx] = mapParada({...corpo, id:editParadaId, tempo_parada:(r.tempo_parada ?? tempoCalculado)});
+      ok = true;
     }
   } else {
     const r = await sbSave('paradas', corpo);
-    if(r) paradas.push(mapParada({...(Array.isArray(r)?r[0]:r), tempo_parada:(Array.isArray(r)?r[0]:r)?.tempo_parada ?? tempoCalculado}));
+    if(r){ paradas.push(mapParada({...r, tempo_parada:(r.tempo_parada ?? tempoCalculado)})); ok = true; }
   }
+
+  if(!ok){
+    alert('Não foi possível salvar a parada. Detalhe do erro:\n\n' + (window._sbLastError || 'Erro desconhecido — verifique o console (F12).'));
+    return;
+  }
+
   limparParada();
   closeModal('modal-parada');
   renderParadas();
@@ -4406,6 +4451,7 @@ window.addEventListener('load', function(){
       document.getElementById('remember-me').checked=true;
     }
   }catch(e){}
+  iniciarKeepAlive(); // mantém o Supabase acordado enquanto esta aba estiver aberta
 });
 </script>
 
