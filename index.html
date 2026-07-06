@@ -3357,17 +3357,18 @@ async function salvarParada(){
 
   if(!data||!recursoId||!tipoId||!inicio||!fim){ alert('Preencha Data, Recurso, Tipo, Hora Início e Hora Fim.'); return; }
 
-  const corpo = {data, recurso_id:recursoId, tipo_parada_id:tipoId, hora_inicio:inicio, hora_fim:fim, obs};
+  const tempoCalculado = minutosDiff(inicio, fim);
+  const corpo = {data, recurso_id:recursoId, tipo_parada_id:tipoId, hora_inicio:inicio, hora_fim:fim, obs, tempo_parada:tempoCalculado};
 
   if(editParadaId){
     const r = await sbUpdate('paradas', editParadaId, corpo);
     if(r){
       const idx = paradas.findIndex(p=>p.id===editParadaId);
-      if(idx>=0) paradas[idx] = mapParada({...corpo, id:editParadaId, tempo_parada:minutosDiff(inicio,fim)});
+      if(idx>=0) paradas[idx] = mapParada({...corpo, id:editParadaId});
     }
   } else {
     const r = await sbSave('paradas', corpo);
-    if(r) paradas.push(mapParada(Array.isArray(r)?r[0]:r));
+    if(r) paradas.push(mapParada({...(Array.isArray(r)?r[0]:r), tempo_parada:(Array.isArray(r)?r[0]:r)?.tempo_parada ?? tempoCalculado}));
   }
   limparParada();
   closeModal('modal-parada');
