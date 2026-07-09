@@ -1658,7 +1658,7 @@ function mapTP(r){ return{id:r.id,nome:r.nome,desc:r.descricao||''}; }
 function mapParada(r){ const pts=r.data?r.data.split('-'):[]; const mes=r.mes||parseInt(pts[1])||0; const ano=r.ano||parseInt(pts[0])||0; return{id:r.id,data:r.data,recursoId:r.recurso_id,tipoId:r.tipo_parada_id,inicio:r.hora_inicio,fim:r.hora_fim,tempo:Number(r.tempo_parada||0),obs:r.obs||'',mes,ano}; }
 function mapMetaH(r){ const pts=r.data?r.data.split('-'):[]; const mes=r.mes||parseInt(pts[1])||0; const ano=r.ano||parseInt(pts[0])||0; return{id:r.id,data:r.data,horas:Number(r.horas),mes,ano}; }
 function mapMetaP(r){ const pts=r.data?r.data.split("-"):[]; const mes=r.mes||parseInt(pts[1])||0; const ano=r.ano||parseInt(pts[0])||0; return{id:r.id,data:r.data,qt:Number(r.quantidade),mes,ano}; }
-function mapOeeQ(r){ return{id:r.id,mes:r.mes,ano:r.ano,qualidade:Number(r.qualidade)}; }
+function mapOeeQ(r){ return{id:r.id,mes:Number(r.mes),ano:Number(r.ano),qualidade:Number(r.qualidade)}; }
 function gRec(id){ return recursos.find(r=>r.id===parseInt(id)); }
 function gTP(id){ return tiposParada.find(t=>t.id===parseInt(id)); }
 
@@ -3888,7 +3888,8 @@ async function salvarTodasMetasProducao(){
 // ══════ OEE ══════
 
 async function salvarQualidadeOEE(mes, ano, qualidade){
-  const exist=oeeQualidade.find(o=>o.mes===mes&&o.ano===ano);
+  mes=Number(mes); ano=Number(ano);
+  const exist=oeeQualidade.find(o=>Number(o.mes)===mes&&Number(o.ano)===ano);
   if(exist){
     const r=await sbUpdate('oee_qualidade',exist.id,{qualidade});
     if(r){exist.qualidade=qualidade;}
@@ -3992,7 +3993,8 @@ function renderOEE(){
 }
 
 async function salvarQualOEEInline(mes,ano){
-  const val=parseFloat(document.getElementById(`oee-qual-${mes}`)?.value)||99;
+  const raw=parseFloat(document.getElementById(`oee-qual-${mes}`)?.value);
+  const val=isNaN(raw)?99:raw;
   await salvarQualidadeOEE(mes,ano,val);
 }
 
