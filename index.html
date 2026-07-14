@@ -469,10 +469,22 @@ body{font-family:'DM Sans',sans-serif;background:var(--preto);color:var(--txt);m
       <div class="kpi-card" id="ind-kpi-card-pct"><div class="kpi-label">% Atingido</div><div class="kpi-value" id="ind-kpi-pct" style="font-size:26px">0%</div><div class="kpi-sub">meta acumulada até hoje</div></div>
     </div>
 
+    <!-- GRÁFICO ANUAL -->
+    <div class="table-card" style="margin-bottom:16px">
+      <div class="tc-head">
+        <div class="tc-title" id="ind-graf-titulo">Produção Mensal — Realizado x Meta</div>
+      </div>
+      <div style="padding:12px 18px 18px;overflow-x:auto">
+        <svg id="ind-grafico-anual" width="100%" viewBox="0 0 980 340" style="min-width:760px"></svg>
+        <div id="ind-grafico-legend" style="display:flex;gap:18px;justify-content:center;margin-top:6px;font-size:12px;color:var(--fraco)"></div>
+      </div>
+    </div>
+
     <!-- TABELA DIÁRIA -->
     <div class="table-card">
-      <div class="tc-head">
+      <div class="tc-head" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
         <div class="tc-title" id="ind-titulo">Indicador de Desempenho</div>
+        <button class="btn btn-s" onclick="gerarPdfIndicadores()">📄 Gerar PDF</button>
       </div>
       <div class="table-wrap">
         <table>
@@ -1501,6 +1513,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--preto);color:var(--txt);m
   </div>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <script>
 const MESES=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
 const TIPOS_SF={materia_prima:'Matéria Prima',produto_acabado:'Produto Acabado',produto_intermediario:'Produto Intermediário',embalagem:'Embalagem',consumivel:'Consumível',sucata:'Sucata / Refugo',outro:'Outro'};
@@ -4171,6 +4185,92 @@ function renderIndicadores(){
   </tr>`;
 
   document.getElementById('tb-indicadores').innerHTML = rows;
+
+  renderGraficoAnualIndicadores(ano);
+}
+
+// ══════ GRÁFICO ANUAL — PRODUÇÃO MENSAL (REALIZADO x META) ══════
+function renderGraficoAnualIndicadores(ano){
+  const metaMensal = new Array(12).fill(0);
+  const realMensal = new Array(12).fill(0);
+
+  metasProducao.forEach(m=>{ if(m.ano===ano) metaMensal[m.mes-1]+=m.qt; });
+  lancamentosProducao.forEach(l=>{
+    if(l.situacao!=='PRODUCAO') return;
+    const [ly,lm] = l.data.split('-').map(Number);
+    if(ly===ano) realMensal[lm-1]+=l.qt;
+  });
+
+  document.getElementById('ind-graf-titulo').textContent = `Produção Mensal — Realizado x Meta (${ano})`;
+  document.getElementById('ind-grafico-anual').innerHTML = buildBarChartAnualSVG(MESES, metaMensal, realMensal);
+  document.getElementById('ind-grafico-legend').innerHTML = `
+    <span><span style="display:inline-block;width:11px;height:11px;background:#555;border-radius:2px;margin-right:5px;vertical-align:-1px"></span>Meta</span>
+    <span><span style="display:inline-block;width:11px;height:11px;background:var(--vmc);border-radius:2px;margin-right:5px;vertical-align:-1px"></span>Realizado</span>`;
+}
+
+function buildBarChartAnualSVG(labels, metaVals, realVals){
+  const W=980, H=340, padL=60, padR=20, padT=20, padB=40;
+  const chartW=W-padL-padR, chartH=H-padT-padB;
+  const n=labels.length;
+  const groupW=chartW/n;
+  const barW=groupW*0.32, gap=groupW*0.06;
+  const maxVal=Math.max(1, ...metaVals, ...realVals);
+  const escala=v=>chartH*(v/maxVal);
+
+  let svg='';
+  // linhas guia horizontais
+  const passos=4;
+  for(let i=0;i<=passos;i++){
+    const y=padT+chartH-(chartH*i/passos);
+    const val=Math.round(maxVal*i/passos);
+    svg+=`<line x1="${padL}" y1="${y}" x2="${W-padR}" y2="${y}" stroke="#3a3a3a" stroke-width="1" stroke-dasharray="3,3"/>`;
+    svg+=`<text x="${padL-8}" y="${y+4}" text-anchor="end" font-size="10" fill="#888">${val.toLocaleString('pt-BR')}</text>`;
+  }
+
+  labels.forEach((lab,i)=>{
+    const gx=padL+i*groupW;
+    const hMeta=escala(metaVals[i]);
+    const hReal=escala(realVals[i]);
+    const xMeta=gx+gap;
+    const xReal=xMeta+barW+gap;
+    svg+=`<rect x="${xMeta}" y="${padT+chartH-hMeta}" width="${barW}" height="${hMeta}" fill="#555" rx="2"><title>${lab}: Meta ${metaVals[i].toLocaleString('pt-BR')} kg</title></rect>`;
+    svg+=`<rect x="${xReal}" y="${padT+chartH-hReal}" width="${barW}" height="${hReal}" fill="var(--vmc)" rx="2"><title>${lab}: Realizado ${realVals[i].toLocaleString('pt-BR')} kg</title></rect>`;
+    svg+=`<text x="${gx+groupW/2}" y="${padT+chartH+18}" text-anchor="middle" font-size="11" fill="#ccc">${lab}</text>`;
+  });
+
+  svg+=`<line x1="${padL}" y1="${padT+chartH}" x2="${W-padR}" y2="${padT+chartH}" stroke="#555" stroke-width="1"/>`;
+  return svg;
+}
+
+// ══════ EXPORTAR TABELA DE INDICADORES EM PDF ══════
+function gerarPdfIndicadores(){
+  if(!window.jspdf){ alert('Biblioteca de PDF ainda não carregou. Aguarde alguns segundos e tente novamente.'); return; }
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({orientation:'landscape', unit:'pt', format:'a4'});
+
+  const titulo = document.getElementById('ind-titulo').textContent;
+  const kpiTxt = `Dias Úteis: ${document.getElementById('ind-kpi-du').textContent}   |   Meta Total: ${document.getElementById('ind-kpi-meta').textContent} kg   |   Produção Total: ${document.getElementById('ind-kpi-prod').textContent} kg   |   % Atingido: ${document.getElementById('ind-kpi-pct').textContent}`;
+
+  doc.setFontSize(14);
+  doc.text(titulo, 40, 40);
+  doc.setFontSize(10);
+  doc.text(kpiTxt, 40, 58);
+
+  const head=[['Dia','Meta Dia (kg)','Prod. Dia (kg)','Meta Acum. (kg)','Prod. Acum. (kg)','% Atingido','Observação']];
+  const body=[...document.querySelectorAll('#tb-indicadores tr')].map(tr=>
+    [...tr.children].map(td=>td.textContent.trim())
+  );
+
+  doc.autoTable({
+    head, body,
+    startY: 72,
+    styles:{ fontSize:8, cellPadding:4 },
+    headStyles:{ fillColor:[46,139,46] },
+    margin:{ left:40, right:40 }
+  });
+
+  const nomeArq = `indicador_desempenho_${titulo.split('—')[1]?.trim().replace('/','_')||'relatorio'}.pdf`;
+  doc.save(nomeArq);
 }
 
 // ===== INIT =====
