@@ -1562,6 +1562,40 @@ async function sbReq(tabela, metodo='GET', corpo=null, filtro=''){
   } catch(e){ console.error('Fetch error', e); window._sbLastError = String(e); return null; }
 }
 
+// Busca TODAS as linhas de uma tabela, ignorando o limite padrão de 1000 linhas
+// do PostgREST/Supabase. Usa o header Range para paginar até esgotar os dados.
+async function sbReqAll(tabela, filtro=''){
+  if(!SB_URL || !SB_KEY) return null;
+  const PAGE = 1000;
+  let from = 0;
+  let all = [];
+  while(true){
+    const url = `${SB_URL}/rest/v1/${tabela}${filtro}`;
+    const opts = {
+      method: 'GET',
+      headers: {
+        'apikey': SB_KEY,
+        'Authorization': 'Bearer ' + SB_KEY,
+        'Content-Type': 'application/json',
+        'Range-Unit': 'items',
+        'Range': `${from}-${from+PAGE-1}`
+      }
+    };
+    try {
+      const r = await fetch(url, opts);
+      const statusTxt = await r.text();
+      if(!r.ok && r.status!==206){ console.error('Supabase ERR', 'GET', tabela, r.status, statusTxt); window._sbLastError = statusTxt; return all.length?all:null; }
+      const data = statusTxt ? JSON.parse(statusTxt) : [];
+      all = all.concat(data);
+      console.log('Supabase OK (página)', tabela, `${from}-${from+data.length-1}`, 'total até agora:', all.length);
+      if(data.length < PAGE) break; // última página
+      from += PAGE;
+    } catch(e){ console.error('Fetch error', e); window._sbLastError = String(e); return all.length?all:null; }
+  }
+  window._sbLastError = null;
+  return all;
+}
+
 async function testarConexao(){
   setSyncStatus('connecting');
   const r = await sbReq('produtos', 'GET', null, '?limit=1');
@@ -1666,21 +1700,21 @@ async function carregarTudo(silent=false){
   setSyncStatus('connecting');
   if(!silent) showLoader(true);
   const [sf, locs, prods, clis, forns, ents, sais, lancs, fts, recs, tps, pars, mh, mp, oq] = await Promise.all([
-    sbReq('subfamilias','GET',null,'?order=id'),
-    sbReq('localizacoes','GET',null,'?order=id'),
-    sbReq('produtos','GET',null,'?order=id'),
-    sbReq('clientes','GET',null,'?order=id'),
-    sbReq('fornecedores','GET',null,'?order=id'),
-    sbReq('entradas','GET',null,'?order=data'),
-    sbReq('saidas','GET',null,'?order=data'),
-    sbReq('lancamentos_producao','GET',null,'?order=data'),
-    sbReq('ficha_tecnica','GET',null,'?order=id'),
-    sbReq('recursos','GET',null,'?order=id'),
-    sbReq('tipos_parada','GET',null,'?order=id'),
-    sbReq('paradas','GET',null,'?order=data'),
-    sbReq('metas_horas','GET',null,'?order=data'),
-    sbReq('metas_producao','GET',null,'?order=data'),
-    sbReq('oee_qualidade','GET',null,'?order=ano,mes'),
+    sbReqAll('subfamilias','?order=id'),
+    sbReqAll('localizacoes','?order=id'),
+    sbReqAll('produtos','?order=id'),
+    sbReqAll('clientes','?order=id'),
+    sbReqAll('fornecedores','?order=id'),
+    sbReqAll('entradas','?order=data'),
+    sbReqAll('saidas','?order=data'),
+    sbReqAll('lancamentos_producao','?order=data'),
+    sbReqAll('ficha_tecnica','?order=id'),
+    sbReqAll('recursos','?order=id'),
+    sbReqAll('tipos_parada','?order=id'),
+    sbReqAll('paradas','?order=data'),
+    sbReqAll('metas_horas','?order=data'),
+    sbReqAll('metas_producao','?order=data'),
+    sbReqAll('oee_qualidade','?order=ano,mes'),
   ]);
   if(sf) subfamilias   = sf.map(mapSF);
   if(locs) localizacoes= locs.map(mapLoc);
@@ -2098,7 +2132,8 @@ async function salvarEntrada(){
   const obj={id:nId(entradas),data,prodId,qt,custo:parseFloat(document.getElementById('ent-custo').value)||0,fornId:parseInt(document.getElementById('ent-forn').value)||'',nf:document.getElementById('ent-nf').value,resp:document.getElementById('ent-resp').value,obs:document.getElementById('ent-obs').value,mes:getM(data),ano:getY(data)};
   if(sbOnline){
     const db=await sbSave('entradas',{data,produto_id:prodId,quantidade:qt,custo_unitario:parseFloat(document.getElementById('ent-custo').value)||0,fornecedor_id:parseInt(document.getElementById('ent-forn').value)||null,nota_fiscal:document.getElementById('ent-nf').value,responsavel:document.getElementById('ent-resp').value,obs:document.getElementById('ent-obs').value});
-    if(db){obj.id=db.id;obj.mes=db.mes;obj.ano=db.ano;}
+    if(!db){ alert('Erro ao salvar entrada no Supabase. Os dados do formulário foram mantidos — verifique a conexão e tente novamente.'); return; }
+    obj.id=db.id;obj.mes=db.mes;obj.ano=db.ano;
   }
   entradas.push(obj);limparEntrada();renderEntradas();
 }
@@ -2120,10 +2155,12 @@ function abrirEditEnt(id){
 async function confirmarEditEntrada(){
   const idx=entradas.findIndex(x=>x.id===editEntId);if(idx<0)return;
   const data=document.getElementById('me-data').value;
-  entradas[idx]={...entradas[idx],data,prodId:parseInt(document.getElementById('me-prod').value),qt:parseFloat(document.getElementById('me-qt').value),custo:parseFloat(document.getElementById('me-custo').value)||0,fornId:parseInt(document.getElementById('me-forn').value)||'',nf:document.getElementById('me-nf').value,resp:document.getElementById('me-resp').value,obs:document.getElementById('me-obs').value,mes:getM(data),ano:getY(data)};
+  const atualizado={...entradas[idx],data,prodId:parseInt(document.getElementById('me-prod').value),qt:parseFloat(document.getElementById('me-qt').value),custo:parseFloat(document.getElementById('me-custo').value)||0,fornId:parseInt(document.getElementById('me-forn').value)||'',nf:document.getElementById('me-nf').value,resp:document.getElementById('me-resp').value,obs:document.getElementById('me-obs').value,mes:getM(data),ano:getY(data)};
   if(sbOnline){
-    await sbUpdate('entradas',editEntId,{data,produto_id:parseInt(document.getElementById('me-prod').value),quantidade:parseFloat(document.getElementById('me-qt').value),custo_unitario:parseFloat(document.getElementById('me-custo').value)||0,fornecedor_id:parseInt(document.getElementById('me-forn').value)||null,nota_fiscal:document.getElementById('me-nf').value,responsavel:document.getElementById('me-resp').value,obs:document.getElementById('me-obs').value});
+    const db=await sbUpdate('entradas',editEntId,{data,produto_id:parseInt(document.getElementById('me-prod').value),quantidade:parseFloat(document.getElementById('me-qt').value),custo_unitario:parseFloat(document.getElementById('me-custo').value)||0,fornecedor_id:parseInt(document.getElementById('me-forn').value)||null,nota_fiscal:document.getElementById('me-nf').value,responsavel:document.getElementById('me-resp').value,obs:document.getElementById('me-obs').value});
+    if(!db){ alert('Erro ao atualizar entrada no Supabase. A edição NÃO foi salva — verifique a conexão e tente novamente.'); return; }
   }
+  entradas[idx]=atualizado;
   closeModal('modal-ent');renderEntradas();
 }
 async function delEnt(id){if(!confirm('Excluir esta entrada?'))return;if(sbOnline)await sbDelete('entradas',id);entradas=entradas.filter(e=>e.id!==id);renderEntradas();}
@@ -2181,7 +2218,8 @@ async function salvarSaida(){
   const sObj={id:nId(saidas),data,prodId,qt,cliId:parseInt(document.getElementById('sai-cli').value)||'',resp:document.getElementById('sai-resp').value,valor:parseFloat(document.getElementById('sai-valor').value)||0,obs:document.getElementById('sai-obs').value,mes:getM(data),ano:getY(data)};
   if(sbOnline){
     const db=await sbSave('saidas',{data,produto_id:prodId,quantidade:qt,cliente_id:parseInt(document.getElementById('sai-cli').value)||null,responsavel:sObj.resp,valor_total:sObj.valor,obs:sObj.obs});
-    if(db){sObj.id=db.id;sObj.mes=db.mes;sObj.ano=db.ano;}
+    if(!db){ alert('Erro ao salvar saída no Supabase. Os dados do formulário foram mantidos — verifique a conexão e tente novamente.'); return; }
+    sObj.id=db.id;sObj.mes=db.mes;sObj.ano=db.ano;
   }
   saidas.push(sObj);limparSaida();renderSaidas();
 }
@@ -2202,10 +2240,12 @@ function abrirEditSai(id){
 async function confirmarEditSaida(){
   const idx=saidas.findIndex(x=>x.id===editSaiId);if(idx<0)return;
   const data=document.getElementById('ms-data').value;
-  saidas[idx]={...saidas[idx],data,prodId:parseInt(document.getElementById('ms-prod').value),qt:parseFloat(document.getElementById('ms-qt').value),cliId:parseInt(document.getElementById('ms-cli').value)||'',resp:document.getElementById('ms-resp').value,valor:parseFloat(document.getElementById('ms-valor').value)||0,obs:document.getElementById('ms-obs').value,mes:getM(data),ano:getY(data)};
+  const atualizado={...saidas[idx],data,prodId:parseInt(document.getElementById('ms-prod').value),qt:parseFloat(document.getElementById('ms-qt').value),cliId:parseInt(document.getElementById('ms-cli').value)||'',resp:document.getElementById('ms-resp').value,valor:parseFloat(document.getElementById('ms-valor').value)||0,obs:document.getElementById('ms-obs').value,mes:getM(data),ano:getY(data)};
   if(sbOnline){
-    await sbUpdate('saidas',editSaiId,{data,produto_id:parseInt(document.getElementById('ms-prod').value),quantidade:parseFloat(document.getElementById('ms-qt').value),cliente_id:parseInt(document.getElementById('ms-cli').value)||null,responsavel:document.getElementById('ms-resp').value,valor_total:parseFloat(document.getElementById('ms-valor').value)||0,obs:document.getElementById('ms-obs').value});
+    const db=await sbUpdate('saidas',editSaiId,{data,produto_id:parseInt(document.getElementById('ms-prod').value),quantidade:parseFloat(document.getElementById('ms-qt').value),cliente_id:parseInt(document.getElementById('ms-cli').value)||null,responsavel:document.getElementById('ms-resp').value,valor_total:parseFloat(document.getElementById('ms-valor').value)||0,obs:document.getElementById('ms-obs').value});
+    if(!db){ alert('Erro ao atualizar saída no Supabase. A edição NÃO foi salva — verifique a conexão e tente novamente.'); return; }
   }
+  saidas[idx]=atualizado;
   closeModal('modal-sai');renderSaidas();
 }
 async function delSai(id){if(!confirm('Excluir esta saída?'))return;if(sbOnline)await sbDelete('saidas',id);saidas=saidas.filter(s=>s.id!==id);renderSaidas();}
