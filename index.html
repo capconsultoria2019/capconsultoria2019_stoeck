@@ -469,19 +469,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--preto);color:var(--txt);m
       <div class="kpi-card" id="ind-kpi-card-pct"><div class="kpi-label">% Atingido</div><div class="kpi-value" id="ind-kpi-pct" style="font-size:26px">0%</div><div class="kpi-sub">meta acumulada até hoje</div></div>
     </div>
 
-    <!-- GRÁFICO ANUAL -->
-    <div class="table-card" style="margin-bottom:16px">
-      <div class="tc-head">
-        <div class="tc-title" id="ind-graf-titulo">Produção Mensal — Realizado x Meta</div>
-      </div>
-      <div style="padding:12px 18px 18px;overflow-x:auto">
-        <svg id="ind-grafico-anual" width="100%" viewBox="0 0 980 340" style="min-width:760px"></svg>
-        <div id="ind-grafico-legend" style="display:flex;gap:18px;justify-content:center;margin-top:6px;font-size:12px;color:var(--fraco)"></div>
-      </div>
-    </div>
-
     <!-- TABELA DIÁRIA -->
-    <div class="table-card">
+    <div class="table-card" style="margin-bottom:16px">
       <div class="tc-head" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
         <div class="tc-title" id="ind-titulo">Indicador de Desempenho</div>
         <button class="btn btn-s" onclick="gerarPdfIndicadores()">📄 Gerar PDF</button>
@@ -501,6 +490,17 @@ body{font-family:'DM Sans',sans-serif;background:var(--preto);color:var(--txt);m
           </thead>
           <tbody id="tb-indicadores"></tbody>
         </table>
+      </div>
+    </div>
+
+    <!-- GRÁFICO ANUAL -->
+    <div class="table-card">
+      <div class="tc-head">
+        <div class="tc-title" id="ind-graf-titulo">Produção Mensal — Realizado x Meta</div>
+      </div>
+      <div style="padding:12px 18px 18px;overflow-x:auto">
+        <svg id="ind-grafico-anual" width="100%" viewBox="0 0 980 340" style="min-width:760px"></svg>
+        <div id="ind-grafico-legend" style="display:flex;gap:18px;justify-content:center;margin-top:6px;font-size:12px;color:var(--fraco)"></div>
       </div>
     </div>
   </div>
@@ -4209,7 +4209,7 @@ function renderGraficoAnualIndicadores(ano){
 }
 
 function buildBarChartAnualSVG(labels, metaVals, realVals){
-  const W=980, H=340, padL=60, padR=20, padT=20, padB=40;
+  const W=980, H=340, padL=60, padR=20, padT=36, padB=40;
   const chartW=W-padL-padR, chartH=H-padT-padB;
   const n=labels.length;
   const groupW=chartW/n;
@@ -4233,8 +4233,12 @@ function buildBarChartAnualSVG(labels, metaVals, realVals){
     const hReal=escala(realVals[i]);
     const xMeta=gx+gap;
     const xReal=xMeta+barW+gap;
-    svg+=`<rect x="${xMeta}" y="${padT+chartH-hMeta}" width="${barW}" height="${hMeta}" fill="#555" rx="2"><title>${lab}: Meta ${metaVals[i].toLocaleString('pt-BR')} kg</title></rect>`;
-    svg+=`<rect x="${xReal}" y="${padT+chartH-hReal}" width="${barW}" height="${hReal}" fill="var(--vmc)" rx="2"><title>${lab}: Realizado ${realVals[i].toLocaleString('pt-BR')} kg</title></rect>`;
+    const yMeta=padT+chartH-hMeta;
+    const yReal=padT+chartH-hReal;
+    svg+=`<rect x="${xMeta}" y="${yMeta}" width="${barW}" height="${hMeta}" fill="#555" rx="2"><title>${lab}: Meta ${metaVals[i].toLocaleString('pt-BR')} kg</title></rect>`;
+    svg+=`<rect x="${xReal}" y="${yReal}" width="${barW}" height="${hReal}" fill="var(--vmc)" rx="2"><title>${lab}: Realizado ${realVals[i].toLocaleString('pt-BR')} kg</title></rect>`;
+    if(metaVals[i]>0) svg+=`<text x="${xMeta+barW/2}" y="${yMeta-6}" text-anchor="middle" font-size="10" fill="#aaa">${metaVals[i].toLocaleString('pt-BR')}</text>`;
+    if(realVals[i]>0) svg+=`<text x="${xReal+barW/2}" y="${yReal-6}" text-anchor="middle" font-size="10" fill="var(--vmc)" font-weight="700">${realVals[i].toLocaleString('pt-BR')}</text>`;
     svg+=`<text x="${gx+groupW/2}" y="${padT+chartH+18}" text-anchor="middle" font-size="11" fill="#ccc">${lab}</text>`;
   });
 
