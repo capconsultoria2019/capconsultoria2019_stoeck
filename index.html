@@ -279,7 +279,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--preto);color:var(--txt);m
 <div class="main-content">
   <div class="topbar">
     <div class="topbar-title" id="page-title">Dashboard</div>
-    <div style="display:flex;align-items:center;gap:12px"><div id="sync-status" style="display:flex;align-items:center;gap:5px;font-size:11px;color:#888"><div id="sync-dot" style="width:7px;height:7px;border-radius:50%;background:#888"></div><span id="sync-txt">Offline</span></div><span id="ping-status" title="Ping ainda não executado" style="font-size:10px;color:#666;cursor:default">📶</span><div style="font-size:12px;color:var(--fraco)" id="topbar-user"></div><button id="btn-tema" onclick="alternarTema()" title="Alternar tema claro/escuro" style="background:none;border:1px solid var(--borda);border-radius:6px;padding:4px 10px;color:var(--fraco);cursor:pointer;font-size:13px;font-family:DM Sans,sans-serif">🌙 Escuro</button><button onclick="document.getElementById('config-screen').style.display='flex'" style="background:none;border:1px solid var(--borda);border-radius:6px;padding:4px 10px;color:var(--fraco);cursor:pointer;font-size:11px;font-family:DM Sans,sans-serif">⚙️ Supabase</button></div>
+    <div style="display:flex;align-items:center;gap:12px"><div id="sync-status" style="display:flex;align-items:center;gap:5px;font-size:11px;color:#888"><div id="sync-dot" style="width:7px;height:7px;border-radius:50%;background:#888"></div><span id="sync-txt">Offline</span></div><span id="ping-status" title="Ping ainda não executado" style="font-size:10px;color:#666;cursor:default">📶</span><div style="font-size:12px;color:var(--fraco)" id="topbar-user"></div><button id="btn-tema" onclick="alternarTema()" title="Alternar tema claro/escuro" style="background:none;border:1px solid var(--borda);border-radius:6px;padding:4px 10px;color:var(--fraco);cursor:pointer;font-size:13px;font-family:DM Sans,sans-serif">🌙 Escuro</button><button onclick="abrirConfigSupabase()" style="background:none;border:1px solid var(--borda);border-radius:6px;padding:4px 10px;color:var(--fraco);cursor:pointer;font-size:11px;font-family:DM Sans,sans-serif">⚙️ Supabase</button></div>
   </div>
 
   <!-- ========= DASHBOARD ========= -->
@@ -1544,9 +1544,28 @@ function aplicarTema(tema){
 // ══════ SUPABASE CONFIG ══════
 let SB_URL = 'https://hjvprcestavatgkygfzz.supabase.co';
 let SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhqdnByY2VzdGF2YXRna3lnZnp6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwNTQzNjYsImV4cCI6MjA5NDYzMDM2Nn0.cK2ibXaskxnoUYOZVspDFaEOFw8iWi6pxOr8bB_LVAA';
+// Se o usuário já salvou credenciais próprias pelo modal "⚙️ Supabase" neste navegador, usa elas em vez das fixas acima.
+try{
+  const _u = localStorage.getItem('stoeck_sburl');
+  const _k = localStorage.getItem('stoeck_sbkey');
+  if(_u) SB_URL = _u;
+  if(_k) SB_KEY = _k;
+}catch(e){}
 let sbOnline = false;
 
+function abrirConfigSupabase(){
+  document.getElementById('cfg-url').value = SB_URL;
+  document.getElementById('cfg-key').value = SB_KEY;
+  document.getElementById('config-screen').style.display = 'flex';
+}
+
 function salvarConfig(){
+  const novaUrl = document.getElementById('cfg-url').value.trim().replace(/\/+$/,'');
+  const novaKey = document.getElementById('cfg-key').value.trim();
+  if(!novaUrl || !novaKey){ alert('Preencha a URL do projeto e a Chave Anon.'); return; }
+  SB_URL = novaUrl;
+  SB_KEY = novaKey;
+  try{ localStorage.setItem('stoeck_sburl', SB_URL); localStorage.setItem('stoeck_sbkey', SB_KEY); }catch(e){}
   document.getElementById('config-screen').style.display = 'none';
   testarConexao().then(() => { if(sbOnline) carregarTudo(); });
 }
