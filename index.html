@@ -266,6 +266,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--preto);color:var(--txt);m
     <div class="nav-item" onclick="goPage('subfamilias')"><span class="ic">🗂️</span> Subfamílias</div>
     <div class="nav-item" onclick="goPage('localizacoes')"><span class="ic">📍</span> Localizações</div>
     <div class="nav-item" onclick="goPage('usuarios')"><span class="ic">🔑</span> Usuários</div>
+    <div class="nav-sec">Sistema</div>
+    <div class="nav-item" onclick="goPage('backup')" data-page="backup"><span class="ic">💾</span> Backup</div>
   </div>
   <div class="sb-foot">
     <div class="user-badge" onclick="logout()">
@@ -1171,7 +1173,47 @@ body{font-family:'DM Sans',sans-serif;background:var(--preto);color:var(--txt);m
     </div>
   </div>
 
-
+  <!-- ========= BACKUP ========= -->
+  <div class="page" id="page-backup">
+    <div class="form-card">
+      <h3>💾 Backup Completo do Sistema</h3>
+      <p style="font-size:13px;color:var(--fraco);line-height:1.6;margin-bottom:16px">
+        Gera um arquivo <b>.json</b> com todos os dados atuais do Supabase (produtos, clientes, fornecedores,
+        entradas, saídas, lançamentos de produção, ficha técnica, recursos, paradas, metas e OEE) e baixa
+        direto para o seu computador. Use isso como uma cópia extra além dos backups automáticos do Supabase.
+      </p>
+      <div class="form-actions" style="justify-content:flex-start">
+        <button class="btn btn-p" id="btn-backup-download" onclick="baixarBackupCompleto()">⬇️ Baixar Backup Completo (JSON)</button>
+      </div>
+      <div id="backup-status" style="font-size:12px;color:var(--vm);margin-top:10px"></div>
+      <div id="backup-ultima-data" style="font-size:12px;color:var(--fraco);margin-top:6px">—</div>
+    </div>
+    <div class="table-card">
+      <div class="tc-head"><div class="tc-title">📋 Tabelas incluídas no backup</div></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Tabela</th><th>Descrição</th></tr></thead>
+          <tbody>
+            <tr><td>produtos</td><td>Cadastro de produtos</td></tr>
+            <tr><td>clientes</td><td>Cadastro de clientes</td></tr>
+            <tr><td>fornecedores</td><td>Cadastro de fornecedores</td></tr>
+            <tr><td>subfamilias</td><td>Subfamílias de produtos</td></tr>
+            <tr><td>localizacoes</td><td>Localizações de estoque</td></tr>
+            <tr><td>entradas</td><td>Entradas de estoque</td></tr>
+            <tr><td>saidas</td><td>Saídas de estoque</td></tr>
+            <tr><td>lancamentos_producao</td><td>Lançamentos de produção / vendas</td></tr>
+            <tr><td>ficha_tecnica</td><td>Ficha técnica dos produtos</td></tr>
+            <tr><td>recursos</td><td>Recursos / máquinas</td></tr>
+            <tr><td>tipos_parada</td><td>Tipos de parada</td></tr>
+            <tr><td>paradas</td><td>Paradas de recurso</td></tr>
+            <tr><td>metas_horas</td><td>Metas de horas previstas</td></tr>
+            <tr><td>metas_producao</td><td>Metas de produção</td></tr>
+            <tr><td>oee_qualidade</td><td>Índice de qualidade (OEE)</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
 
 <!-- ========= MODAL DIA ENTREGAS ========= -->
 <div class="modal-ov" id="modal-dia-entregas">
@@ -1851,6 +1893,78 @@ async function carregarTudo(silent=false){
   renderDash();
 }
 
+// ══════ BACKUP MANUAL (download JSON de todas as tabelas) ══════
+const TABELAS_BACKUP = [
+  'subfamilias','localizacoes','produtos','clientes','fornecedores',
+  'entradas','saidas','lancamentos_producao','ficha_tecnica','recursos',
+  'tipos_parada','paradas','metas_horas','metas_producao','oee_qualidade'
+];
+
+function renderBackup(){
+  const el = document.getElementById('backup-ultima-data');
+  if(!el) return;
+  let ultimo = null;
+  try{ ultimo = localStorage.getItem('stoeck_ultimo_backup'); }catch(e){}
+  if(ultimo){
+    const d = new Date(ultimo);
+    const dd = String(d.getDate()).padStart(2,'0');
+    const mm = String(d.getMonth()+1).padStart(2,'0');
+    const yyyy = d.getFullYear();
+    const hh = String(d.getHours()).padStart(2,'0');
+    const mi = String(d.getMinutes()).padStart(2,'0');
+    el.textContent = `Último backup baixado neste navegador: ${dd}/${mm}/${yyyy} às ${hh}:${mi}`;
+  } else {
+    el.textContent = 'Nenhum backup foi baixado ainda neste navegador.';
+  }
+}
+
+async function baixarBackupCompleto(){
+  const btn = document.getElementById('btn-backup-download');
+  const status = document.getElementById('backup-status');
+  if(!SB_URL || !SB_KEY){
+    alert('Configure a conexão com o Supabase antes de gerar o backup.');
+    return;
+  }
+  if(btn){ btn.disabled = true; btn.textContent = '⏳ Gerando backup...'; }
+  if(status) status.textContent = 'Buscando dados de todas as tabelas, aguarde...';
+
+  try{
+    const resultados = await Promise.all(TABELAS_BACKUP.map(t => sbReqAll(t)));
+    const falhou = resultados.some(r => r === null);
+    if(falhou){
+      alert('⚠️ Não foi possível baixar todas as tabelas (verifique a conexão com o Supabase). Nenhum arquivo foi gerado.');
+      if(status) status.textContent = 'Falha ao gerar o backup. Tente novamente.';
+      return;
+    }
+
+    const agora = new Date();
+    const backup = { sistema: 'Stoeck - Controle de Estoque', geradoEm: agora.toISOString(), tabelas: {} };
+    TABELAS_BACKUP.forEach((tabela, i) => { backup.tabelas[tabela] = resultados[i]; });
+
+    const json = JSON.stringify(backup, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const carimbo = agora.toISOString().slice(0,19).replace(/[-T:]/g,'');
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `backup_stoeck_${carimbo}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    try{ localStorage.setItem('stoeck_ultimo_backup', agora.toISOString()); }catch(e){}
+    if(status) status.textContent = '✅ Backup gerado e baixado com sucesso!';
+    renderBackup();
+  }catch(e){
+    console.error('Erro ao gerar backup', e);
+    alert('Erro ao gerar backup: ' + e.message);
+    if(status) status.textContent = 'Erro ao gerar o backup.';
+  }finally{
+    if(btn){ btn.disabled = false; btn.textContent = '⬇️ Baixar Backup Completo (JSON)'; }
+  }
+}
+
 let _autoRefreshInterval = null;
 const AUTO_REFRESH_MS = 60 * 1000; // era 5000ms (5s): buscava as 15 tabelas inteiras 12x/min por aba aberta, estourando a cota de egress do Supabase. 60s reduz o consumo de banda ~12x.
 function iniciarAutoRefresh(){
@@ -2017,7 +2131,7 @@ function logout(){
 }
 
 // ══════ NAV ══════
-const PT={dashboard:'Dashboard',estoque:'Estoque Atual',entradas:'Entradas',saidas:'Saídas',variacao:'Variação Mensal',movimentacao:'Movimentação do Estoque',producao:'Lançamentos de Produção',fichatecnica:'Ficha Técnica',indicadores:'Indicador de Desempenho',paradas:'Paradas de Recurso',recursos:'Cadastro de Recursos',tiposparada:'Tipos de Parada',metashoras:'Metas de Horas Previstas',metasproducao:'Metas de Produção',oee:'OEE — Indicador Global',produtos:'Cadastro de Produtos',clientes:'Cadastro de Clientes',fornecedores:'Cadastro de Fornecedores',subfamilias:'Subfamílias',localizacoes:'Localizações',usuarios:'Usuários',calendario:'Calendário de Entregas'};
+const PT={dashboard:'Dashboard',estoque:'Estoque Atual',entradas:'Entradas',saidas:'Saídas',variacao:'Variação Mensal',movimentacao:'Movimentação do Estoque',producao:'Lançamentos de Produção',fichatecnica:'Ficha Técnica',indicadores:'Indicador de Desempenho',paradas:'Paradas de Recurso',recursos:'Cadastro de Recursos',tiposparada:'Tipos de Parada',metashoras:'Metas de Horas Previstas',metasproducao:'Metas de Produção',oee:'OEE — Indicador Global',produtos:'Cadastro de Produtos',clientes:'Cadastro de Clientes',fornecedores:'Cadastro de Fornecedores',subfamilias:'Subfamílias',localizacoes:'Localizações',usuarios:'Usuários',calendario:'Calendário de Entregas',backup:'Backup do Sistema'};
 // ── FILTRO GLOBAL (subfamília + produto) ──
 let _gFiltroSF = '';
 let _gFiltroProd = '';
@@ -2070,7 +2184,7 @@ function goPage(id){
     carregarFiltrosParadas();
   }
 
-  const renders={dashboard:renderDash,estoque:renderEstoque,entradas:renderEntradas,saidas:renderSaidas,variacao:renderVariacao,movimentacao:renderMovimentacao,producao:renderProducao,fichatecnica:renderFT,indicadores:renderIndicadores,paradas:renderParadas,recursos:renderRecursos,tiposparada:renderTP,metashoras:renderMetasHoras,metasproducao:renderMetasProducao,oee:renderOEE,produtos:renderProdutos,clientes:renderClientes,fornecedores:renderForn,subfamilias:renderSF,localizacoes:renderLoc,usuarios:renderUsr,calendario:renderCalendario};
+  const renders={dashboard:renderDash,estoque:renderEstoque,entradas:renderEntradas,saidas:renderSaidas,variacao:renderVariacao,movimentacao:renderMovimentacao,producao:renderProducao,fichatecnica:renderFT,indicadores:renderIndicadores,paradas:renderParadas,recursos:renderRecursos,tiposparada:renderTP,metashoras:renderMetasHoras,metasproducao:renderMetasProducao,oee:renderOEE,produtos:renderProdutos,clientes:renderClientes,fornecedores:renderForn,subfamilias:renderSF,localizacoes:renderLoc,usuarios:renderUsr,calendario:renderCalendario,backup:renderBackup};
   if(renders[id])renders[id]();
 }
 
@@ -2830,6 +2944,7 @@ const TELAS_PERMISSAO = [
   {key:'subfamilias',label:'Subfamílias',icon:'🗂️'},
   {key:'localizacoes',label:'Localizações',icon:'📍'},
   {key:'usuarios',label:'Usuários',icon:'🔑'},
+  {key:'backup',label:'Backup',icon:'💾'},
 ];
 const PERFIS_DEFAULT = {
   admin: TELAS_PERMISSAO.map(t=>t.key),
