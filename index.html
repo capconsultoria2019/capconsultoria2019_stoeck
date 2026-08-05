@@ -343,7 +343,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--preto);color:var(--txt);m
     <!-- KPIs de Produção -->
     <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr)">
       <div class="kpi-card green" style="cursor:pointer" onclick="filtrarSit('')" title="Ver todos">
-        <div class="kpi-label">Total (filtro atual)</div>
+        <div class="kpi-label">Total em Estoque (filtro atual)</div>
         <div class="kpi-value" id="pkpi-total">0</div>
         <div class="kpi-sub" id="pkpi-total-lotes">0 lançamentos</div>
       </div>
@@ -3461,10 +3461,10 @@ function renderProducao(){
   });
 
   // KPIs — calculados sobre listaBase (sem filtro de situação)
-  const qtTot  = listaBase.reduce((a,b)=>a+b.qt,0);
   const qtProd = listaBase.filter(l=>l.situacao==='PRODUCAO').reduce((a,b)=>a+b.qt,0);
   const qtVenda= listaBase.filter(l=>l.situacao==='VENDA').reduce((a,b)=>a+b.qt,0);
   const qtPrev = listaBase.filter(l=>l.situacao==='PRE_VENDA').reduce((a,b)=>a+b.qt,0);
+  const qtTot  = qtProd - qtVenda - qtPrev;   // Total em Estoque = Produção − Venda − Pré-Venda
   const nTot   = listaBase.length;
   const nProd  = listaBase.filter(l=>l.situacao==='PRODUCAO').length;
   const nVenda = listaBase.filter(l=>l.situacao==='VENDA').length;
