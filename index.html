@@ -2195,6 +2195,11 @@ function fillSel(id,items,valKey,labelFn,def='Selecione...'){
   el.innerHTML=`<option value="">${def}</option>`+items.map(i=>`<option value="${i[valKey]}">${labelFn(i)}</option>`).join('');
   el.value=cur;
 }
+// Retorna apenas os produtos que possuem ficha técnica cadastrada (id aparece como acabadoId).
+function produtosComFicha(){
+  const ids = new Set(fichasTecnicas.map(f=>f.acabadoId));
+  return produtos.filter(p=>ids.has(p.id));
+}
 function fillAllSelects(){
   ['ent-prod','sai-prod','var-prod','me-prod','ms-prod'].forEach(id=>fillSel(id,produtos,'id',p=>p.desc));
   ['prod-sf','fe-sf','fp-sf'].forEach(id=>fillSel(id,subfamilias,'id',s=>s.nome,'Todas'));
@@ -2204,7 +2209,7 @@ function fillAllSelects(){
   fillSel('fe-ent-prod',produtos,'id',p=>p.desc,'Todos produtos');
   fillSel('fe-sai-prod',produtos,'id',p=>p.desc,'Todos produtos');
   fillSel('prod-produto',produtos,'id',p=>p.desc,'Selecione...');
-  fillSel('fp-prod-f',produtos,'id',p=>p.desc,'Todos produtos');
+  fillSel('fp-prod-f',produtosComFicha(),'id',p=>p.desc,'Todos produtos'); // só produtos com ficha técnica
   fillSel('ft-acabado',produtos,'id',p=>p.desc,'Selecione...');
   fillSel('ft-mp',produtos,'id',p=>p.desc,'Selecione...');
   // paradas
@@ -3421,7 +3426,8 @@ async function excluirProducao(id){
 
 function onFpSfChange(){
   const sfId = document.getElementById('fp-sf').value;
-  const lista = sfId ? produtos.filter(p=>p.subfam===parseInt(sfId)) : produtos;
+  const base = produtosComFicha(); // só produtos com ficha técnica
+  const lista = sfId ? base.filter(p=>p.subfam===parseInt(sfId)) : base;
   const sel = document.getElementById('fp-prod-f');
   sel.innerHTML = '<option value="">Todos produtos</option>' + lista.map(p=>`<option value="${p.id}">${p.desc}</option>`).join('');
   renderProducao();
