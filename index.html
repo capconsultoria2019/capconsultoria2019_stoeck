@@ -3464,7 +3464,33 @@ function renderProducao(){
   const qtProd = listaBase.filter(l=>l.situacao==='PRODUCAO').reduce((a,b)=>a+b.qt,0);
   const qtVenda= listaBase.filter(l=>l.situacao==='VENDA').reduce((a,b)=>a+b.qt,0);
   const qtPrev = listaBase.filter(l=>l.situacao==='PRE_VENDA').reduce((a,b)=>a+b.qt,0);
-  const qtTot  = qtProd - qtVenda - qtPrev;   // Total em Estoque = Produção − Venda − Pré-Venda
+  // Total em Estoque (filtro atual) = SALDO ACUMULADO que carrega o saldo do mês anterior.
+  // Regra: Estoque[mês] = Estoque[mês anterior] + Produção[mês] − Venda[mês] − Pré-Venda[mês]
+  //  => acumulado de (Produção − Venda − Pré-Venda) de TODOS os lançamentos até o mês/ano do filtro.
+  //  Respeita o filtro de produto e SEMPRE ignora o filtro de situação.
+  let qtTot;
+  if(mes && ano){
+    const chaveSel = parseInt(ano)*100 + parseInt(mes);            // ex.: Maio/2026 -> 202605
+    const acum = lancamentosProducao.filter(l=>
+      ((Number(l.ano)||0)*100 + (Number(l.mes)||0)) <= chaveSel
+      && (!prodF||String(l.prodId)===prodF));
+    const aP = acum.filter(l=>l.situacao==='PRODUCAO').reduce((a,b)=>a+b.qt,0);
+    const aV = acum.filter(l=>l.situacao==='VENDA').reduce((a,b)=>a+b.qt,0);
+    const aX = acum.filter(l=>l.situacao==='PRE_VENDA').reduce((a,b)=>a+b.qt,0);
+    qtTot = aP - aV - aX;
+  } else if(ano && !mes){
+    // Ano inteiro selecionado (sem mês): acumula tudo até o fim desse ano.
+    const acum = lancamentosProducao.filter(l=>
+      (Number(l.ano)||0) <= parseInt(ano)
+      && (!prodF||String(l.prodId)===prodF));
+    const aP = acum.filter(l=>l.situacao==='PRODUCAO').reduce((a,b)=>a+b.qt,0);
+    const aV = acum.filter(l=>l.situacao==='VENDA').reduce((a,b)=>a+b.qt,0);
+    const aX = acum.filter(l=>l.situacao==='PRE_VENDA').reduce((a,b)=>a+b.qt,0);
+    qtTot = aP - aV - aX;
+  } else {
+    // Sem mês/ano definidos: saldo total do filtro atual (comportamento anterior).
+    qtTot = qtProd - qtVenda - qtPrev;
+  }
   const nTot   = listaBase.length;
   const nProd  = listaBase.filter(l=>l.situacao==='PRODUCAO').length;
   const nVenda = listaBase.filter(l=>l.situacao==='VENDA').length;
