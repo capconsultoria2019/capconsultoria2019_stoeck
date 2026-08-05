@@ -346,6 +346,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--preto);color:var(--txt);m
         <div class="kpi-label">Total em Estoque (filtro atual)</div>
         <div class="kpi-value" id="pkpi-total">0</div>
         <div class="kpi-sub" id="pkpi-total-lotes">0 lançamentos</div>
+        <label style="display:flex;align-items:center;gap:6px;margin-top:8px;font-size:11px;color:var(--fraco);cursor:pointer;font-weight:500" onclick="event.stopPropagation()" title="Ao marcar, a pré-venda deixa de ser subtraída do Total em Estoque">
+          <input type="checkbox" id="chk-desc-prev" onchange="toggleDescPreVenda()" style="cursor:pointer;margin:0">
+          Desconsiderar pré-venda
+        </label>
       </div>
       <div class="kpi-card" style="cursor:pointer;border-color:rgba(46,139,46,.4)" onclick="filtrarSit('PRODUCAO')" title="Filtrar por Produção">
         <div class="kpi-label">🏭 Produção</div>
@@ -3452,6 +3456,12 @@ function filtrarSit(sit){
   renderProducao();
 }
 
+// Quando true, a pré-venda NÃO é subtraída do "Total em Estoque (filtro atual)".
+let descPreVenda = false;
+function toggleDescPreVenda(){
+  descPreVenda = !!document.getElementById('chk-desc-prev')?.checked;
+  renderProducao();
+}
 function renderProducao(){
   fillAllSelects();
   const mes   = document.getElementById('fp-mes')?.value||'';
@@ -3483,7 +3493,7 @@ function renderProducao(){
     const aP = acum.filter(l=>l.situacao==='PRODUCAO').reduce((a,b)=>a+b.qt,0);
     const aV = acum.filter(l=>l.situacao==='VENDA').reduce((a,b)=>a+b.qt,0);
     const aX = acum.filter(l=>l.situacao==='PRE_VENDA').reduce((a,b)=>a+b.qt,0);
-    qtTot = aP - aV - aX;
+    qtTot = aP - aV - (descPreVenda ? 0 : aX);
   } else if(ano && !mes){
     // Ano inteiro selecionado (sem mês): acumula tudo até o fim desse ano.
     const acum = lancamentosProducao.filter(l=>
@@ -3492,10 +3502,10 @@ function renderProducao(){
     const aP = acum.filter(l=>l.situacao==='PRODUCAO').reduce((a,b)=>a+b.qt,0);
     const aV = acum.filter(l=>l.situacao==='VENDA').reduce((a,b)=>a+b.qt,0);
     const aX = acum.filter(l=>l.situacao==='PRE_VENDA').reduce((a,b)=>a+b.qt,0);
-    qtTot = aP - aV - aX;
+    qtTot = aP - aV - (descPreVenda ? 0 : aX);
   } else {
     // Sem mês/ano definidos: saldo total do filtro atual (comportamento anterior).
-    qtTot = qtProd - qtVenda - qtPrev;
+    qtTot = qtProd - qtVenda - (descPreVenda ? 0 : qtPrev);
   }
   const nTot   = listaBase.length;
   const nProd  = listaBase.filter(l=>l.situacao==='PRODUCAO').length;
