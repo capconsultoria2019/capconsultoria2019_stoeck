@@ -326,6 +326,23 @@ body{font-family:'DM Sans',sans-serif;background:var(--preto);color:var(--txt);m
       <select class="fi" id="fe-sf" onchange="renderEstoque()"><option value="">Todas subfamílias</option></select>
       <select class="fi" id="fe-loc" onchange="renderEstoque()"><option value="">Todas localizações</option></select>
     </div>
+    <div class="kpi-grid" style="grid-template-columns:repeat(3,1fr)">
+      <div class="kpi-card ok">
+        <div class="kpi-label">Estoque Total (Quantidade)</div>
+        <div class="kpi-value" id="est-tot-qtd">0</div>
+        <div class="kpi-sub" id="est-tot-qtd-sub">soma do saldo (filtro atual)</div>
+      </div>
+      <div class="kpi-card warn">
+        <div class="kpi-label">Estoque Total (Valor)</div>
+        <div class="kpi-value" id="est-tot-valor" style="font-size:22px">R$ 0,00</div>
+        <div class="kpi-sub">valor do estoque (filtro atual)</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Variação do Estoque (R$)</div>
+        <div class="kpi-value" id="est-tot-variacao" style="font-size:22px">R$ 0,00</div>
+        <div class="kpi-sub">saldo × custo médio (filtro atual)</div>
+      </div>
+    </div>
     <div class="table-card">
       <div class="tc-head">
         <div class="tc-title" id="estoque-count">Estoque</div>
@@ -333,7 +350,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--preto);color:var(--txt);m
           <span style="font-size:11px;color:var(--fraco);margin-right:8px">Admin:</span>
         </div>
       </div>
-      <div class="table-wrap"><table><thead><tr><th>Cód.</th><th>Produto</th><th>Subfamília</th><th>Localização</th><th>Estoque Mín.</th><th>Saldo Inicial</th><th>Entradas</th><th>Saídas</th><th>Saldo</th><th>Custo Médio</th><th>Valor Estoque</th><th id="th-ajuste-saldo" style="display:none">Ajuste</th></tr></thead><tbody id="tb-estoque"></tbody></table></div>
+      <div class="table-wrap"><table><thead><tr><th>Cód.</th><th>Produto</th><th>Subfamília</th><th>Localização</th><th>Estoque Mín.</th><th>Saldo Inicial</th><th>Entradas</th><th>Saídas</th><th>Saldo</th><th>Custo Médio</th><th>Valor Estoque</th><th>Variação do Mês</th><th id="th-ajuste-saldo" style="display:none">Ajuste</th></tr></thead><tbody id="tb-estoque"></tbody></table></div>
     </div>
   </div>
 
@@ -2300,7 +2317,7 @@ function renderEstoque(){
   const anoF   = document.getElementById('fe-ano')?.value||'';
   const sfF    = document.getElementById('fe-sf')?.value||'';
   const locF   = document.getElementById('fe-loc')?.value||'';
-  let rows='', count=0;
+  let rows='', count=0, totQtd=0, totValor=0, totVariacao=0;
   produtos.filter(p=>{
     const est = estItemPeriodo(p.id, mesF, anoF);
     const isCrit = est.saldo<=p.min||est.saldo<0;
@@ -2320,12 +2337,25 @@ function renderEstoque(){
     const ajusteBtn=isAdmin?`<span class="r-edit" onclick="abrirAjusteSaldo(${p.id})" title="Ajustar saldo inicial">⚖️</span>`:'';
     const saldoInicialCell=`<td class="txt-f">${fN(p.saldoInicial||0)}</td>`;
     const ajusteCell=isAdmin?`<td>${ajusteBtn}</td>`:'<td style="display:none"></td>';
-    rows+=`<tr><td>${p.id}</td><td class="fw">${p.desc}</td><td>${sf?sf.nome:'—'}</td><td>${loc?loc.nome:'—'}</td><td>${fN(p.min)}</td>${saldoInicialCell}<td class="txt-v">${fN(est.e)}</td><td class="txt-r">${fN(est.s)}</td><td class="fw ${saldoClass}">${fN(est.saldo)}${periodoLabel}${critIcon}</td><td class="txt-f">${fR(est.cmp)}</td><td>${fR(Math.max(0,est.saldo)*est.cmp)}</td>${ajusteCell}</tr>`;
+    const valorItem = Math.max(0,est.saldo)*est.cmp;
+    const variacaoItem = est.saldo*est.cmp;
+    totQtd   += est.saldo;
+    totValor += valorItem;
+    totVariacao += variacaoItem;
+    rows+=`<tr><td>${p.id}</td><td class="fw">${p.desc}</td><td>${sf?sf.nome:'—'}</td><td>${loc?loc.nome:'—'}</td><td>${fN(p.min)}</td>${saldoInicialCell}<td class="txt-v">${fN(est.e)}</td><td class="txt-r">${fN(est.s)}</td><td class="fw ${saldoClass}">${fN(est.saldo)}${periodoLabel}${critIcon}</td><td class="txt-f">${fR(est.cmp)}</td><td>${fR(valorItem)}</td><td class="fw" style="color:${variacaoItem<0?'var(--verm)':'var(--verde)'}">${fR(variacaoItem)}</td>${ajusteCell}</tr>`;
   });
+  const totQtdEl=document.getElementById('est-tot-qtd');
+  if(totQtdEl){ totQtdEl.textContent=fN(totQtd); totQtdEl.style.color = totQtd<0 ? 'var(--verm)' : 'var(--verde)'; }
+  const totValEl=document.getElementById('est-tot-valor');
+  if(totValEl) totValEl.textContent=fR(totValor);
+  const totVarEl=document.getElementById('est-tot-variacao');
+  if(totVarEl){ totVarEl.textContent=fR(totVariacao); totVarEl.style.color = totVariacao<0 ? 'var(--verm)' : 'var(--verde)'; }
+  const totQtdSub=document.getElementById('est-tot-qtd-sub');
+  if(totQtdSub) totQtdSub.textContent=`${count} ${count===1?'item':'itens'} (filtro atual)`;
   const periodoTxt = (mesF||anoF) ? ` — ${mesF?MESES[parseInt(mesF)-1]:''}${mesF&&anoF?' ':''}${anoF||''}` : '';
   document.getElementById('estoque-count').textContent=`Estoque${periodoTxt} — ${count} itens`;
   const isAdmin=currentUser&&currentUser.perfil==='admin';
-  const colCount = isAdmin ? 12 : 11;
+  const colCount = isAdmin ? 13 : 12;
   document.getElementById('tb-estoque').innerHTML=rows||`<tr><td colspan="${colCount}" class="empty">Nenhum item encontrado.</td></tr>`;
   toggleAjusteColuna();
 }
@@ -5025,6 +5055,14 @@ window.addEventListener('load', function(){
       document.getElementById('login-pass').value=decodeURIComponent(escape(atob(p)));
       document.getElementById('remember-me').checked=true;
     }
+  }catch(e){}
+  // Padrão do filtro de Estoque: mês e ano atuais (uma vez, no carregamento)
+  try{
+    const hoje = new Date();
+    const feMes = document.getElementById('fe-mes');
+    const feAno = document.getElementById('fe-ano');
+    if(feMes && !feMes.value) feMes.value = String(hoje.getMonth()+1);
+    if(feAno && !feAno.value) feAno.value = String(hoje.getFullYear());
   }catch(e){}
   iniciarKeepAlive(); // mantém o Supabase acordado enquanto esta aba estiver aberta
 });
