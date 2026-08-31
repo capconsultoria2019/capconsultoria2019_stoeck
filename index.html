@@ -479,7 +479,23 @@ body{font-family:'DM Sans',sans-serif;background:var(--preto);color:var(--txt);m
     <div class="table-card" style="margin-bottom:16px">
       <div class="tc-head" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
         <div class="tc-title" id="ind-titulo">Indicador de Desempenho</div>
-        <button class="btn btn-s" onclick="gerarPdfIndicadores()">📄 Gerar PDF</button>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <select class="fi" id="ind-pdf-formato" style="min-width:78px;padding:6px 8px" title="Tamanho da folha">
+            <option value="a4" selected>A4</option>
+            <option value="a3">A3</option>
+          </select>
+          <select class="fi" id="ind-pdf-orient" style="min-width:112px;padding:6px 8px" title="Orientação">
+            <option value="landscape" selected>Paisagem</option>
+            <option value="portrait">Retrato</option>
+          </select>
+          <select class="fi" id="ind-pdf-fonte" style="min-width:120px;padding:6px 8px" title="Tamanho da letra">
+            <option value="8" selected>Fonte: Pequena</option>
+            <option value="10">Fonte: Média</option>
+            <option value="12">Fonte: Grande</option>
+            <option value="14">Fonte: Extra</option>
+          </select>
+          <button class="btn btn-s" onclick="gerarPdfIndicadores()">📄 Gerar PDF</button>
+        </div>
       </div>
       <div class="table-wrap">
         <table>
@@ -491,7 +507,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--preto);color:var(--txt);m
               <th>Meta Acum. (kg)</th>
               <th>Prod. Acum. (kg)</th>
               <th>% Atingido</th>
-              <th>Observação</th>
+              <th style="background:var(--verm);color:#fff">Paradas Dia</th>
+              <th style="background:var(--verm);color:#fff">Paradas Acum.</th>
+              <th style="background:var(--verm);color:#fff">Observação das Paradas de Máquinas</th>
             </tr>
           </thead>
           <tbody id="tb-indicadores"></tbody>
@@ -4418,6 +4436,13 @@ function buildSabadosCheckboxes(mes, ano){
     </label>`).join('');
 }
 
+function fHHMM(mins){
+  const m = Math.round(mins||0);
+  const h = Math.floor(m/60);
+  const mm = m%60;
+  return String(h).padStart(2,'0')+':'+String(mm).padStart(2,'0');
+}
+
 function renderIndicadores(){
   const mes  = parseInt(document.getElementById('ind-mes')?.value||new Date().getMonth()+1);
   const ano  = parseInt(document.getElementById('ind-ano')?.value||new Date().getFullYear());
@@ -4445,6 +4470,19 @@ function renderIndicadores(){
     metaPorDia[d] = m.qt;
   });
 
+  // paradas por dia (todos os recursos) — minutos e tipos de parada
+  const paradaMinPorDia = {};
+  const tiposPorDia = {};
+  paradas.forEach(p=>{
+    if(p.mes!==mes||p.ano!==ano) return;
+    const d = parseInt(p.data.split('-')[2]);
+    const mins = p.tempo||minutosDiff(p.inicio,p.fim);
+    paradaMinPorDia[d] = (paradaMinPorDia[d]||0) + mins;
+    const nomeTipo = gTP(p.tipoId)?.nome || 'Sem tipo';
+    if(!tiposPorDia[d]) tiposPorDia[d] = new Set();
+    tiposPorDia[d].add(nomeTipo);
+  });
+
   // totais
   let diasUteisTotal=0, metaTotal=0, metaAcumAteHoje=0;
   for(let d=1;d<=total;d++){
@@ -4469,7 +4507,7 @@ function renderIndicadores(){
   kpiCard.className = 'kpi-card ' + (pct>=100?'green':pct>=80?'warn':'red');
 
   // TABELA
-  let rows='', metaAcum=0, prodAcum=0;
+  let rows='', metaAcum=0, prodAcum=0, parAcum=0;
   for(let d=1;d<=total;d++){
     const dt=new Date(ano,mes-1,d);
     const dow=dt.getDay();
@@ -4478,9 +4516,12 @@ function renderIndicadores(){
     const isFut=d>diaAtual;
     const metaDia=metaPorDia[d]||0;
     const prodDia=prodPorDia[d]||0;
+    const parDia=paradaMinPorDia[d]||0;
     if(!isFut) metaAcum+=metaDia;
     prodAcum+=prodDia;
+    parAcum+=parDia;
     const pctDia=metaAcum>0?(prodAcum/metaAcum*100):null;
+    const tiposTxt = tiposPorDia[d] ? [...tiposPorDia[d]].join('; ') : '';
 
     // cor da linha
     let rowStyle = '';
@@ -4500,7 +4541,9 @@ function renderIndicadores(){
       <td class="txt-r">${metaAcum>0?fN(metaAcum):'—'}</td>
       <td class="txt-r fw" style="color:var(--verde)">${prodAcum>0?fN(prodAcum):'—'}</td>
       <td class="txt-r">${pctTxt}</td>
-      <td></td>
+      <td class="txt-r" style="color:${parDia>0?'var(--verm)':'var(--fraco)'};font-weight:${parDia>0?'700':'400'}">${isFut?'—':fHHMM(parDia)}</td>
+      <td class="txt-r" style="color:var(--verm);font-weight:600">${isFut?'—':fHHMM(parAcum)}</td>
+      <td style="font-size:12px">${tiposTxt}</td>
     </tr>`;
   }
 
@@ -4513,6 +4556,8 @@ function renderIndicadores(){
     <td class="txt-r">—</td>
     <td class="txt-r">—</td>
     <td class="txt-r" style="color:${pctFinal>=100?'var(--verde)':pctFinal>=80?'var(--amar)':'var(--verm)'}">${pctFinal.toFixed(1)}%</td>
+    <td class="txt-r" style="color:var(--verm)">${fHHMM(parAcum)}</td>
+    <td class="txt-r" style="color:var(--verm)">${fHHMM(parAcum)}</td>
     <td></td>
   </tr>`;
 
@@ -4582,28 +4627,74 @@ function buildBarChartAnualSVG(labels, metaVals, realVals){
 function gerarPdfIndicadores(){
   if(!window.jspdf){ alert('Biblioteca de PDF ainda não carregou. Aguarde alguns segundos e tente novamente.'); return; }
   const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({orientation:'landscape', unit:'pt', format:'a4'});
+  const fmt    = document.getElementById('ind-pdf-formato')?.value || 'a4';
+  const orient = document.getElementById('ind-pdf-orient')?.value || 'landscape';
+  const doc = new jsPDF({orientation:orient, unit:'pt', format:fmt});
+
+  const fonte  = parseInt(document.getElementById('ind-pdf-fonte')?.value || 8);
+  const padCel = fonte<=8 ? 4 : fonte<=10 ? 5 : 6;
+
+  // OEE do mês conforme filtro (mesma fórmula da tela OEE)
+  const oeeMes = parseInt(document.getElementById('ind-mes')?.value||new Date().getMonth()+1);
+  const oeeAno = parseInt(document.getElementById('ind-ano')?.value||new Date().getFullYear());
+  const oeeDisp = calcDisponibilidadeMes(oeeMes, oeeAno);
+  const oeeEfic = calcEficienciaMes(oeeMes, oeeAno);
+  const oeeQualObj = oeeQualidade.find(o=>o.mes===oeeMes&&o.ano===oeeAno);
+  const oeeQual = oeeQualObj ? oeeQualObj.qualidade : 99;
+  const oeeVal = (oeeDisp!==null&&oeeEfic!==null) ? (oeeDisp/100*oeeEfic/100*oeeQual/100*100) : null;
+  const MESES_ABREV_PDF = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  const oeeLabel = `${MESES_ABREV_PDF[oeeMes-1]}/${oeeAno}`;
 
   const titulo = document.getElementById('ind-titulo').textContent;
   const kpiTxt = `Dias Úteis: ${document.getElementById('ind-kpi-du').textContent}   |   Meta Total: ${document.getElementById('ind-kpi-meta').textContent} kg   |   Produção Total: ${document.getElementById('ind-kpi-prod').textContent} kg   |   % Atingido: ${document.getElementById('ind-kpi-pct').textContent}`;
 
-  doc.setFontSize(14);
+  doc.setFontSize(14 + (fonte-8));
   doc.text(titulo, 40, 40);
-  doc.setFontSize(10);
+  doc.setFontSize(10 + Math.round((fonte-8)/2));
   doc.text(kpiTxt, 40, 58);
 
-  const head=[['Dia','Meta Dia (kg)','Prod. Dia (kg)','Meta Acum. (kg)','Prod. Acum. (kg)','% Atingido','Observação']];
+  const head=[['Dia','Meta Dia (kg)','Prod. Dia (kg)','Meta Acum. (kg)','Prod. Acum. (kg)','% Atingido','Paradas Dia','Paradas Acum.','Observação das Paradas de Máquinas']];
   const body=[...document.querySelectorAll('#tb-indicadores tr')].map(tr=>
-    [...tr.children].map(td=>td.textContent.trim())
+    [...tr.children].map((td,ci)=>{
+      let txt = td.textContent.trim();
+      if(ci===0){ const m = txt.match(/^\d+/); if(m) txt = m[0]; } // só o número do dia, sem Seg/Ter...
+      return txt;
+    })
   );
 
   doc.autoTable({
     head, body,
     startY: 72,
-    styles:{ fontSize:8, cellPadding:4 },
+    styles:{ fontSize:fonte, cellPadding:padCel },
     headStyles:{ fillColor:[46,139,46] },
-    margin:{ left:40, right:40 }
+    margin:{ left:40, right:40 },
+    didParseCell: function(data){
+      // colunas Paradas Dia (6), Paradas Acum. (7) e Observação (8) — cabeçalho vermelho
+      if(data.section==='head' && data.column.index>=6){
+        data.cell.styles.fillColor = [231,76,60];
+        data.cell.styles.textColor = [255,255,255];
+      }
+    }
   });
+
+  // ===== OEE do mês (conforme filtro), após o TOTAL =====
+  let oeeY = (doc.lastAutoTable?.finalY || 72) + 18;
+  const oeeCor = oeeVal===null ? [120,120,120] : oeeVal>=70 ? [39,174,96] : oeeVal>=50 ? [243,156,18] : [231,76,60];
+  doc.setFontSize(fonte + 3);
+  doc.setTextColor(oeeCor[0], oeeCor[1], oeeCor[2]);
+  const oeeTxt = oeeVal!==null
+    ? `OEE do mês (${oeeLabel}): ${oeeVal.toFixed(2)}%`
+    : `OEE do mês (${oeeLabel}): sem dados suficientes`;
+  doc.text(oeeTxt, 40, oeeY);
+
+  if(oeeVal!==null){
+    doc.setFontSize(fonte + 1);
+    doc.setTextColor(90, 90, 90);
+    const dispTxt = oeeDisp!==null ? oeeDisp.toFixed(2)+'%' : '—';
+    const eficTxt = oeeEfic!==null ? oeeEfic.toFixed(2)+'%' : '—';
+    doc.text(`Disponibilidade ${dispTxt}  ×  Eficiência ${eficTxt}  ×  Qualidade ${oeeQual.toFixed(2)}%`, 40, oeeY + fonte + 8);
+  }
+  doc.setTextColor(0, 0, 0);
 
   const nomeArq = `indicador_desempenho_${titulo.split('—')[1]?.trim().replace('/','_')||'relatorio'}.pdf`;
   doc.save(nomeArq);
