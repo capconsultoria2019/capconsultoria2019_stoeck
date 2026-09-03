@@ -248,6 +248,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--preto);color:var(--txt);m
     <div class="nav-item" onclick="goPage('movimentacao')" data-page="movimentacao"><span class="ic">🔄</span> Movimentação</div>
     <div class="nav-sec">Produção</div>
     <div class="nav-item" onclick="goPage('producao')"><span class="ic">🏭</span> Lançamentos</div>
+    <div class="nav-item" onclick="goPage('conciliacao')" data-page="conciliacao"><span class="ic">🧮</span> Conciliação</div>
+    <div class="nav-item" onclick="goPage('transferencia')" data-page="transferencia"><span class="ic">🔀</span> Transferência</div>
     <div class="nav-item" onclick="goPage('fichatecnica')"><span class="ic">📋</span> Ficha Técnica</div>
     <div class="nav-item" onclick="goPage('indicadores')"><span class="ic">📊</span> Indicadores</div>
     <div class="nav-item" onclick="goPage('paradas')"><span class="ic">⛔</span> Paradas</div>
@@ -291,6 +293,27 @@ body{font-family:'DM Sans',sans-serif;background:var(--preto);color:var(--txt);m
       <div class="kpi-card ok"><div class="kpi-label">Total em Estoque</div><div class="kpi-value" id="kpi-qt">0</div><div class="kpi-sub">unidades disponíveis</div></div>
       <div class="kpi-card danger"><div class="kpi-label">Itens Críticos</div><div class="kpi-value" id="kpi-crit">0</div><div class="kpi-sub">abaixo do mínimo</div></div>
       <div class="kpi-card warn"><div class="kpi-label">Valor Total Estoque</div><div class="kpi-value" id="kpi-valor" style="font-size:22px;font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:-0.5px">R$ 0,00</div><div class="kpi-sub">valor estimado</div></div>
+    </div>
+
+    <!-- VELOCÍMETROS CUSTO MÉDIO (MP) -->
+    <div class="table-card" style="margin-bottom:16px">
+      <div class="tc-head" style="flex-wrap:wrap;gap:8px">
+        <div class="tc-title">⛽ Custo Médio — Matérias-Primas</div>
+        <div class="filters" style="margin:0;flex-wrap:nowrap">
+          <select class="fi" id="fd-cm-mes" onchange="renderGaugesCusto()">
+            <option value="">Todos os meses</option>
+            <option value="1">Janeiro</option><option value="2">Fevereiro</option><option value="3">Março</option>
+            <option value="4">Abril</option><option value="5">Maio</option><option value="6">Junho</option>
+            <option value="7">Julho</option><option value="8">Agosto</option><option value="9">Setembro</option>
+            <option value="10">Outubro</option><option value="11">Novembro</option><option value="12">Dezembro</option>
+          </select>
+          <select class="fi" id="fd-cm-ano" onchange="renderGaugesCusto()">
+            <option value="">Todos os anos</option>
+            <option value="2024">2024</option><option value="2025">2025</option><option value="2026">2026</option><option value="2027">2027</option><option value="2028">2028</option><option value="2029">2029</option><option value="2030">2030</option>
+          </select>
+        </div>
+      </div>
+      <div id="gauges-custo" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;padding:6px 2px"></div>
     </div>
 
     <!-- ITENS CRÍTICOS -->
@@ -410,6 +433,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--preto);color:var(--txt);m
             <select class="fi" id="fp-sf" onchange="onFpSfChange()"><option value="">Todas subfamílias</option></select>
             <select class="fi" id="fp-prod-f" onchange="renderProducao()"><option value="">Todos produtos</option></select>
           </div>
+          <button class="btn btn-s" onclick="exportarProducaoExcel()" title="Exportar os lançamentos filtrados para Excel">📊 Exportar Excel</button>
           <button class="btn btn-p" onclick="abrirModalProducao()">＋ Novo Lançamento</button>
         </div>
       </div>
@@ -422,30 +446,83 @@ body{font-family:'DM Sans',sans-serif;background:var(--preto);color:var(--txt);m
     </div>
   </div>
 
-  <!-- ========= FICHA TÉCNICA ========= -->
-  <div class="page" id="page-fichatecnica">
-    <div class="form-card">
-      <h3>📋 Cadastro de Ficha Técnica</h3>
-      <div class="form-grid">
-        <div class="fg">
-          <label>Produto Acabado *</label>
-          <select id="ft-acabado"><option value="">Selecione...</option></select>
-        </div>
-        <div class="fg">
-          <label>Matéria-Prima *</label>
-          <select id="ft-mp"><option value="">Selecione...</option></select>
-        </div>
-        <div class="fg">
-          <label>Quantidade MP por unidade *</label>
-          <input type="number" id="ft-qt" min="0.001" step="0.001" placeholder="Ex: 1.5">
-        </div>
+  <!-- ========= TRANSFERÊNCIA DE ESTOQUE ========= -->
+  <div class="page" id="page-transferencia">
+    <div class="table-card">
+      <div class="tc-head">
+        <div class="tc-title">Transferências Registradas</div>
+        <button class="btn btn-p" onclick="abrirModalTransferencia()">＋ Nova Transferência</button>
       </div>
-      <div class="form-actions">
-        <button class="btn btn-s" onclick="limparFT()">Limpar</button>
-        <button class="btn btn-p" id="btn-salvar-ft" onclick="salvarFT()">💾 Salvar Ficha Técnica</button>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Data</th><th>Origem</th><th>Destino</th><th>Qtd.</th><th>Custo Méd.</th><th>Custo Total</th><th>Ações</th></tr></thead>
+        <tbody id="tb-transferencia"></tbody>
+      </table></div>
+    </div>
+  </div>
+
+  <!-- ========= CONCILIAÇÃO ========= -->
+  <div class="page" id="page-conciliacao">
+    <div class="filters">
+      <input class="fi fi-search" id="fc-search" placeholder="🔍 Buscar produto..." oninput="renderConciliacao()">
+      <select class="fi" id="fc-mes" onchange="renderConciliacao()">
+        <option value="">Todos os meses</option>
+        <option value="1">Janeiro</option><option value="2">Fevereiro</option><option value="3">Março</option>
+        <option value="4">Abril</option><option value="5">Maio</option><option value="6">Junho</option>
+        <option value="7">Julho</option><option value="8">Agosto</option><option value="9">Setembro</option>
+        <option value="10">Outubro</option><option value="11">Novembro</option><option value="12">Dezembro</option>
+      </select>
+      <select class="fi" id="fc-ano" onchange="renderConciliacao()">
+        <option value="">Todos os anos</option>
+        <option value="2024">2024</option><option value="2025">2025</option><option value="2026">2026</option><option value="2027">2027</option><option value="2028">2028</option><option value="2029">2029</option><option value="2030">2030</option>
+      </select>
+      <select class="fi" id="fc-sf" onchange="renderConciliacao()"><option value="">Todas subfamílias</option></select>
+      <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--fraco);white-space:nowrap;cursor:pointer">
+        <input type="checkbox" id="fc-so-diverg" checked onchange="renderConciliacao()" style="accent-color:var(--vm);width:15px;height:15px"> Só divergências
+      </label>
+    </div>
+
+    <div class="kpi-grid" style="grid-template-columns:repeat(3,1fr)">
+      <div class="kpi-card">
+        <div class="kpi-label">Δ Entradas × Produção</div>
+        <div class="kpi-value" id="conc-tot-ent" style="font-size:24px">0</div>
+        <div class="kpi-sub">entradas sem produção equivalente</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Δ Saídas × Venda</div>
+        <div class="kpi-value" id="conc-tot-sai" style="font-size:24px">0</div>
+        <div class="kpi-sub">diferença entre saídas e vendas</div>
+      </div>
+      <div class="kpi-card danger">
+        <div class="kpi-label">Produtos com Divergência</div>
+        <div class="kpi-value" id="conc-tot-itens">0</div>
+        <div class="kpi-sub">itens a revisar (filtro atual)</div>
       </div>
     </div>
+
     <div class="table-card">
+      <div class="tc-head" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+        <div class="tc-title" id="conc-count">Conciliação Produção × Estoque</div>
+        <button class="btn btn-s" onclick="gerarPdfConciliacao()">📄 Gerar PDF</button>
+      </div>
+      <div class="table-wrap"><table>
+        <thead><tr>
+          <th>Cód.</th><th>Produto</th>
+          <th>Produção</th><th>Entradas</th><th>Δ Entr.</th>
+          <th>Venda</th><th>Saídas</th><th>Δ Saíd.</th>
+          <th>Detalhe</th>
+        </tr></thead>
+        <tbody id="tb-conciliacao"></tbody>
+      </table></div>
+    </div>
+  </div>
+
+  <!-- ========= FICHA TÉCNICA ========= -->
+  <div class="page" id="page-fichatecnica">
+    <div class="table-card">
+      <div class="tc-head">
+        <div class="tc-title">📋 Fichas Técnicas</div>
+        <button class="btn btn-p" onclick="abrirModalFT()">＋ Nova Ficha Técnica</button>
+      </div>
       <div class="table-wrap">
         <table>
           <thead><tr><th>Produto Acabado</th><th>Matéria-Prima</th><th>Qtd MP / unid.</th><th>Ações</th></tr></thead>
@@ -792,26 +869,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--preto);color:var(--txt);m
 
   <!-- ========= ENTRADAS ========= -->
   <div class="page" id="page-entradas">
-    <div class="form-card">
-      <h3>📥 Registrar Entrada</h3>
-      <div class="form-grid">
-        <div class="fg"><label>Data</label><input type="date" id="ent-data"></div>
-        <div class="fg"><label>Produto *</label><select id="ent-prod"></select></div>
-        <div class="fg"><label>Quantidade *</label><input type="number" id="ent-qt" min="0" placeholder="0"></div>
-        <div class="fg"><label>Custo Unitário (R$)</label><input type="number" id="ent-custo" min="0" step="0.01" placeholder="0,00"></div>
-        <div class="fg"><label>Fornecedor</label><select id="ent-forn"><option value="">— Selecione —</option></select></div>
-        <div class="fg"><label>Nº NF</label><input type="text" id="ent-nf" placeholder="Nº da nota fiscal"></div>
-        <div class="fg"><label>Responsável</label><input type="text" id="ent-resp" placeholder="Responsável"></div>
-        <div class="fg"><label>Observação</label><input type="text" id="ent-obs" placeholder="Observação"></div>
-      </div>
-      <div class="form-actions">
-        <button class="btn btn-s" onclick="limparEntrada()">Limpar</button>
-        <button class="btn btn-p" id="btn-salvar-ent" onclick="salvarEntrada()">💾 Registrar Entrada</button>
-      </div>
-    </div>
     <div class="table-card">
       <div class="tc-head">
         <div class="tc-title">Histórico de Entradas</div>
+        <button class="btn btn-p" onclick="abrirModalEntrada()">＋ Nova Entrada</button>
         <button class="btn btn-p" onclick="abrirModalProducao()" style="font-size:12px;padding:6px 14px;flex-shrink:0;background:var(--vmd)">🏭 + Lançamento Produção</button>
         <button class="btn btn-p" onclick="importarEntradasXlsx()" style="margin-left:auto;font-size:12px;padding:6px 14px;flex-shrink:0">📥 Importar Planilha (620 reg.)</button>
         <div class="filters" style="margin:0;flex-wrap:nowrap">
@@ -828,25 +889,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--preto);color:var(--txt);m
 
   <!-- ========= SAÍDAS ========= -->
   <div class="page" id="page-saidas">
-    <div class="form-card">
-      <h3>📤 Registrar Saída</h3>
-      <div class="form-grid">
-        <div class="fg"><label>Data</label><input type="date" id="sai-data"></div>
-        <div class="fg"><label>Produto *</label><select id="sai-prod"></select></div>
-        <div class="fg"><label>Quantidade *</label><input type="number" id="sai-qt" min="0" placeholder="0"></div>
-        <div class="fg"><label>Cliente / Destino</label><select id="sai-cli"><option value="">— Selecione —</option></select></div>
-        <div class="fg"><label>Responsável</label><input type="text" id="sai-resp" placeholder="Responsável"></div>
-        <div class="fg"><label>Valor Unitário (R$)</label><input type="number" id="sai-valor" min="0" step="0.01" placeholder="0,00"></div>
-        <div class="fg"><label>Observação</label><input type="text" id="sai-obs" placeholder="Observação"></div>
-      </div>
-      <div class="form-actions">
-        <button class="btn btn-s" onclick="limparSaida()">Limpar</button>
-        <button class="btn btn-p" id="btn-salvar-sai" onclick="salvarSaida()">💾 Registrar Saída</button>
-      </div>
-    </div>
     <div class="table-card">
       <div class="tc-head">
         <div class="tc-title">Histórico de Saídas</div>
+        <button class="btn btn-p" onclick="abrirModalSaida()">＋ Nova Saída</button>
         <button class="btn btn-p" onclick="abrirModalProducao()" style="font-size:12px;padding:6px 14px;flex-shrink:0;background:var(--vmd)">🏭 + Lançamento Produção</button>
         <button class="btn btn-p" onclick="importarSaidasXlsx()" style="margin-left:auto;font-size:12px;padding:6px 14px;flex-shrink:0">📤 Importar Planilha (83 reg.)</button>
         <div class="filters" style="margin:0;flex-wrap:nowrap">
@@ -1432,6 +1478,121 @@ body{font-family:'DM Sans',sans-serif;background:var(--preto);color:var(--txt);m
   </div>
 </div>
 
+<!-- MODAL DETALHE CONCILIAÇÃO -->
+<div class="modal-ov" id="modal-conc-detalhe">
+  <div class="modal" style="width:640px;max-height:88vh;overflow-y:auto">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+      <span style="font-size:24px">🧮</span>
+      <div>
+        <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:700" id="conc-det-nome">—</div>
+        <div style="font-size:11px;color:var(--fraco)" id="conc-det-sub">—</div>
+      </div>
+    </div>
+    <div id="conc-det-corpo" style="margin-top:14px"></div>
+    <div class="modal-foot" style="margin-top:16px">
+      <button class="btn btn-s" onclick="closeModal('modal-conc-detalhe')">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL NOVA ENTRADA -->
+<div class="modal-ov" id="modal-entrada">
+  <div class="modal" style="width:min(720px,96vw)">
+    <h3>📥 Registrar Entrada</h3>
+    <div class="form-grid-2">
+      <div class="fg"><label>Data</label><input type="date" id="ent-data"></div>
+      <div class="fg"><label>Produto *</label><select id="ent-prod"></select></div>
+      <div class="fg"><label>Quantidade *</label><input type="number" id="ent-qt" min="0" placeholder="0"></div>
+      <div class="fg"><label>Custo Unitário (R$)</label><input type="number" id="ent-custo" min="0" step="0.01" placeholder="0,00"></div>
+      <div class="fg"><label>Fornecedor</label><select id="ent-forn"><option value="">— Selecione —</option></select></div>
+      <div class="fg"><label>Nº NF</label><input type="text" id="ent-nf" placeholder="Nº da nota fiscal"></div>
+      <div class="fg"><label>Responsável</label><input type="text" id="ent-resp" placeholder="Responsável"></div>
+      <div class="fg"><label>Observação</label><input type="text" id="ent-obs" placeholder="Observação"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-s" onclick="closeModal('modal-entrada')">Cancelar</button>
+      <button class="btn btn-s" onclick="limparEntrada()">Limpar</button>
+      <button class="btn btn-p" id="btn-salvar-ent" onclick="salvarEntrada()">💾 Registrar Entrada</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL NOVA SAÍDA -->
+<div class="modal-ov" id="modal-saida">
+  <div class="modal" style="width:min(720px,96vw)">
+    <h3>📤 Registrar Saída</h3>
+    <div class="form-grid-2">
+      <div class="fg"><label>Data</label><input type="date" id="sai-data"></div>
+      <div class="fg"><label>Produto *</label><select id="sai-prod"></select></div>
+      <div class="fg"><label>Quantidade *</label><input type="number" id="sai-qt" min="0" placeholder="0"></div>
+      <div class="fg"><label>Cliente / Destino</label><select id="sai-cli"><option value="">— Selecione —</option></select></div>
+      <div class="fg"><label>Responsável</label><input type="text" id="sai-resp" placeholder="Responsável"></div>
+      <div class="fg"><label>Valor Unitário (R$)</label><input type="number" id="sai-valor" min="0" step="0.01" placeholder="0,00"></div>
+      <div class="fg full"><label>Observação</label><input type="text" id="sai-obs" placeholder="Observação"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-s" onclick="closeModal('modal-saida')">Cancelar</button>
+      <button class="btn btn-s" onclick="limparSaida()">Limpar</button>
+      <button class="btn btn-p" id="btn-salvar-sai" onclick="salvarSaida()">💾 Registrar Saída</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL NOVA FICHA TÉCNICA -->
+<div class="modal-ov" id="modal-ft">
+  <div class="modal" style="width:min(640px,96vw)">
+    <h3 id="modal-ft-title">📋 Nova Ficha Técnica</h3>
+    <div class="form-grid-2">
+      <div class="fg"><label>Produto Acabado *</label><select id="ft-acabado"><option value="">Selecione...</option></select></div>
+      <div class="fg"><label>Matéria-Prima *</label><select id="ft-mp"><option value="">Selecione...</option></select></div>
+      <div class="fg"><label>Quantidade MP por unidade *</label><input type="number" id="ft-qt" min="0.001" step="0.001" placeholder="Ex: 1.5"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-s" onclick="closeModal('modal-ft')">Cancelar</button>
+      <button class="btn btn-s" onclick="limparFT()">Limpar</button>
+      <button class="btn btn-p" id="btn-salvar-ft" onclick="salvarFT()">💾 Salvar Ficha Técnica</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL NOVA TRANSFERÊNCIA -->
+<div class="modal-ov" id="modal-transferencia">
+  <div class="modal" style="width:min(760px,96vw)">
+    <h3>🔀 Transferência de Estoque</h3>
+    <div class="form-grid-2">
+      <div class="fg"><label>Data *</label><input type="date" id="tr-data"></div>
+      <div class="fg"><label>Produto de Origem *</label><select id="tr-origem" onchange="onTransfChange()"><option value="">Selecione...</option></select></div>
+      <div class="fg"><label>Produto de Destino *</label><select id="tr-destino" onchange="onTransfChange()"><option value="">Selecione...</option></select></div>
+      <div class="fg"><label>Quantidade *</label><input type="number" id="tr-qt" min="0" step="0.001" placeholder="0" oninput="onTransfChange()"></div>
+      <div class="fg full"><label>Observação</label><input type="text" id="tr-obs" placeholder="Motivo / referência (opcional)"></div>
+    </div>
+    <div id="tr-resumo" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:8px 0 12px">
+      <div style="background:var(--cm);border:1px solid var(--borda);border-radius:10px;padding:11px">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--fraco);margin-bottom:4px">Saldo atual da origem</div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700" id="tr-saldo-orig">—</div>
+      </div>
+      <div style="background:var(--cm);border:1px solid var(--borda);border-radius:10px;padding:11px">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--fraco);margin-bottom:4px">Custo médio da origem</div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;color:var(--amar)" id="tr-cmp-orig">—</div>
+      </div>
+      <div style="background:rgba(46,139,46,.08);border:1px solid rgba(46,139,46,.25);border-radius:10px;padding:11px">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--fraco);margin-bottom:4px">Quantidade a transferir</div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;color:var(--verde)" id="tr-qt-view">—</div>
+      </div>
+      <div style="background:rgba(46,139,46,.08);border:1px solid rgba(46,139,46,.25);border-radius:10px;padding:11px">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--fraco);margin-bottom:4px">Custo total transferido</div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;color:var(--verde)" id="tr-total-view">—</div>
+      </div>
+    </div>
+    <div id="tr-alerta" style="display:none;font-size:12px;color:var(--verm);margin-bottom:10px"></div>
+    <div class="modal-foot">
+      <button class="btn btn-s" onclick="closeModal('modal-transferencia')">Cancelar</button>
+      <button class="btn btn-s" onclick="limparTransferencia()">Limpar</button>
+      <button class="btn btn-p" onclick="registrarTransferencia()">🔀 Registrar Transferência</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL AJUSTE SALDO (admin) -->
 <div class="modal-ov" id="modal-ajuste-saldo">
   <div class="modal" style="width:480px">
@@ -1470,12 +1631,30 @@ body{font-family:'DM Sans',sans-serif;background:var(--preto);color:var(--txt);m
   </div>
 </div>
 
+<!-- MODAL MOVIMENTOS DO PRODUTO (editar entradas/saídas) -->
+<div class="modal-ov" id="modal-mov-produto">
+  <div class="modal" style="width:min(860px,97vw);max-height:90vh;overflow-y:auto">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+      <span style="font-size:22px">📋</span>
+      <div>
+        <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:700" id="mov-prod-nome">—</div>
+        <div style="font-size:11px;color:var(--fraco)" id="mov-prod-sub">Edite ou exclua os movimentos para ajustar o saldo</div>
+      </div>
+    </div>
+    <div id="mov-prod-corpo" style="margin-top:12px"></div>
+    <div class="modal-foot" style="margin-top:14px">
+      <button class="btn btn-s" onclick="exportarMovProdutoExcel()" title="Exportar entradas e saídas deste produto para Excel">📊 Exportar Excel</button>
+      <button class="btn btn-s" onclick="closeModal('modal-mov-produto')">Fechar</button>
+    </div>
+  </div>
+</div>
+
 </div><!-- /main-content -->
 </div><!-- /layout -->
 </div><!-- /app -->
 
 <!-- MODAL EDITAR ENTRADA -->
-<div class="modal-ov" id="modal-ent">
+<div class="modal-ov" id="modal-ent" style="z-index:1001">
   <div class="modal" style="width:min(720px,96vw)">
     <h3>✏️ Editar Entrada</h3>
     <div class="form-grid-2">
@@ -1496,7 +1675,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--preto);color:var(--txt);m
 </div>
 
 <!-- MODAL EDITAR SAÍDA -->
-<div class="modal-ov" id="modal-sai">
+<div class="modal-ov" id="modal-sai" style="z-index:1001">
   <div class="modal" style="width:min(720px,96vw)">
     <h3>✏️ Editar Saída</h3>
     <div class="form-grid-2">
@@ -1596,6 +1775,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--preto);color:var(--txt);m
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 const MESES=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
 const TIPOS_SF={materia_prima:'Matéria Prima',produto_acabado:'Produto Acabado',produto_intermediario:'Produto Intermediário',embalagem:'Embalagem',consumivel:'Consumível',sucata:'Sucata / Refugo',outro:'Outro'};
@@ -2066,6 +2246,21 @@ function getM(d){return parseInt(d.split('-')[1])}
 function getY(d){return parseInt(d.split('-')[0])}
 function save(){} // não usado mais — tudo vai direto ao Supabase
 
+// ══════ EXPORTAÇÃO PARA EXCEL (.xlsx) ══════
+// sheetsObj: { 'Nome da Aba': [[linha1...], [linha2...], ...], ... }
+function baixarExcel(nomeArquivo, sheetsObj){
+  if(!window.XLSX){ alert('Biblioteca de Excel ainda não carregou. Aguarde alguns segundos e tente novamente.'); return; }
+  const wb = XLSX.utils.book_new();
+  Object.keys(sheetsObj).forEach(nomeAba=>{
+    const ws = XLSX.utils.aoa_to_sheet(sheetsObj[nomeAba]);
+    XLSX.utils.book_append_sheet(wb, ws, nomeAba.substring(0,31));
+  });
+  XLSX.writeFile(wb, nomeArquivo);
+}
+function carimboArquivo(){
+  return new Date().toISOString().slice(0,19).replace(/[-T:]/g,'');
+}
+
 function estItem(prodId){
   const p=gP(prodId);
   const saldoInicial=p?Number(p.saldoInicial||0):0;
@@ -2137,6 +2332,10 @@ function abrirModalUsr(){limparUsr();document.getElementById('modal-usr-titulo')
 // MODALS
 function openModal(id){document.getElementById(id).classList.add('open')}
 function closeModal(id){document.getElementById(id).classList.remove('open')}
+function abrirModalEntrada(){ fillAllSelects(); limparEntrada(); openModal('modal-entrada'); }
+function abrirModalSaida(){ fillAllSelects(); limparSaida(); openModal('modal-saida'); }
+function abrirModalFT(){ editFTId=null; fillSel('ft-acabado',produtos,'id',p=>p.desc,'Selecione...'); fillSel('ft-mp',produtos,'id',p=>p.desc,'Selecione...'); limparFT(); const t=document.getElementById('modal-ft-title'); if(t)t.textContent='📋 Nova Ficha Técnica'; openModal('modal-ft'); }
+function abrirModalTransferencia(){ fillSel('tr-origem',produtos,'id',p=>`${p.id} — ${p.desc}`,'Selecione...'); fillSel('tr-destino',produtos,'id',p=>`${p.id} — ${p.desc}`,'Selecione...'); limparTransferencia(); openModal('modal-transferencia'); }
 
 // ══════ LOGIN ══════
 function doLogin(){
@@ -2170,7 +2369,7 @@ function logout(){
 }
 
 // ══════ NAV ══════
-const PT={dashboard:'Dashboard',estoque:'Estoque Atual',entradas:'Entradas',saidas:'Saídas',variacao:'Variação Mensal',movimentacao:'Movimentação do Estoque',producao:'Lançamentos de Produção',fichatecnica:'Ficha Técnica',indicadores:'Indicador de Desempenho',paradas:'Paradas de Recurso',recursos:'Cadastro de Recursos',tiposparada:'Tipos de Parada',metashoras:'Metas de Horas Previstas',metasproducao:'Metas de Produção',oee:'OEE — Indicador Global',produtos:'Cadastro de Produtos',clientes:'Cadastro de Clientes',fornecedores:'Cadastro de Fornecedores',subfamilias:'Subfamílias',localizacoes:'Localizações',usuarios:'Usuários',calendario:'Calendário de Entregas',backup:'Backup do Sistema'};
+const PT={dashboard:'Dashboard',estoque:'Estoque Atual',entradas:'Entradas',saidas:'Saídas',variacao:'Variação Mensal',movimentacao:'Movimentação do Estoque',producao:'Lançamentos de Produção',conciliacao:'Conciliação Produção × Estoque',transferencia:'Transferência de Estoque',fichatecnica:'Ficha Técnica',indicadores:'Indicador de Desempenho',paradas:'Paradas de Recurso',recursos:'Cadastro de Recursos',tiposparada:'Tipos de Parada',metashoras:'Metas de Horas Previstas',metasproducao:'Metas de Produção',oee:'OEE — Indicador Global',produtos:'Cadastro de Produtos',clientes:'Cadastro de Clientes',fornecedores:'Cadastro de Fornecedores',subfamilias:'Subfamílias',localizacoes:'Localizações',usuarios:'Usuários',calendario:'Calendário de Entregas',backup:'Backup do Sistema'};
 // ── FILTRO GLOBAL (subfamília + produto) ──
 let _gFiltroSF = '';
 let _gFiltroProd = '';
@@ -2223,7 +2422,7 @@ function goPage(id){
     carregarFiltrosParadas();
   }
 
-  const renders={dashboard:renderDash,estoque:renderEstoque,entradas:renderEntradas,saidas:renderSaidas,variacao:renderVariacao,movimentacao:renderMovimentacao,producao:renderProducao,fichatecnica:renderFT,indicadores:renderIndicadores,paradas:renderParadas,recursos:renderRecursos,tiposparada:renderTP,metashoras:renderMetasHoras,metasproducao:renderMetasProducao,oee:renderOEE,produtos:renderProdutos,clientes:renderClientes,fornecedores:renderForn,subfamilias:renderSF,localizacoes:renderLoc,usuarios:renderUsr,calendario:renderCalendario,backup:renderBackup};
+  const renders={dashboard:renderDash,estoque:renderEstoque,entradas:renderEntradas,saidas:renderSaidas,variacao:renderVariacao,movimentacao:renderMovimentacao,producao:renderProducao,conciliacao:renderConciliacao,transferencia:renderTransferencia,fichatecnica:renderFT,indicadores:renderIndicadores,paradas:renderParadas,recursos:renderRecursos,tiposparada:renderTP,metashoras:renderMetasHoras,metasproducao:renderMetasProducao,oee:renderOEE,produtos:renderProdutos,clientes:renderClientes,fornecedores:renderForn,subfamilias:renderSF,localizacoes:renderLoc,usuarios:renderUsr,calendario:renderCalendario,backup:renderBackup};
   if(renders[id])renders[id]();
 }
 
@@ -2258,6 +2457,88 @@ function fillAllSelects(){
   fillSel('fpar-tipo',tiposParada,'id',t=>t.nome,'Todos os tipos');
 }
 // ===== DASHBOARD =====
+// ══════ VELOCÍMETROS DE CUSTO MÉDIO (MATÉRIAS-PRIMAS) ══════
+const CUSTO_ALVOS = ['Canela','Cristal','Verde','Colorido'];
+function _normTxt(s){ return (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim(); }
+function getMetaCusto(prodId){ try{ const v=localStorage.getItem('stoeck_meta_custo_'+prodId); return v!=null?parseFloat(v):0; }catch(e){ return 0; } }
+function setMetaCusto(prodId, val){ try{ localStorage.setItem('stoeck_meta_custo_'+prodId, String(val)); }catch(e){} }
+function _custoStatus(valor, meta){
+  if(!(meta>0)) return {cor:'var(--fraco)', txt:'defina a meta'};
+  if(valor<=meta) return {cor:'var(--verde)', txt:'dentro da meta'};
+  if(valor<=meta*1.1) return {cor:'var(--amar)', txt:'no limite'};
+  return {cor:'var(--verm)', txt:'acima da meta'};
+}
+function _gPol(cx,cy,r,deg){ const a=deg*Math.PI/180; return [cx+r*Math.cos(a), cy-r*Math.sin(a)]; }
+function _gArc(cx,cy,r,a1,a2,col,w){
+  const [x1,y1]=_gPol(cx,cy,r,a1), [x2,y2]=_gPol(cx,cy,r,a2);
+  return `<path d="M ${x1.toFixed(1)} ${y1.toFixed(1)} A ${r} ${r} 0 0 1 ${x2.toFixed(1)} ${y2.toFixed(1)}" fill="none" stroke="${col}" stroke-width="${w}" stroke-linecap="butt"/>`;
+}
+function svgGaugeCusto(valor, meta){
+  const cx=100, cy=92, r=74, w=13;
+  const max = meta>0 ? meta*1.5 : (valor>0 ? valor*1.5 : 1);
+  const v2a = x => 180 - (Math.min(Math.max(x,0),max)/max)*180;
+  let zonas='';
+  if(meta>0){
+    zonas =
+      _gArc(cx,cy,r,180, v2a(meta),        'var(--verde)', w) +
+      _gArc(cx,cy,r,v2a(meta), v2a(meta*1.1),'var(--amar)', w) +
+      _gArc(cx,cy,r,v2a(meta*1.1), 0,       'var(--verm)',  w);
+    // marcador da meta
+    const [mx1,my1]=_gPol(cx,cy,r-w/2-3,v2a(meta)), [mx2,my2]=_gPol(cx,cy,r+w/2+3,v2a(meta));
+    zonas += `<line x1="${mx1.toFixed(1)}" y1="${my1.toFixed(1)}" x2="${mx2.toFixed(1)}" y2="${my2.toFixed(1)}" stroke="var(--txt)" stroke-width="2"/>`;
+  } else {
+    zonas = _gArc(cx,cy,r,180,0,'var(--borda)',w);
+  }
+  const ang=v2a(valor);
+  const [nx,ny]=_gPol(cx,cy,r-16,ang);
+  const cor=_custoStatus(valor,meta).cor;
+  return `<svg viewBox="0 0 200 108" style="width:100%;max-width:220px;height:auto">
+    <path d="M ${cx-r} ${cy} A ${r} ${r} 0 0 1 ${cx+r} ${cy}" fill="none" stroke="var(--cm)" stroke-width="${w}"/>
+    ${zonas}
+    <line x1="${cx}" y1="${cy}" x2="${nx.toFixed(1)}" y2="${ny.toFixed(1)}" stroke="${cor}" stroke-width="3.5" stroke-linecap="round"/>
+    <circle cx="${cx}" cy="${cy}" r="6" fill="${cor}"/>
+  </svg>`;
+}
+function renderGaugesCusto(){
+  const cont=document.getElementById('gauges-custo');
+  if(!cont) return;
+  const mesF=document.getElementById('fd-cm-mes')?.value||'';
+  const anoF=document.getElementById('fd-cm-ano')?.value||'';
+  cont.innerHTML = CUSTO_ALVOS.map(alvo=>{
+    const p = produtos.find(x=>_normTxt(x.desc)===_normTxt(alvo));
+    if(!p){
+      return `<div class="kpi-card" style="text-align:center;padding:14px">
+        <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">${alvo}</div>
+        <div style="font-size:12px;color:var(--fraco);padding:24px 0">Produto não encontrado no cadastro.</div>
+      </div>`;
+    }
+    const cmp = estItemPeriodo(p.id, mesF, anoF).cmp;
+    const meta = getMetaCusto(p.id);
+    const st = _custoStatus(cmp, meta);
+    return `<div class="kpi-card" style="text-align:center;padding:14px 12px">
+      <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--txt)">${p.desc}</div>
+      <div style="font-size:10px;color:var(--fraco);margin-bottom:4px">custo médio no período</div>
+      ${svgGaugeCusto(cmp, meta)}
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:30px;font-weight:700;color:${st.cor};line-height:1;margin-top:-4px">${fR(cmp)}</div>
+      <div style="font-size:11px;color:var(--fraco);margin-top:7px;display:flex;align-items:center;justify-content:center;gap:6px">
+        Meta: <b style="color:var(--txt)">${meta>0?fR(meta):'—'}</b>
+        <span class="r-edit" onclick="editarMetaCusto(${p.id})" title="Editar meta" style="cursor:pointer">✏️</span>
+      </div>
+      <div style="font-size:10px;margin-top:3px;color:${st.cor};font-weight:600">${st.txt}</div>
+    </div>`;
+  }).join('');
+}
+function editarMetaCusto(prodId){
+  const p=gP(prodId); if(!p) return;
+  const atual=getMetaCusto(prodId);
+  const inp=prompt(`Meta de custo médio para "${p.desc}" (R$):`, atual>0?String(atual).replace('.',','):'');
+  if(inp===null) return;
+  const val=parseFloat(String(inp).replace(/\./g,'').replace(',','.'));
+  if(isNaN(val)||val<0){ alert('Valor inválido. Informe um número (ex.: 3,00).'); return; }
+  setMetaCusto(prodId, val);
+  renderGaugesCusto();
+}
+
 function renderDash(){
   fillAllSelects();
   // fill filter selects
@@ -2295,6 +2576,7 @@ function renderDash(){
   document.getElementById('kpi-crit').textContent=crit;
   document.getElementById('kpi-valor').textContent=fR(totV);
   document.getElementById('tb-dash').innerHTML=rowsDash||'<tr><td colspan="9" class="empty">Nenhum item encontrado.</td></tr>';
+  renderGaugesCusto();
 }
 // ===== ESTOQUE =====
 function estItemPeriodo(prodId, mesF, anoF){
@@ -2334,7 +2616,7 @@ function renderEstoque(){
     const periodoLabel = (mesF||anoF) ? ' <span style="font-size:10px;color:var(--amar)">(período)</span>' : '';
     const saldoClass = isCrit ? 'txt-r' : (est.saldo<0?'txt-r':'');
     const isAdmin=currentUser&&currentUser.perfil==='admin';
-    const ajusteBtn=isAdmin?`<span class="r-edit" onclick="abrirAjusteSaldo(${p.id})" title="Ajustar saldo inicial">⚖️</span>`:'';
+    const ajusteBtn=isAdmin?`<span class="r-edit" onclick="abrirAjusteSaldo(${p.id})" title="Ajustar saldo inicial">⚖️</span> <span class="r-edit" onclick="abrirMovProduto(${p.id})" title="Editar entradas/saídas do produto">📋</span>`:'';
     const saldoInicialCell=`<td class="txt-f">${fN(p.saldoInicial||0)}</td>`;
     const ajusteCell=isAdmin?`<td>${ajusteBtn}</td>`:'<td style="display:none"></td>';
     const valorItem = Math.max(0,est.saldo)*est.cmp;
@@ -2421,7 +2703,7 @@ async function salvarEntrada(){
     if(!db){ alert('Erro ao salvar entrada no Supabase. Os dados do formulário foram mantidos — verifique a conexão e tente novamente.'); return; }
     obj.id=db.id;obj.mes=db.mes;obj.ano=db.ano;
   }
-  entradas.push(obj);limparEntrada();renderEntradas();
+  entradas.push(obj);limparEntrada();renderEntradas();closeModal('modal-entrada');
 }
 function abrirEditEnt(id){
   const e=entradas.find(x=>x.id===id);if(!e)return;
@@ -2447,7 +2729,7 @@ async function confirmarEditEntrada(){
     if(!db){ alert('Erro ao atualizar entrada no Supabase. A edição NÃO foi salva — verifique a conexão e tente novamente.'); return; }
   }
   entradas[idx]=atualizado;
-  closeModal('modal-ent');renderEntradas();
+  closeModal('modal-ent');renderEntradas();renderEstoque();renderConciliacao();_refreshMovProduto();
 }
 async function delEnt(id){
   if(!confirm('Excluir esta entrada?'))return;
@@ -2511,7 +2793,7 @@ async function salvarSaida(){
     if(!db){ alert('Erro ao salvar saída no Supabase. Os dados do formulário foram mantidos — verifique a conexão e tente novamente.'); return; }
     sObj.id=db.id;sObj.mes=db.mes;sObj.ano=db.ano;
   }
-  saidas.push(sObj);limparSaida();renderSaidas();
+  saidas.push(sObj);limparSaida();renderSaidas();closeModal('modal-saida');
 }
 function abrirEditSai(id){
   const s=saidas.find(x=>x.id===id);if(!s)return;
@@ -2536,7 +2818,7 @@ async function confirmarEditSaida(){
     if(!db){ alert('Erro ao atualizar saída no Supabase. A edição NÃO foi salva — verifique a conexão e tente novamente.'); return; }
   }
   saidas[idx]=atualizado;
-  closeModal('modal-sai');renderSaidas();
+  closeModal('modal-sai');renderSaidas();renderEstoque();renderConciliacao();_refreshMovProduto();
 }
 async function delSai(id){
   if(!confirm('Excluir esta saída?'))return;
@@ -2995,6 +3277,8 @@ const TELAS_PERMISSAO = [
   {key:'saidas',label:'Saídas',icon:'📤'},
   {key:'variacao',label:'Variação',icon:'📈'},
   {key:'movimentacao',label:'Movimentação',icon:'🔄'},
+  {key:'conciliacao',label:'Conciliação',icon:'🧮'},
+  {key:'transferencia',label:'Transferência',icon:'🔀'},
   {key:'produtos',label:'Produtos',icon:'🏷️'},
   {key:'clientes',label:'Clientes',icon:'👤'},
   {key:'fornecedores',label:'Fornecedores',icon:'🚚'},
@@ -3323,6 +3607,17 @@ async function importarEntradasXlsx(){
 function getFT(acabadoId){
   return fichasTecnicas.find(f=>f.acabadoId===parseInt(acabadoId));
 }
+// Custo unitário do produto ACABADO formado pelo custo médio da matéria-prima (via ficha técnica).
+// Sem ficha técnica, cai no custo de cadastro como fallback.
+function custoProducaoAcabado(prodId){
+  const ft = getFT(prodId);
+  if(ft){
+    const cmpMP = estItem(ft.mpId).cmp || 0;
+    return ft.qtMP * cmpMP;
+  }
+  const p = gP(prodId);
+  return p ? (p.custo||0) : 0;
+}
 
 function onProdSituacaoChange(){
   onProdProdutoChange();
@@ -3332,8 +3627,15 @@ function onProdProdutoChange(){
   const prodId = parseInt(document.getElementById('prod-produto').value);
   const sit = document.getElementById('prod-situacao').value;
   const prod = gP(prodId);
-  // custo automático do custo_base
-  document.getElementById('prod-custo').value = prod ? prod.custo : '';
+  // custo formado pelo custo médio (não pelo cadastro)
+  let custoAuto = prod ? (prod.custo||0) : 0;
+  if(sit === 'PRODUCAO' && prodId){
+    custoAuto = custoProducaoAcabado(prodId);
+  } else if((sit === 'VENDA' || sit === 'PRE_VENDA') && prodId){
+    const cf = estItem(prodId).cmp;
+    custoAuto = cf>0 ? cf : custoAuto;
+  }
+  document.getElementById('prod-custo').value = custoAuto ? (Math.round(custoAuto*10000)/10000) : '';
   // info de MP apenas para PRODUCAO com ficha técnica
   const mpInfo = document.getElementById('prod-mp-info');
   const mpTxt = document.getElementById('prod-mp-txt');
@@ -3372,6 +3674,57 @@ function limparProducao(){
   document.getElementById('btn-salvar-prod').textContent = '💾 Registrar Lançamento';
 }
 
+// ══════ VÍNCULO LANÇAMENTO ↔ ESTOQUE (tag [lp:id] na observação) ══════
+// Cria os movimentos de estoque de um lançamento, marcados com [lp:<id>] para rastreio.
+async function _lpAplicarMov(lancId, o){
+  const tag = ` [lp:${lancId}]`;
+  if(o.sit === 'PRODUCAO'){
+    // entrada no produto acabado
+    const entCorpo = {data:o.data, produto_id:o.prodId, quantidade:o.qt, custo_unitario:o.custo||0,
+      fornecedor_id:null, nota_fiscal:'', responsavel:'Produção',
+      obs:'Lançamento produção auto'+tag};
+    const entR = await sbSave('entradas', entCorpo);
+    if(entR){ entradas.push(mapEnt(Array.isArray(entR)?entR[0]:entR)); }
+    else { console.error('Falha ao criar entrada de produção'); }
+    // saída automática de MP via ficha técnica
+    const ft = getFT(o.prodId);
+    if(ft){
+      const qtMP = ft.qtMP * o.qt;
+      const saiCorpo = {data:o.data, produto_id:ft.mpId, quantidade:qtMP,
+        cliente_id:null, responsavel:'Produção', valor_total:0,
+        obs:'Baixa MP auto — produção'+tag};
+      const saiR = await sbSave('saidas', saiCorpo);
+      if(saiR){ saidas.push(mapSai(Array.isArray(saiR)?saiR[0]:saiR)); }
+      else { console.error('Falha ao criar saída de MP'); }
+    }
+  } else if(o.sit === 'VENDA'){
+    const baseObs = (o.obs && o.obs.trim()) ? o.obs.trim() : 'Venda via produção';
+    const saiCorpo = {data:o.data, produto_id:o.prodId, quantidade:o.qt,
+      cliente_id:o.cliId||null, responsavel:'Produção', valor_total:(o.custo||0)*o.qt,
+      obs:baseObs+tag};
+    const saiR = await sbSave('saidas', saiCorpo);
+    if(saiR){ saidas.push(mapSai(Array.isArray(saiR)?saiR[0]:saiR)); }
+    else { console.error('Falha ao criar saída de venda'); }
+  }
+  // PRE_VENDA: não movimenta estoque
+}
+// Reverte (exclui) TODOS os movimentos de estoque vinculados a um lançamento.
+async function _lpReverterMov(lancId){
+  const tag = `[lp:${lancId}]`;
+  const entsAlvo = entradas.filter(e=>(e.obs||'').includes(tag));
+  const saisAlvo = saidas.filter(s=>(s.obs||'').includes(tag));
+  let okTudo = true;
+  for(const e of entsAlvo){
+    const r = await sbDelete('entradas', e.id);
+    if(r!==null) entradas = entradas.filter(x=>x.id!==e.id); else okTudo=false;
+  }
+  for(const s of saisAlvo){
+    const r = await sbDelete('saidas', s.id);
+    if(r!==null) saidas = saidas.filter(x=>x.id!==s.id); else okTudo=false;
+  }
+  return okTudo;
+}
+
 async function salvarProducao(){
   const data   = document.getElementById('prod-data').value;
   const sit    = document.getElementById('prod-situacao').value;
@@ -3387,10 +3740,21 @@ async function salvarProducao(){
   const ano = getY(data);
   const origem = editProdLancId ? (lancamentosProducao.find(l=>l.id===editProdLancId)?.origem||'manual') : 'manual';
 
+  // Custo formado pelo custo médio (não pelo cadastro):
+  //  - PRODUÇÃO: custo médio da MP × qtd por unidade (ficha técnica)
+  //  - VENDA / PRÉ-VENDA: custo médio do próprio produto acabado
+  let custoEfetivo = custo;
+  if(sit === 'PRODUCAO'){
+    custoEfetivo = custoProducaoAcabado(prodId);
+  } else if(sit === 'VENDA' || sit === 'PRE_VENDA'){
+    const cf = estItem(prodId).cmp;
+    custoEfetivo = cf>0 ? cf : custo;
+  }
+
   const corpo = {
     data, produto_id:prodId, situacao:sit,
     cliente_id:cliId, quantidade:qt,
-    custo_producao:custo, origem, obs
+    custo_producao:custoEfetivo, origem, obs
   };
 
   let ok = false;
@@ -3400,40 +3764,17 @@ async function salvarProducao(){
     if(r){
       const idx = lancamentosProducao.findIndex(l=>l.id===editProdLancId);
       if(idx>=0) lancamentosProducao[idx] = mapLanc({...corpo, id:editProdLancId});
+      // Propaga no estoque: reverte o movimento antigo e aplica o novo
+      await _lpReverterMov(editProdLancId);
+      await _lpAplicarMov(editProdLancId, {data, prodId, sit, qt, custo:custoEfetivo, cliId, obs});
       ok = true;
     }
   } else {
     const r = await sbSave('lancamentos_producao', corpo);
     if(r){
-      lancamentosProducao.push(mapLanc(Array.isArray(r)?r[0]:r));
-
-      if(sit === 'PRODUCAO'){
-        // entrada no produto acabado
-        const entCorpo = {data, produto_id:prodId, quantidade:qt, custo_unitario:custo,
-          fornecedor_id:null, nota_fiscal:'', responsavel:'Produção',
-          obs:'Lançamento produção auto'};
-        const entR = await sbSave('entradas', entCorpo);
-        if(entR){ entradas.push(mapEnt(Array.isArray(entR)?entR[0]:entR)); }
-        else { console.error('Falha ao criar entrada de produção'); }
-
-        // saída automática de MP via ficha técnica
-        const ft = getFT(prodId);
-        if(ft){
-          const qtMP = ft.qtMP * qt;
-          const saiCorpo = {data, produto_id:ft.mpId, quantidade:qtMP,
-            cliente_id:null, responsavel:'Produção', valor_total:0,
-            obs:'Baixa MP auto — produção'};
-          const saiR = await sbSave('saidas', saiCorpo);
-          if(saiR){ saidas.push(mapSai(Array.isArray(saiR)?saiR[0]:saiR)); }
-          else { console.error('Falha ao criar saída de MP'); }
-        }
-      } else if(sit === 'VENDA'){
-        const saiCorpo = {data, produto_id:prodId, quantidade:qt,
-          cliente_id:cliId, responsavel:'Produção', valor_total:custo*qt,
-          obs:obs||'Venda via produção'};
-        const saiR = await sbSave('saidas', saiCorpo);
-        if(saiR){ saidas.push(mapSai(Array.isArray(saiR)?saiR[0]:saiR)); }
-      }
+      const novo = mapLanc(Array.isArray(r)?r[0]:r);
+      lancamentosProducao.push(novo);
+      await _lpAplicarMov(novo.id, {data, prodId, sit, qt, custo:custoEfetivo, cliId, obs});
       ok = true;
     }
   }
@@ -3444,6 +3785,7 @@ async function salvarProducao(){
     renderProducao();
     renderDash();
     renderEstoque();
+    renderConciliacao();
   } else {
     alert('Erro ao salvar lançamento. Verifique a conexão com o Supabase.');
   }
@@ -3468,11 +3810,15 @@ function editarProducao(id){
 }
 
 async function excluirProducao(id){
-  if(!confirm('Excluir este lançamento? O estoque NÃO será revertido automaticamente.')) return;
+  if(!confirm('Excluir este lançamento?\n\nOs movimentos de estoque vinculados (entrada/saída) serão revertidos automaticamente.')) return;
+  await _lpReverterMov(id);
   const r = await sbDelete('lancamentos_producao', id);
   if(r !== null){
     lancamentosProducao = lancamentosProducao.filter(l=>l.id!==id);
     renderProducao();
+    renderDash();
+    renderEstoque();
+    renderConciliacao();
   }
 }
 
@@ -3576,6 +3922,9 @@ function renderProducao(){
   // ordenar por data desc
   lista.sort((a,b)=>b.data.localeCompare(a.data));
 
+  // guarda a lista exibida (já filtrada/ordenada) para a exportação em Excel
+  window._ultimaListaProducao = lista;
+
   let rows = '';
   lista.forEach(l=>{
     const prod = gP(l.prodId);
@@ -3610,6 +3959,31 @@ function renderProducao(){
   document.getElementById('prod-count').textContent = 'Lançamentos de Produção (' + lista.length + ')';
 }
 
+// Exporta os lançamentos de produção atualmente exibidos (respeitando os filtros aplicados) para Excel
+function exportarProducaoExcel(){
+  const lista = window._ultimaListaProducao || [];
+  if(!lista.length){ alert('Não há lançamentos para exportar com os filtros atuais.'); return; }
+
+  const sitTxt = {PRODUCAO:'Produção', VENDA:'Venda', PRE_VENDA:'Pré-Venda'};
+  const linhas = [['Data','Produto','Situação','Qtd','Cliente','Custo Prod.','Origem','Obs.']];
+  lista.forEach(l=>{
+    const prod = gP(l.prodId);
+    const cli  = gCli(l.cliId);
+    linhas.push([
+      fD(l.data),
+      prod ? prod.desc : ('#'+l.prodId),
+      sitTxt[l.situacao] || l.situacao,
+      l.qt,
+      cli ? cli.nome : '',
+      l.custo || 0,
+      l.origem==='ficha_tecnica' ? 'Ficha Técnica' : 'Manual',
+      l.obs || ''
+    ]);
+  });
+
+  baixarExcel(`lancamentos_producao_${carimboArquivo()}.xlsx`, {'Lançamentos de Produção': linhas});
+}
+
 async function confirmarPreVenda(id){
   const l = lancamentosProducao.find(x=>x.id===id);
   if(!l || l.situacao !== 'PRE_VENDA') return;
@@ -3627,24 +4001,273 @@ async function confirmarPreVenda(id){
   const idx = lancamentosProducao.findIndex(x=>x.id===id);
   if(idx>=0) lancamentosProducao[idx].situacao = 'VENDA';
 
-  // 3. Criar saída no estoque
-  const saiCorpo = {
-    data: l.data,
-    produto_id: l.prodId,
-    quantidade: l.qt,
-    cliente_id: l.cliId||null,
-    responsavel: 'Produção',
-    valor_total: l.custo * l.qt,
-    obs: 'Confirmação de Pré-Venda → Venda'
-  };
-  const saiR = await sbSave('saidas', saiCorpo);
-  if(saiR){ saidas.push(mapSai(Array.isArray(saiR)?saiR[0]:saiR)); }
-  else { console.warn('Lançamento atualizado mas falha ao criar saída.'); }
+  // 3. Criar saída no estoque (vinculada ao lançamento via [lp:id])
+  await _lpReverterMov(id); // segurança: pré-venda não tem movimento, mas evita duplicidade
+  await _lpAplicarMov(id, {data:l.data, prodId:l.prodId, sit:'VENDA', qt:l.qt, custo:l.custo, cliId:l.cliId, obs:l.obs});
 
   renderProducao();
   renderDash();
   renderEstoque();
+  renderConciliacao();
   alert('✅ Pré-Venda confirmada como Venda e saída registrada!');
+}
+
+// ══════ TRANSFERÊNCIA DE ESTOQUE (produto → produto, carregando o custo médio) ══════
+function renderTransferencia(){
+  fillSel('tr-origem', produtos, 'id', p=>`${p.id} — ${p.desc}`, 'Selecione...');
+  fillSel('tr-destino', produtos, 'id', p=>`${p.id} — ${p.desc}`, 'Selecione...');
+  if(!document.getElementById('tr-data').value) document.getElementById('tr-data').value = today();
+  onTransfChange();
+
+  const itens = entradas.filter(e=>(e.obs||'').includes('[tr:'))
+    .sort((a,b)=>(a.data<b.data?1:-1));
+  let rows='';
+  itens.forEach(e=>{
+    const m = (e.obs||'').match(/\[tr:(\d+)\]/); const ts = m?m[1]:'';
+    const origemNome = (e.obs||'').replace(/\s*\[tr:\d+\]/,'').replace(/^Transferência de\s*/,'');
+    const dP = gP(e.prodId);
+    const total = e.qt * (e.custo||0);
+    rows += `<tr>
+      <td>${e.data||'—'}</td>
+      <td>${origemNome||'—'}</td>
+      <td class="fw">${dP?dP.desc:'—'}</td>
+      <td class="txt-r">${fN(e.qt)}</td>
+      <td class="txt-f">${fR(e.custo||0)}</td>
+      <td class="fw">${fR(total)}</td>
+      <td>${ts?`<span class="r-del" onclick="excluirTransferencia('${ts}')" title="Excluir transferência" style="cursor:pointer">🗑️</span>`:''}</td>
+    </tr>`;
+  });
+  document.getElementById('tb-transferencia').innerHTML = rows || '<tr><td colspan="7" class="empty">Nenhuma transferência registrada.</td></tr>';
+}
+
+function onTransfChange(){
+  const oId = parseInt(document.getElementById('tr-origem')?.value)||0;
+  const qt  = parseFloat(document.getElementById('tr-qt')?.value)||0;
+  const saldoEl=document.getElementById('tr-saldo-orig');
+  const cmpEl=document.getElementById('tr-cmp-orig');
+  const qtEl=document.getElementById('tr-qt-view');
+  const totEl=document.getElementById('tr-total-view');
+  const alerta=document.getElementById('tr-alerta');
+  if(!oId){ saldoEl.textContent='—'; cmpEl.textContent='—'; qtEl.textContent='—'; totEl.textContent='—'; alerta.style.display='none'; return; }
+  const est = estItem(oId);
+  const cmp = est.cmp||0;
+  saldoEl.textContent = fN(est.saldo);
+  saldoEl.style.color = est.saldo<0 ? 'var(--verm)' : 'var(--txt)';
+  cmpEl.textContent = fR(cmp);
+  qtEl.textContent = qt>0 ? fN(qt) : '—';
+  totEl.textContent = qt>0 ? fR(qt*cmp) : '—';
+  if(qt>0 && qt>est.saldo){
+    alerta.style.display='';
+    alerta.textContent = `⚠ A quantidade (${fN(qt)}) é maior que o saldo atual da origem (${fN(est.saldo)}). A transferência deixará o saldo negativo.`;
+  } else { alerta.style.display='none'; }
+}
+
+async function registrarTransferencia(){
+  const data = document.getElementById('tr-data').value;
+  const oId  = parseInt(document.getElementById('tr-origem').value)||0;
+  const dId  = parseInt(document.getElementById('tr-destino').value)||0;
+  const qt   = parseFloat(document.getElementById('tr-qt').value)||0;
+  const obsU = document.getElementById('tr-obs').value.trim();
+  if(!data||!oId||!dId||!qt||qt<=0){ alert('Preencha Data, Origem, Destino e Quantidade.'); return; }
+  if(oId===dId){ alert('Origem e destino devem ser produtos diferentes.'); return; }
+  const oP=gP(oId), dP=gP(dId);
+  const cmp = estItem(oId).cmp||0;
+  const total = qt*cmp;
+  if(!confirm(`Confirmar transferência?\n\n${fN(qt)} un. de "${oP.desc}" → "${dP.desc}"\nCusto médio da origem: ${fR(cmp)}/un\nCusto total transferido: ${fR(total)}`)) return;
+
+  const ts = Date.now();
+  const tag = ` [tr:${ts}]`;
+  const sufixo = obsU ? ` — ${obsU}` : '';
+  // saída na origem
+  const saiCorpo={data, produto_id:oId, quantidade:qt, cliente_id:null, responsavel:'Transferência', valor_total:total, obs:`Transferência p/ ${dP.desc}${sufixo}${tag}`};
+  const saiR=await sbSave('saidas', saiCorpo);
+  if(saiR){ saidas.push(mapSai(Array.isArray(saiR)?saiR[0]:saiR)); }
+  else { alert('Erro ao registrar a saída na origem. Verifique a conexão.'); return; }
+  // entrada no destino com o custo médio da origem
+  const entCorpo={data, produto_id:dId, quantidade:qt, custo_unitario:cmp, fornecedor_id:null, nota_fiscal:'', responsavel:'Transferência', obs:`Transferência de ${oP.desc}${sufixo}${tag}`};
+  const entR=await sbSave('entradas', entCorpo);
+  if(entR){ entradas.push(mapEnt(Array.isArray(entR)?entR[0]:entR)); }
+  else { alert('A saída foi registrada, mas houve falha ao criar a entrada no destino. Revise na tela de Entradas.'); }
+
+  limparTransferencia();
+  renderTransferencia(); renderDash(); renderEstoque(); renderConciliacao();
+  closeModal('modal-transferencia');
+  alert('✅ Transferência registrada!');
+}
+
+async function excluirTransferencia(ts){
+  if(!confirm('Excluir esta transferência?\n\nA entrada (destino) e a saída (origem) correspondentes serão removidas.')) return;
+  const tag=`[tr:${ts}]`;
+  for(const e of entradas.filter(x=>(x.obs||'').includes(tag))){ const r=await sbDelete('entradas', e.id); if(r!==null) entradas=entradas.filter(y=>y.id!==e.id); }
+  for(const s of saidas.filter(x=>(x.obs||'').includes(tag))){ const r=await sbDelete('saidas', s.id); if(r!==null) saidas=saidas.filter(y=>y.id!==s.id); }
+  renderTransferencia(); renderDash(); renderEstoque(); renderConciliacao();
+}
+
+function limparTransferencia(){
+  document.getElementById('tr-data').value = today();
+  document.getElementById('tr-origem').value = '';
+  document.getElementById('tr-destino').value = '';
+  document.getElementById('tr-qt').value = '';
+  document.getElementById('tr-obs').value = '';
+  onTransfChange();
+}
+
+// ══════ CONCILIAÇÃO PRODUÇÃO × ESTOQUE ══════
+const CONC_AUTO_ENT = 'Lançamento produção auto';
+function concEntAuto(e){ const t=(e.obs||''); return t.includes(CONC_AUTO_ENT)||t.includes('[lp:'); }
+function concIsSaiVenda(o){ const t=(o.obs||''); return t.includes('Venda via produção')||t.includes('Pré-Venda')||t.includes('Pre-Venda')||(t.includes('[lp:')&&!t.includes('Baixa MP')); }
+function concSigned(v){ const r=Math.round(v); return (r>0?'+':'')+fN(r); }
+
+function concCalcular(mesF, anoF, sfF, search){
+  const inPer = (o)=> (!mesF||String(o.mes)===mesF) && (!anoF||String(o.ano)===anoF);
+  return produtos.filter(p=>{
+    if(sfF && String(p.subfam)!==sfF) return false;
+    if(search && !(p.desc.toLowerCase().includes(search)||String(p.id)===search)) return false;
+    return true;
+  }).map(p=>{
+    const lp    = lancamentosProducao.filter(l=>l.prodId===p.id && inPer(l));
+    const prod  = lp.filter(l=>l.situacao==='PRODUCAO').reduce((a,b)=>a+b.qt,0);
+    const venda = lp.filter(l=>l.situacao==='VENDA').reduce((a,b)=>a+b.qt,0);
+    const ents  = entradas.filter(e=>e.prodId===p.id && inPer(e));
+    const entAuto = ents.filter(e=>concEntAuto(e)).reduce((a,b)=>a+b.qt,0);
+    const entMan  = ents.filter(e=>!concEntAuto(e)).reduce((a,b)=>a+b.qt,0);
+    const entTot  = entAuto+entMan;
+    const sais  = saidas.filter(s=>s.prodId===p.id && inPer(s));
+    const saiVen = sais.filter(concIsSaiVenda).reduce((a,b)=>a+b.qt,0);
+    const saiOut = sais.filter(s=>!concIsSaiVenda(s)).reduce((a,b)=>a+b.qt,0);
+    const saiTot = saiVen+saiOut;
+    return {p, prod, venda, entAuto, entMan, entTot, saiVen, saiOut, saiTot,
+            dEnt:entTot-prod, dSai:saiTot-venda, ents, sais};
+  });
+}
+
+function renderConciliacao(){
+  fillSel('fc-sf', subfamilias, 'id', s=>s.nome, 'Todas subfamílias');
+  const search = (document.getElementById('fc-search')?.value||'').toLowerCase();
+  const mesF   = document.getElementById('fc-mes')?.value||'';
+  const anoF   = document.getElementById('fc-ano')?.value||'';
+  const sfF    = document.getElementById('fc-sf')?.value||'';
+  const soDiv  = document.getElementById('fc-so-diverg')?.checked;
+  const EPS = 0.001;
+
+  let dados = concCalcular(mesF, anoF, sfF, search);
+  if(soDiv) dados = dados.filter(d=>Math.abs(d.dEnt)>EPS || Math.abs(d.dSai)>EPS);
+  dados.sort((a,b)=>(Math.abs(b.dEnt)+Math.abs(b.dSai))-(Math.abs(a.dEnt)+Math.abs(a.dSai)));
+
+  let rows='', totEnt=0, totSai=0, nDiv=0;
+  dados.forEach(d=>{
+    totEnt += d.dEnt; totSai += d.dSai;
+    if(Math.abs(d.dEnt)>EPS || Math.abs(d.dSai)>EPS) nDiv++;
+    const corEnt = Math.abs(d.dEnt)>EPS ? 'var(--verm)' : 'var(--fraco)';
+    const corSai = Math.abs(d.dSai)>EPS ? 'var(--verm)' : 'var(--fraco)';
+    rows += `<tr>
+      <td>${d.p.id}</td><td class="fw">${d.p.desc}</td>
+      <td class="txt-r">${fN(Math.round(d.prod))}</td>
+      <td class="txt-r">${fN(Math.round(d.entTot))}</td>
+      <td class="txt-r fw" style="color:${corEnt}">${concSigned(d.dEnt)}</td>
+      <td class="txt-r">${fN(Math.round(d.venda))}</td>
+      <td class="txt-r">${fN(Math.round(d.saiTot))}</td>
+      <td class="txt-r fw" style="color:${corSai}">${concSigned(d.dSai)}</td>
+      <td><span class="r-edit" onclick="abrirDetalheConc(${d.p.id},'${mesF}','${anoF}')" title="Ver detalhe">🔍</span></td>
+    </tr>`;
+  });
+
+  const totEntEl=document.getElementById('conc-tot-ent');
+  if(totEntEl){ totEntEl.textContent=concSigned(totEnt); totEntEl.style.color=Math.abs(totEnt)>EPS?'var(--verm)':'var(--verde)'; }
+  const totSaiEl=document.getElementById('conc-tot-sai');
+  if(totSaiEl){ totSaiEl.textContent=concSigned(totSai); totSaiEl.style.color=Math.abs(totSai)>EPS?'var(--verm)':'var(--verde)'; }
+  const totItEl=document.getElementById('conc-tot-itens');
+  if(totItEl) totItEl.textContent=nDiv;
+  const periodoTxt = (mesF||anoF) ? ` — ${mesF?MESES[parseInt(mesF)-1]:''}${mesF&&anoF?' ':''}${anoF||''}` : ' — acumulado';
+  document.getElementById('conc-count').textContent=`Conciliação${periodoTxt} — ${dados.length} ${dados.length===1?'produto':'produtos'}`;
+  document.getElementById('tb-conciliacao').innerHTML=rows||`<tr><td colspan="9" class="empty">Nenhuma divergência encontrada com o filtro atual. 👍</td></tr>`;
+}
+
+function abrirDetalheConc(prodId, mesF, anoF){
+  const d = concCalcular(mesF, anoF, '', '').find(x=>x.p.id===prodId);
+  if(!d) return;
+  const sf=gSF(d.p.subfam); const loc=gLoc(d.p.locId);
+  const periodoTxt = (mesF||anoF) ? `${mesF?MESES[parseInt(mesF)-1]:''}${mesF&&anoF?' ':''}${anoF||''}` : 'acumulado';
+  document.getElementById('conc-det-nome').textContent = `${d.p.id} — ${d.p.desc}`;
+  document.getElementById('conc-det-sub').textContent = `${sf?sf.nome:'—'} · ${loc?loc.nome:'—'} · Período: ${periodoTxt}`;
+
+  const box = (titulo, cor, linhas, delta, txtDelta)=>`
+    <div style="background:var(--cm);border:1px solid var(--borda);border-radius:10px;padding:14px;margin-bottom:12px">
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:${cor};font-weight:700;margin-bottom:10px">${titulo}</div>
+      ${linhas}
+      <div style="border-top:1px solid var(--borda);margin-top:8px;padding-top:8px;display:flex;justify-content:space-between;font-weight:700">
+        <span>${txtDelta}</span><span style="color:${Math.abs(delta)>0.001?'var(--verm)':'var(--verde)'}">${concSigned(delta)}</span>
+      </div>
+    </div>`;
+  const linha = (rot, val, cor)=>`<div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px"><span style="color:var(--fraco)">${rot}</span><span style="${cor?`color:${cor};`:''}font-weight:600">${fN(Math.round(val))}</span></div>`;
+
+  const entLinhas =
+    linha('Produção lançada (esperado)', d.prod) +
+    linha('Entradas automáticas (da produção)', d.entAuto, 'var(--verde)') +
+    linha('Entradas manuais (fora da produção)', d.entMan, d.entMan>0?'var(--amar)':'') +
+    linha('Total de entradas no estoque', d.entTot);
+  const saiLinhas =
+    linha('Venda lançada (esperado)', d.venda) +
+    linha('Saídas de venda/confirmação', d.saiVen) +
+    linha('Outras saídas (manuais/ajustes)', d.saiOut, d.saiOut>0?'var(--amar)':'') +
+    linha('Total de saídas no estoque', d.saiTot);
+
+  // registros que compõem a divergência
+  const listaReg = (arr, filtroFn, vazio)=>{
+    const itens = arr.filter(filtroFn);
+    if(!itens.length) return `<div style="font-size:12px;color:var(--fraco)">${vazio}</div>`;
+    return `<table style="width:100%;font-size:12px;border-collapse:collapse">
+      <thead><tr style="color:var(--fraco);text-align:left"><th style="padding:3px 6px">Data</th><th style="padding:3px 6px" class="txt-r">Qtd</th><th style="padding:3px 6px">Obs.</th></tr></thead>
+      <tbody>${itens.sort((a,b)=>(a.data<b.data?1:-1)).map(i=>`<tr><td style="padding:3px 6px">${i.data||'—'}</td><td style="padding:3px 6px" class="txt-r">${fN(i.qt)}</td><td style="padding:3px 6px;color:var(--fraco)">${i.obs||'—'}</td></tr>`).join('')}</tbody></table>`;
+  };
+  const inPer = (o)=> (!mesF||String(o.mes)===mesF) && (!anoF||String(o.ano)===anoF);
+  const entManReg = listaReg(d.ents, e=>!concEntAuto(e), 'Sem entradas manuais no período.');
+  const saiOutReg = listaReg(d.sais, s=>!concIsSaiVenda(s), 'Sem outras saídas no período.');
+
+  document.getElementById('conc-det-corpo').innerHTML =
+    box('Entradas × Produção', 'var(--verde)', entLinhas, d.dEnt, 'Δ Entradas − Produção') +
+    box('Saídas × Venda', 'var(--verm)', saiLinhas, d.dSai, 'Δ Saídas − Venda') +
+    `<div style="background:rgba(243,156,18,.08);border:1px solid rgba(243,156,18,.25);border-radius:10px;padding:12px 14px;font-size:12.5px;color:var(--txt);line-height:1.5">
+      <b>Como ler:</b> a divergência vem de entradas/saídas que não têm um lançamento de produção equivalente — tipicamente <b>lançamentos manuais</b>, ou lançamentos de produção <b>editados/excluídos</b> sem reverter o estoque. Abaixo, os registros "fora da produção" que compõem a diferença.
+    </div>
+    <div style="margin-top:14px"><div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--fraco);margin-bottom:6px">Entradas manuais (fora da produção)</div>${entManReg}</div>
+    <div style="margin-top:12px"><div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--fraco);margin-bottom:6px">Outras saídas (fora da venda)</div>${saiOutReg}</div>`;
+  openModal('modal-conc-detalhe');
+}
+
+function gerarPdfConciliacao(){
+  if(!window.jspdf){ alert('Biblioteca de PDF ainda não carregou. Aguarde alguns segundos e tente novamente.'); return; }
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({orientation:'landscape', unit:'pt', format:'a4'});
+  const titulo = document.getElementById('conc-count').textContent;
+
+  const head=[['Cód.','Produto','Produção','Entradas','Δ Entr.','Venda','Saídas','Δ Saíd.']];
+  const body=[...document.querySelectorAll('#tb-conciliacao tr')].map(tr=>{
+    const tds=[...tr.children];
+    if(tds.length<8) return null; // linha "vazia"
+    return tds.slice(0,8).map(td=>td.textContent.trim());
+  }).filter(Boolean);
+
+  doc.setFontSize(14);
+  doc.text('Conciliação Produção × Estoque', 40, 40);
+  doc.setFontSize(10);
+  doc.setTextColor(120,120,120);
+  doc.text(titulo, 40, 58);
+  doc.setTextColor(0,0,0);
+
+  doc.autoTable({
+    head, body, startY: 72,
+    styles:{ fontSize:8, cellPadding:4 },
+    headStyles:{ fillColor:[46,139,46] },
+    margin:{ left:40, right:40 },
+    didParseCell:function(data){
+      if(data.section==='body' && (data.column.index===4 || data.column.index===7)){
+        const v=(data.cell.raw||'').toString().replace(/\./g,'').replace(',', '.');
+        if(v && v!=='0' && v!=='+0' && parseFloat(v)!==0){ data.cell.styles.textColor=[231,76,60]; data.cell.styles.fontStyle='bold'; }
+      }
+    }
+  });
+  doc.save(`conciliacao_${Date.now()}.pdf`);
 }
 
 // ══════ FICHA TÉCNICA ══════
@@ -3661,7 +4284,8 @@ function editarFT(id){
   document.getElementById('ft-mp').value = ft.mpId;
   document.getElementById('ft-qt').value = ft.qtMP;
   document.getElementById('btn-salvar-ft').textContent = '💾 Atualizar Ficha';
-  document.getElementById('page-fichatecnica').scrollTop = 0;
+  const t=document.getElementById('modal-ft-title'); if(t)t.textContent='📋 Editar Ficha Técnica';
+  openModal('modal-ft');
 }
 
 function limparFT(){
@@ -3704,6 +4328,7 @@ async function salvarFT(){
   }
   limparFT();
   renderFT();
+  closeModal('modal-ft');
 }
 
 async function excluirFT(id){
@@ -4756,6 +5381,102 @@ function init(){
 // ===== AJUSTE DE SALDO (admin) =====
 let _ajusteProdId = null;
 
+// ══════ MOVIMENTOS DO PRODUTO (editar/excluir entradas e saídas direto do Estoque) ══════
+let _movProdId = null;
+function abrirMovProduto(prodId){
+  if(!currentUser||currentUser.perfil!=='admin'){alert('Acesso restrito ao Administrador.');return;}
+  _movProdId = prodId;
+  const p = gP(prodId); if(!p) return;
+  document.getElementById('mov-prod-nome').textContent = `${p.id} — ${p.desc}`;
+  _renderMovProduto();
+  openModal('modal-mov-produto');
+}
+function _renderMovProduto(){
+  const prodId = _movProdId; if(!prodId) return;
+  const box = document.getElementById('mov-prod-corpo'); if(!box) return;
+  const est = estItem(prodId);
+  const ents = entradas.filter(e=>e.prodId===prodId).sort((a,b)=>(a.data<b.data?1:-1));
+  const sais = saidas.filter(s=>s.prodId===prodId).sort((a,b)=>(a.data<b.data?1:-1));
+  const linhaEnt = e => `<tr>
+    <td>${e.data||'—'}</td>
+    <td class="txt-r">${fN(e.qt)}</td>
+    <td class="txt-f">${fR(e.custo||0)}</td>
+    <td style="font-size:11px;color:var(--fraco)">${(e.obs||'').replace(/</g,'&lt;')}</td>
+    <td style="white-space:nowrap">
+      <button class="btn btn-s" style="padding:3px 9px;font-size:12px" onclick="abrirEditEnt(${e.id})">✏️</button>
+      <button class="btn btn-s" style="padding:3px 9px;font-size:12px;color:var(--verm)" onclick="delEntMov(${e.id})">🗑️</button>
+    </td></tr>`;
+  const linhaSai = s => `<tr>
+    <td>${s.data||'—'}</td>
+    <td class="txt-r">${fN(s.qt)}</td>
+    <td class="txt-f">${fR(s.valor||0)}</td>
+    <td style="font-size:11px;color:var(--fraco)">${(s.obs||'').replace(/</g,'&lt;')}</td>
+    <td style="white-space:nowrap">
+      <button class="btn btn-s" style="padding:3px 9px;font-size:12px" onclick="abrirEditSai(${s.id})">✏️</button>
+      <button class="btn btn-s" style="padding:3px 9px;font-size:12px;color:var(--verm)" onclick="delSaiMov(${s.id})">🗑️</button>
+    </td></tr>`;
+  const tabela = (titulo, cor, linhas, colValor) => `
+    <div style="margin-bottom:14px">
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:${cor};font-weight:700;margin-bottom:6px">${titulo}</div>
+      <div class="table-wrap"><table style="font-size:13px">
+        <thead><tr><th>Data</th><th class="txt-r">Qtd</th><th>${colValor}</th><th>Obs.</th><th>Ações</th></tr></thead>
+        <tbody>${linhas || `<tr><td colspan="5" class="empty">Nenhum registro.</td></tr>`}</tbody>
+      </table></div>
+    </div>`;
+  box.innerHTML =
+    `<div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:12px">
+       <div style="background:var(--cm);border:1px solid var(--borda);border-radius:10px;padding:10px 14px;flex:1;min-width:120px">
+         <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--fraco)">Entradas</div>
+         <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;color:var(--verde)">${fN(est.e)}</div>
+       </div>
+       <div style="background:var(--cm);border:1px solid var(--borda);border-radius:10px;padding:10px 14px;flex:1;min-width:120px">
+         <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--fraco)">Saídas</div>
+         <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;color:var(--verm)">${fN(est.s)}</div>
+       </div>
+       <div style="background:var(--cm);border:1px solid var(--borda);border-radius:10px;padding:10px 14px;flex:1;min-width:120px">
+         <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--fraco)">Saldo (acum.)</div>
+         <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;color:${est.saldo<0?'var(--verm)':'var(--txt)'}">${fN(est.saldo)}</div>
+       </div>
+     </div>` +
+    tabela('Entradas', 'var(--verde)', ents.map(linhaEnt).join(''), 'Custo Unit.') +
+    tabela('Saídas', 'var(--verm)', sais.map(linhaSai).join(''), 'Valor Unit.');
+}
+function _refreshMovProduto(){
+  const m = document.getElementById('modal-mov-produto');
+  if(m && m.classList.contains('open')) _renderMovProduto();
+}
+async function delEntMov(id){ await delEnt(id); renderEstoque(); renderConciliacao(); _refreshMovProduto(); }
+async function delSaiMov(id){ await delSai(id); renderEstoque(); renderConciliacao(); _refreshMovProduto(); }
+
+// Exporta um relatório em Excel (Resumo + Entradas + Saídas) do produto aberto na tela de edição do estoque
+function exportarMovProdutoExcel(){
+  const prodId = _movProdId; if(!prodId) return;
+  const p = gP(prodId); if(!p) return;
+  const est  = estItem(prodId);
+  const ents = entradas.filter(e=>e.prodId===prodId).sort((a,b)=>(a.data<b.data?1:-1));
+  const sais = saidas.filter(s=>s.prodId===prodId).sort((a,b)=>(a.data<b.data?1:-1));
+
+  const linhasResumo = [
+    ['Produto', `${p.id} — ${p.desc}`],
+    ['Entradas (total)', est.e],
+    ['Saídas (total)', est.s],
+    ['Saldo (acumulado)', est.saldo],
+    ['Gerado em', new Date().toLocaleString('pt-BR')]
+  ];
+
+  const linhasEnt = [['Data','Qtd','Custo Unit.','Obs.']];
+  ents.forEach(e=> linhasEnt.push([e.data||'', e.qt, e.custo||0, e.obs||'']));
+
+  const linhasSai = [['Data','Qtd','Valor Unit.','Obs.']];
+  sais.forEach(s=> linhasSai.push([s.data||'', s.qt, s.valor||0, s.obs||'']));
+
+  baixarExcel(`movimentos_estoque_${p.id}_${carimboArquivo()}.xlsx`, {
+    'Resumo': linhasResumo,
+    'Entradas': linhasEnt,
+    'Saídas': linhasSai
+  });
+}
+
 function abrirAjusteSaldo(prodId){
   if(!currentUser||currentUser.perfil!=='admin'){alert('Acesso restrito ao Administrador.');return;}
   _ajusteProdId = prodId;
@@ -5063,6 +5784,10 @@ window.addEventListener('load', function(){
     const feAno = document.getElementById('fe-ano');
     if(feMes && !feMes.value) feMes.value = String(hoje.getMonth()+1);
     if(feAno && !feAno.value) feAno.value = String(hoje.getFullYear());
+    const cmMes = document.getElementById('fd-cm-mes');
+    const cmAno = document.getElementById('fd-cm-ano');
+    if(cmMes && !cmMes.value) cmMes.value = String(hoje.getMonth()+1);
+    if(cmAno && !cmAno.value) cmAno.value = String(hoje.getFullYear());
   }catch(e){}
   iniciarKeepAlive(); // mantém o Supabase acordado enquanto esta aba estiver aberta
 });
