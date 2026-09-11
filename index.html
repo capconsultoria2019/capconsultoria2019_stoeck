@@ -2580,16 +2580,28 @@ function renderDash(){
 }
 // ===== ESTOQUE =====
 function estItemPeriodo(prodId, mesF, anoF){
-  const p=gP(prodId);
-  // saldoInicial só é considerado quando não há filtro de período (visão acumulada)
-  const saldoInicial=(!mesF&&!anoF)?(p?Number(p.saldoInicial||0):0):0;
-  const entsF = entradas.filter(x => x.prodId===prodId && (!mesF||String(x.mes)===mesF) && (!anoF||String(x.ano)===anoF));
-  const saisF = saidas.filter(x  => x.prodId===prodId && (!mesF||String(x.mes)===mesF) && (!anoF||String(x.ano)===anoF));
-  const e = entsF.reduce((a,b)=>a+b.qt,0);
-  const s = saisF.reduce((a,b)=>a+b.qt,0);
+  const p = gP(prodId);
+  const base = p ? Number(p.saldoInicial||0) : 0;
+  const soma = arr => arr.reduce((a,b)=>a+b.qt,0);
+
+  // Saldo de abertura = saldo inicial + movimentos ANTES do período filtrado
+  let ini = base;
+  if(anoF){
+    const corte = Number(anoF)*100 + Number(mesF||1);          // ex.: 202601
+    const antes = x => x.prodId===prodId && (Number(x.ano)*100 + Number(x.mes)) < corte;
+    ini += soma(entradas.filter(antes)) - soma(saidas.filter(antes));
+  } else if(mesF){
+    ini = 0; // mês sem ano (ex.: "março de todos os anos") = só o movimento do mês
+  }
+
+  const noPeriodo = x => x.prodId===prodId && (!mesF||String(x.mes)===mesF) && (!anoF||String(x.ano)===anoF);
+  const entsF = entradas.filter(noPeriodo);
+  const saisF = saidas.filter(noPeriodo);
+  const e = soma(entsF);
+  const s = soma(saisF);
   const totalCusto = entsF.reduce((a,b)=>a+(b.qt*(b.custo||0)),0);
   const cmp = e>0 ? totalCusto/e : (p?.custo||0);
-  return {e, s, saldo:saldoInicial+e-s, cmp};
+  return {ini, e, s, saldo: ini + e - s, cmp};
 }
 
 function renderEstoque(){
@@ -2617,10 +2629,10 @@ function renderEstoque(){
     const saldoClass = isCrit ? 'txt-r' : (est.saldo<0?'txt-r':'');
     const isAdmin=currentUser&&currentUser.perfil==='admin';
     const ajusteBtn=isAdmin?`<span class="r-edit" onclick="abrirAjusteSaldo(${p.id})" title="Ajustar saldo inicial">⚖️</span> <span class="r-edit" onclick="abrirMovProduto(${p.id})" title="Editar entradas/saídas do produto">📋</span>`:'';
-    const saldoInicialCell=`<td class="txt-f">${fN(p.saldoInicial||0)}</td>`;
+    const saldoInicialCell=`<td class="txt-f">${fN(est.ini)}</td>`;
     const ajusteCell=isAdmin?`<td>${ajusteBtn}</td>`:'<td style="display:none"></td>';
     const valorItem = Math.max(0,est.saldo)*est.cmp;
-    const variacaoItem = est.saldo*est.cmp;
+    const variacaoItem = (est.e - est.s)*est.cmp;
     totQtd   += est.saldo;
     totValor += valorItem;
     totVariacao += variacaoItem;
