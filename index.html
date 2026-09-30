@@ -786,6 +786,18 @@ body{font-family:'DM Sans',sans-serif;background:var(--preto);color:var(--txt);m
         <button class="btn btn-p" onclick="salvarTodasMetasHoras()">💾 Salvar Todas</button>
       </div>
     </div>
+    <div class="table-card" style="margin-bottom:16px">
+      <div class="tc-head" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+        <div class="tc-title" id="mh-fer-titulo">🎉 Feriados</div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <input type="date" class="fi" id="mh-fer-data" style="min-width:140px">
+          <input type="text" class="fi" id="mh-fer-nome" placeholder="Nome do feriado (ex.: Aniversário da cidade)" style="min-width:240px">
+          <button class="btn btn-s" onclick="adicionarFeriado('mh')">➕ Adicionar feriado</button>
+        </div>
+      </div>
+      <div id="mh-fer-lista" style="padding:12px 18px 4px;display:flex;flex-wrap:wrap;gap:8px"></div>
+      <div id="mh-fer-aviso" style="padding:6px 18px 14px;font-size:12px;color:var(--fraco)"></div>
+    </div>
     <div class="table-card">
       <div class="tc-head"><div class="tc-title" id="mh-titulo">Metas de Horas Previstas</div></div>
       <div class="table-wrap"><table>
@@ -821,6 +833,18 @@ body{font-family:'DM Sans',sans-serif;background:var(--preto);color:var(--txt);m
         <button class="btn btn-s" onclick="preencherMetasProducaoPadrao()">⚡ Preencher dias úteis</button>
         <button class="btn btn-p" onclick="salvarTodasMetasProducao()">💾 Salvar Todas</button>
       </div>
+    </div>
+    <div class="table-card" style="margin-bottom:16px">
+      <div class="tc-head" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+        <div class="tc-title" id="mp-fer-titulo">🎉 Feriados</div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <input type="date" class="fi" id="mp-fer-data" style="min-width:140px">
+          <input type="text" class="fi" id="mp-fer-nome" placeholder="Nome do feriado (ex.: Aniversário da cidade)" style="min-width:240px">
+          <button class="btn btn-s" onclick="adicionarFeriado('mp')">➕ Adicionar feriado</button>
+        </div>
+      </div>
+      <div id="mp-fer-lista" style="padding:12px 18px 4px;display:flex;flex-wrap:wrap;gap:8px"></div>
+      <div id="mp-fer-aviso" style="padding:6px 18px 14px;font-size:12px;color:var(--fraco)"></div>
     </div>
     <div class="table-card">
       <div class="tc-head"><div class="tc-title" id="mp-titulo">Metas de Produção</div></div>
@@ -2106,6 +2130,8 @@ async function carregarTudo(silent=false){
       setSyncStatus(projetoPausado ? 'pausado_vazio' : 'offline_vazio');
     }
   }
+
+  await carregarFeriados();
 
   if(!silent) showLoader(false);
   fillAllSelects();
@@ -4666,7 +4692,7 @@ function renderParadas(){
     for(let d=1;d<=totalDias;d++){
       const dt = new Date(anoN,mesN-1,d);
       const dow = dt.getDay();
-      const isUtil = dow!==0&&(dow!==6||sabExtras.includes(d));
+      const isUtil = isDiaUtil(dt)||(dow===6&&sabExtras.includes(d));
       const isDom  = dow===0;
       const isFut  = d>diaAtual;
       const prevDia = isUtil ? minsPrev : 0;
@@ -4843,32 +4869,209 @@ function renderTP(){
   document.getElementById('tb-tiposparada').innerHTML = rows || '<tr><td colspan="3" class="empty">Nenhum tipo de parada cadastrado.</td></tr>';
 }
 
+// ══════ FERIADOS ══════
+// Feriados nacionais são calculados automaticamente (inclusive os móveis, a partir da Páscoa).
+// Ajustes do usuário (desmarcar um oficial, marcar um facultativo ou incluir um feriado
+// próprio) ficam em `feriadosAjustes`: tabela "feriados" do Supabase quando existir,
+// com cópia sempre no navegador (localStorage) para funcionar mesmo sem a tabela.
+const FERIADOS_LS_KEY = 'stoeck_feriados_v1';
+let feriadosAjustes = [];   // [{data:'AAAA-MM-DD', nome, ativo, personalizado}]
+let feriadosRemoto = false; // true = tabela "feriados" disponível no Supabase
+let _ferCache = {};
+
+function _ferFmt(dt){ return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`; }
+function _ferEsc(t){ return String(t||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function _ferPascoa(ano){
+  const a=ano%19, b=Math.floor(ano/100), c=ano%100, d=Math.floor(b/4), e=b%4;
+  const f=Math.floor((b+8)/25), g=Math.floor((b-f+1)/3), h=(19*a+b-d-g+15)%30;
+  const i=Math.floor(c/4), k=c%4, l=(32+2*e+2*i-h-k)%7, m=Math.floor((a+11*h+22*l)/451);
+  const mes=Math.floor((h+l-7*m+114)/31), dia=((h+l-7*m+114)%31)+1;
+  return new Date(ano, mes-1, dia);
+}
+function _ferMais(dt, n){ const x=new Date(dt); x.setDate(x.getDate()+n); return _ferFmt(x); }
+
+function feriadosOficiais(ano){
+  const pas=_ferPascoa(ano);
+  const f=(m,d)=>`${ano}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+  const lista=[
+    {data:f(1,1),   nome:'Confraternização Universal', tipo:'nacional'},
+    {data:_ferMais(pas,-48), nome:'Carnaval (segunda)', tipo:'facultativo'},
+    {data:_ferMais(pas,-47), nome:'Carnaval (terça)',   tipo:'facultativo'},
+    {data:_ferMais(pas,-2),  nome:'Sexta-feira Santa',  tipo:'nacional'},
+    {data:f(4,21),  nome:'Tiradentes', tipo:'nacional'},
+    {data:f(5,1),   nome:'Dia do Trabalho', tipo:'nacional'},
+    {data:_ferMais(pas,60),  nome:'Corpus Christi', tipo:'facultativo'},
+    {data:f(9,7),   nome:'Independência do Brasil', tipo:'nacional'},
+    {data:f(10,12), nome:'Nossa Senhora Aparecida', tipo:'nacional'},
+    {data:f(11,2),  nome:'Finados', tipo:'nacional'},
+    {data:f(11,15), nome:'Proclamação da República', tipo:'nacional'},
+    {data:f(12,25), nome:'Natal', tipo:'nacional'},
+  ];
+  if(ano>=2024) lista.push({data:f(11,20), nome:'Consciência Negra', tipo:'nacional'}); // Lei 14.759/2023
+  return lista;
+}
+
+// Lista consolidada do ano: oficiais (com ativo padrão) + ajustes do usuário
+function listaFeriadosAno(ano){
+  ano=Number(ano);
+  if(_ferCache[ano]) return _ferCache[ano];
+  const map={};
+  feriadosOficiais(ano).forEach(o=>{ map[o.data]={...o, ativo:o.tipo==='nacional', personalizado:false}; });
+  feriadosAjustes.filter(a=>a.data && a.data.startsWith(ano+'-')).forEach(a=>{
+    if(!a.personalizado && map[a.data]) map[a.data].ativo = !!a.ativo;
+    else map[a.data] = {data:a.data, nome:a.nome||'Feriado', tipo:'personalizado', ativo:!!a.ativo, personalizado:true};
+  });
+  const lista=Object.values(map).sort((x,y)=>x.data.localeCompare(y.data));
+  _ferCache[ano]=lista;
+  return lista;
+}
+function getFeriadoAtivo(dataStr){
+  if(!dataStr) return null;
+  const f=listaFeriadosAno(parseInt(dataStr.slice(0,4))).find(x=>x.data===dataStr);
+  return f && f.ativo ? f : null;
+}
+
+async function carregarFeriados(){
+  const r = await sbReqAll('feriados','?order=data');
+  if(Array.isArray(r)){
+    feriadosRemoto = true;
+    feriadosAjustes = r.map(x=>({data:x.data, nome:x.nome||'', ativo:x.ativo!==false, personalizado:!!x.personalizado}));
+    try{ localStorage.setItem(FERIADOS_LS_KEY, JSON.stringify(feriadosAjustes)); }catch(e){}
+  } else {
+    feriadosRemoto = false;
+    try{ feriadosAjustes = JSON.parse(localStorage.getItem(FERIADOS_LS_KEY)||'[]'); }catch(e){ feriadosAjustes=[]; }
+  }
+  _ferCache = {};
+}
+
+async function _salvarAjusteFeriado(aj, remover=false){
+  const i = feriadosAjustes.findIndex(a=>a.data===aj.data);
+  if(remover){ if(i>=0) feriadosAjustes.splice(i,1); }
+  else if(i>=0) feriadosAjustes[i]=aj; else feriadosAjustes.push(aj);
+  _ferCache = {};
+  try{ localStorage.setItem(FERIADOS_LS_KEY, JSON.stringify(feriadosAjustes)); }catch(e){}
+  if(!feriadosRemoto) return true;
+  let r;
+  if(remover) r = await sbReq('feriados','DELETE',null,`?data=eq.${aj.data}`);
+  else {
+    const corpo={data:aj.data, nome:aj.nome, ativo:aj.ativo, personalizado:aj.personalizado};
+    r = i>=0 ? await sbReq('feriados','PATCH',corpo,`?data=eq.${aj.data}`)
+             : await sbReq('feriados','POST',corpo);
+  }
+  if(r===null){ alert('Não foi possível salvar o feriado no servidor. Ficou salvo apenas neste navegador.'); return false; }
+  return true;
+}
+
+function renderPainelFeriados(px, mes, ano){
+  const el=document.getElementById(px+'-fer-lista'); if(!el) return;
+  const DIAS=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+  const lista=listaFeriadosAno(ano);
+  document.getElementById(px+'-fer-titulo').textContent=`🎉 Feriados ${ano}`;
+  const inp=document.getElementById(px+'-fer-data');
+  if(inp && !inp.value) inp.value=`${ano}-${String(mes).padStart(2,'0')}-01`;
+  el.innerHTML = lista.map(f=>{
+    const [, fm, fd]=f.data.split('-').map(Number);
+    const dow=new Date(ano,fm-1,fd).getDay();
+    const noMes=fm===mes, fds=dow===0||dow===6;
+    const tag = f.tipo==='nacional' ? '<span class="badge badge-ok">Nacional</span>'
+              : f.tipo==='facultativo' ? '<span class="badge badge-warn">Ponto facultativo</span>'
+              : '<span class="badge badge-ficha">Adicionado</span>';
+    return `<label title="${fds?'Cai em fim de semana':''}" style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;border-radius:8px;padding:6px 10px;
+        border:1px solid ${noMes?'var(--amar)':'var(--borda)'};background:${noMes?'rgba(243,156,18,.10)':'var(--cm)'};${f.ativo?'':'opacity:.55;'}">
+      <input type="checkbox" ${f.ativo?'checked':''} onchange="alternarFeriado('${f.data}',this.checked)">
+      <b>${String(fd).padStart(2,'0')}/${String(fm).padStart(2,'0')}</b>
+      <span style="color:var(--fraco)">${DIAS[dow]}</span>
+      <span style="${f.ativo?'':'text-decoration:line-through'}">${_ferEsc(f.nome)}</span>${tag}
+      ${f.personalizado?`<span onclick="event.preventDefault();removerFeriado('${f.data}')" title="Remover feriado" style="cursor:pointer;color:var(--verm);font-weight:700;padding:0 2px">✕</span>`:''}
+    </label>`;
+  }).join('');
+  const qtdMes=lista.filter(f=>f.ativo&&parseInt(f.data.split('-')[1])===mes&&isDiaUtilSemFeriado(f.data)).length;
+  document.getElementById(px+'-fer-aviso').innerHTML =
+    `${qtdMes} feriado(s) em dia útil em ${MESES_IND[mes-1]}. Desmarque para voltar a contar como dia útil; marque os pontos facultativos em que a fábrica não trabalha. `+
+    `Ao alterar, a meta do dia é ajustada na tabela abaixo — clique em <b>💾 Salvar Todas</b> para gravar.`+
+    (feriadosRemoto?'':' <span style="color:var(--amar)">(Feriados salvos só neste navegador — crie a tabela "feriados" no Supabase para compartilhar.)</span>');
+}
+function isDiaUtilSemFeriado(dataStr){ const [a,m,d]=dataStr.split('-').map(Number); const w=new Date(a,m-1,d).getDay(); return w!==0&&w!==6; }
+
+function _capturarInputsMeta(sel){
+  const o={}; document.querySelectorAll(sel).forEach(i=>{ o[i.dataset.data]=i.value; }); return o;
+}
+
+// Re-renderiza as tabelas de metas mantendo o que foi digitado e ajusta o dia alterado
+function _aplicarMudancaFeriado(dataStr){
+  const virouFeriado = !!getFeriadoAtivo(dataStr);
+  const util = isDiaUtilSemFeriado(dataStr);
+  [['mh','.mh-input',renderMetasHoras],['mp','.mp-input',renderMetasProducao]].forEach(([px,sel,fn])=>{
+    if(!document.querySelector(sel)) { return; }
+    fn(true);
+    const inp=document.querySelector(`${sel}[data-data="${dataStr}"]`);
+    if(inp && util){
+      const padrao=parseFloat(document.getElementById(px+'-padrao')?.value||0);
+      inp.value = virouFeriado ? 0 : padrao;
+      inp.style.outline='2px solid var(--amar)';
+    }
+  });
+}
+
+async function alternarFeriado(dataStr, ativo){
+  const f=listaFeriadosAno(parseInt(dataStr.slice(0,4))).find(x=>x.data===dataStr);
+  if(!f) return;
+  await _salvarAjusteFeriado({data:dataStr, nome:f.nome, ativo:!!ativo, personalizado:!!f.personalizado});
+  _aplicarMudancaFeriado(dataStr);
+}
+
+async function adicionarFeriado(px){
+  const data=document.getElementById(px+'-fer-data')?.value;
+  const nome=(document.getElementById(px+'-fer-nome')?.value||'').trim();
+  if(!data){ alert('Informe a data do feriado.'); return; }
+  if(!nome){ alert('Informe o nome do feriado.'); return; }
+  const oficial=feriadosOficiais(parseInt(data.slice(0,4))).find(o=>o.data===data);
+  if(oficial){
+    // já existe como oficial: apenas garante que fica marcado
+    await _salvarAjusteFeriado({data, nome:oficial.nome, ativo:true, personalizado:false});
+  } else {
+    await _salvarAjusteFeriado({data, nome, ativo:true, personalizado:true});
+  }
+  document.getElementById(px+'-fer-nome').value='';
+  _aplicarMudancaFeriado(data);
+}
+
+async function removerFeriado(dataStr){
+  const f=listaFeriadosAno(parseInt(dataStr.slice(0,4))).find(x=>x.data===dataStr);
+  if(!f || !confirm(`Remover o feriado "${f.nome}" (${dataStr.split('-').reverse().join('/')})?`)) return;
+  await _salvarAjusteFeriado({data:dataStr}, true);
+  _aplicarMudancaFeriado(dataStr);
+}
+
 // ══════ METAS DE HORAS ══════
 
 function getMetaHorasDia(data){ return metasHoras.find(m=>m.data===data)?.horas||0; }
 function getMetaProdDia(data){ return metasProducao.find(m=>m.data===data)?.qt||0; }
 
-function renderMetasHoras(){
+function renderMetasHoras(manterDigitados=false){
   const mes = parseInt(document.getElementById('mh-mes')?.value||new Date().getMonth()+1);
   const ano = parseInt(document.getElementById('mh-ano')?.value||new Date().getFullYear());
   const total = diasNoMes(mes,ano);
+  const digitados = manterDigitados ? _capturarInputsMeta('.mh-input') : {};
   const DIAS=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
   let rows='';
   for(let d=1;d<=total;d++){
     const dt=new Date(ano,mes-1,d);
     const dow=dt.getDay();
     const dataStr=`${ano}-${String(mes).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    const meta=getMetaHorasDia(dataStr);
-    const isUtil=dow!==0&&dow!==6;
-    rows+=`<tr style="${!isUtil?'opacity:.5':''}">
+    const fer=getFeriadoAtivo(dataStr);
+    const meta=(dataStr in digitados) ? digitados[dataStr] : (getMetaHorasDia(dataStr)||'');
+    const isUtil=isDiaUtil(dt);
+    rows+=`<tr style="${fer?'background:rgba(243,156,18,.08);':''}${!isUtil?'opacity:.6':''}">
       <td><b>${d}</b></td>
       <td>${dataStr}</td>
-      <td>${DIAS[dow]}</td>
-      <td><input type="number" min="0" step="0.5" value="${meta||''}" placeholder="${isUtil?'8':'0'}" style="background:var(--cm);border:1px solid var(--borda);border-radius:6px;padding:6px 10px;color:var(--txt);font-size:13px;width:100px" data-data="${dataStr}" class="mh-input"></td>
+      <td>${DIAS[dow]}${fer?` <span class="badge badge-warn" style="margin-left:6px">🎉 ${_ferEsc(fer.nome)}</span>`:''}</td>
+      <td><input type="number" min="0" step="0.5" value="${meta}" placeholder="${isUtil?'8':'0'}" style="background:var(--cm);border:1px solid var(--borda);border-radius:6px;padding:6px 10px;color:var(--txt);font-size:13px;width:100px" data-data="${dataStr}" class="mh-input"></td>
     </tr>`;
   }
   document.getElementById('tb-mh').innerHTML=rows;
   document.getElementById('mh-titulo').textContent=`Metas de Horas — ${MESES_IND[mes-1]}/${ano}`;
+  renderPainelFeriados('mh', mes, ano);
 }
 
 function preencherMetasHorasPadrao(){
@@ -4876,7 +5079,8 @@ function preencherMetasHorasPadrao(){
   document.querySelectorAll('.mh-input').forEach(inp=>{
     const [_a,_m,_d]=inp.dataset.data.split("-").map(Number); const dt=new Date(_a,_m-1,_d);
     const dow=dt.getDay();
-    if(dow!==0&&dow!==6) inp.value=padrao;
+    if(dow===0||dow===6) return;
+    inp.value = getFeriadoAtivo(inp.dataset.data) ? 0 : padrao; // feriado = 0h
   });
 }
 
@@ -4902,25 +5106,29 @@ async function salvarTodasMetasHoras(){
 
 // ══════ METAS DE PRODUÇÃO ══════
 
-function renderMetasProducao(){
+function renderMetasProducao(manterDigitados=false){
   const mes=parseInt(document.getElementById('mp-mes')?.value||new Date().getMonth()+1);
   const ano=parseInt(document.getElementById('mp-ano')?.value||new Date().getFullYear());
   const total=diasNoMes(mes,ano);
+  const digitados = manterDigitados ? _capturarInputsMeta('.mp-input') : {};
   const DIAS=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
   let rows='';
   for(let d=1;d<=total;d++){
     const dt=new Date(ano,mes-1,d);
     const dow=dt.getDay();
     const dataStr=`${ano}-${String(mes).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    const meta=getMetaProdDia(dataStr);
-    const isUtil=dow!==0&&dow!==6;
-    rows+=`<tr style="${!isUtil?'opacity:.5':''}">
-      <td><b>${d}</b></td><td>${dataStr}</td><td>${DIAS[dow]}</td>
-      <td><input type="number" min="0" step="1" value="${meta||''}" placeholder="${isUtil?'1000':'0'}" style="background:var(--cm);border:1px solid var(--borda);border-radius:6px;padding:6px 10px;color:var(--txt);font-size:13px;width:120px" data-data="${dataStr}" class="mp-input"></td>
+    const fer=getFeriadoAtivo(dataStr);
+    const meta=(dataStr in digitados) ? digitados[dataStr] : (getMetaProdDia(dataStr)||'');
+    const isUtil=isDiaUtil(dt);
+    rows+=`<tr style="${fer?'background:rgba(243,156,18,.08);':''}${!isUtil?'opacity:.6':''}">
+      <td><b>${d}</b></td><td>${dataStr}</td>
+      <td>${DIAS[dow]}${fer?` <span class="badge badge-warn" style="margin-left:6px">🎉 ${_ferEsc(fer.nome)}</span>`:''}</td>
+      <td><input type="number" min="0" step="1" value="${meta}" placeholder="${isUtil?'1000':'0'}" style="background:var(--cm);border:1px solid var(--borda);border-radius:6px;padding:6px 10px;color:var(--txt);font-size:13px;width:120px" data-data="${dataStr}" class="mp-input"></td>
     </tr>`;
   }
   document.getElementById('tb-mp').innerHTML=rows;
   document.getElementById('mp-titulo').textContent=`Metas de Produção — ${MESES_IND[mes-1]}/${ano}`;
+  renderPainelFeriados('mp', mes, ano);
 }
 
 function preencherMetasProducaoPadrao(){
@@ -4928,7 +5136,8 @@ function preencherMetasProducaoPadrao(){
   document.querySelectorAll('.mp-input').forEach(inp=>{
     const [_a,_m,_d]=inp.dataset.data.split("-").map(Number); const dt=new Date(_a,_m-1,_d);
     const dow=dt.getDay();
-    if(dow!==0&&dow!==6) inp.value=padrao;
+    if(dow===0||dow===6) return;
+    inp.value = getFeriadoAtivo(inp.dataset.data) ? 0 : padrao; // feriado = 0 kg
   });
 }
 
@@ -4940,8 +5149,8 @@ async function salvarTodasMetasProducao(){
     const qt=parseFloat(inp.value)||0;
     const data=inp.dataset.data;
     if(!data) continue;
-    if(qt===0) continue;
     const exist=metasProducao.find(m=>m.data===data);
+    if(qt===0 && !exist) continue;
     console.log('data:', data, 'qt:', qt, 'exist:', exist ? 'id='+exist.id : 'novo');
     if(exist){
       const r=await sbReq('metas_producao','PATCH',{quantidade:qt},`?id=eq.${exist.id}`);
@@ -5077,7 +5286,8 @@ function diasNoMes(mes, ano){ return new Date(ano, mes, 0).getDate(); }
 
 function isDiaUtil(date){
   const dow = date.getDay(); // 0=dom, 6=sab
-  return dow !== 0 && dow !== 6;
+  if(dow === 0 || dow === 6) return false;
+  return !getFeriadoAtivo(_ferFmt(date)); // feriado ativo não é dia útil
 }
 
 function getSabadosMarcados(){
