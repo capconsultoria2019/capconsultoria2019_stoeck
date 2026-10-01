@@ -161,6 +161,77 @@ body{font-family:'DM Sans',sans-serif;background:var(--preto);color:var(--txt);m
 .var-row{display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px}
 .var-saldo{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;margin-top:6px;border-top:1px solid var(--borda);padding-top:6px}
 
+/* ══════ FERIADOS ══════ */
+.fer-card .tc-head{gap:12px}
+.fer-head-l{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;min-width:0}
+.fer-resumo{display:flex;gap:6px;flex-wrap:wrap;font-size:12px;color:var(--fraco)}
+.fer-resumo b{color:var(--txt);font-weight:600}
+.fer-pill{background:var(--cm);border:1px solid var(--borda);border-radius:20px;padding:2px 10px}
+.fer-ano{display:grid;grid-template-columns:repeat(12,minmax(52px,1fr));gap:6px;padding:14px 18px 0;overflow-x:auto}
+.fer-m{display:flex;flex-direction:column;align-items:center;gap:6px;padding:8px 4px 9px;border-radius:8px;border:1px solid var(--borda);background:var(--cm);color:var(--fraco);font:500 11px 'DM Sans',sans-serif;cursor:pointer;transition:border-color .15s,background .15s}
+.fer-m:hover{border-color:var(--vm);color:var(--txt)}
+.fer-m:focus-visible,.fer-x:focus-visible,.fer-f:focus-visible{outline:2px solid var(--vm);outline-offset:2px}
+.fer-m.cur{border-color:var(--vm);background:rgba(46,139,46,.12);color:var(--txt);font-weight:700}
+.fer-m-d{display:flex;gap:3px;min-height:7px}
+.fer-m-d i{width:7px;height:7px;border-radius:50%;background:var(--vm)}
+.fer-m-d i.fds{background:transparent;border:1.5px solid var(--vm)}
+.fer-m-d i.off{background:transparent;border:1.5px dashed var(--fraco)}
+.fer-mes{padding:12px 18px 4px;display:flex;flex-direction:column;gap:6px}
+.fer-mes-t{font-size:12px;color:var(--fraco);margin-bottom:2px}
+.fer-vazio{font-size:13px;color:var(--fraco);padding:10px 14px;border:1px dashed var(--borda);border-radius:8px}
+.fer-vazio b{color:var(--txt);font-weight:600}
+.fer-aviso{padding:8px 18px 14px;font-size:12px;color:var(--fraco);line-height:1.5}
+.fer-row{display:flex;align-items:center;gap:12px;padding:8px 12px;border:1px solid var(--borda);border-radius:10px;background:var(--cm);transition:opacity .15s}
+.fer-row.off{opacity:.55}
+.fer-row.off .fer-nome{text-decoration:line-through}
+.fer-dt{flex-shrink:0;width:44px;text-align:center;border-radius:8px;background:var(--ce);border:1px solid var(--borda);padding:4px 0 3px;line-height:1.05}
+.fer-dt b{display:block;font:700 17px 'Syne',sans-serif}
+.fer-dt span{font-size:10px;color:var(--fraco)}
+.fer-info{flex:1;min-width:0}
+.fer-nome{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fer-meta{display:flex;align-items:center;gap:8px;margin-top:3px;font-size:11px;color:var(--fraco);flex-wrap:wrap}
+.fer-meta .badge{padding:1px 8px;font-size:10px}
+.fer-impacto{color:var(--amar)}
+.fer-rm{background:none;border:none;color:var(--fraco);cursor:pointer;font-size:13px;padding:4px 6px;border-radius:6px}
+.fer-rm:hover{color:var(--verm);background:rgba(231,76,60,.12)}
+.fer-sw{position:relative;flex-shrink:0;width:36px;height:20px;cursor:pointer}
+.fer-sw input{position:absolute;opacity:0;width:100%;height:100%;margin:0;cursor:pointer}
+.fer-sw span{position:absolute;inset:0;border-radius:20px;background:var(--cc);transition:background .15s;pointer-events:none}
+.fer-sw span::after{content:'';position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.3);transition:transform .15s}
+.fer-sw input:checked + span{background:var(--vm)}
+.fer-sw input:checked + span::after{transform:translateX(16px)}
+.fer-sw input:focus-visible + span{outline:2px solid var(--vm);outline-offset:2px}
+/* modal */
+.modal.fer-modal{width:680px;padding:0;display:flex;flex-direction:column;overflow:hidden}
+.fer-modal-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:22px 24px 14px;border-bottom:1px solid var(--borda)}
+.fer-modal-head h3{margin:0}
+.fer-modal-sub{font-size:12px;color:var(--fraco);margin-top:4px}
+.fer-x{background:none;border:none;color:var(--fraco);font-size:16px;cursor:pointer;padding:4px 8px;border-radius:6px}
+.fer-x:hover{background:var(--cm);color:var(--txt)}
+.fer-filtros{display:flex;gap:6px;padding:12px 24px;border-bottom:1px solid var(--borda);flex-wrap:wrap}
+.fer-f{background:var(--cm);border:1px solid var(--borda);color:var(--fraco);border-radius:20px;padding:5px 12px;font:500 12px 'DM Sans',sans-serif;cursor:pointer}
+.fer-f:hover{color:var(--txt)}
+.fer-f.on{background:rgba(46,139,46,.15);border-color:var(--vm);color:var(--txt)}
+.fer-f small{opacity:.7;margin-left:4px}
+.fer-modal-lista{flex:1;overflow-y:auto;padding:6px 24px 16px;min-height:120px}
+.fer-grupo{padding-top:12px}
+.fer-grupo-t{display:flex;justify-content:space-between;font:700 12px 'Syne',sans-serif;margin-bottom:8px;color:var(--txt)}
+.fer-grupo-t span{font:400 11px 'DM Sans',sans-serif;color:var(--fraco)}
+.fer-grupo .fer-row + .fer-row{margin-top:6px}
+.fer-grupo.cur .fer-grupo-t{color:var(--vmc)}
+.fer-add{padding:14px 24px;border-top:1px solid var(--borda);background:var(--cm)}
+.fer-add-t{font-size:12px;font-weight:600;margin-bottom:8px}
+.fer-add-row{display:flex;gap:8px;flex-wrap:wrap}
+.fer-add-row .fi{background:var(--ce)}
+.fer-add-row #fm-fer-nome{flex:1;min-width:180px}
+.fer-modal-nota{padding:0 24px 14px;background:var(--cm);font-size:11px;color:var(--amar)}
+.fer-modal-nota:empty{display:none}
+@media (max-width:640px){
+  .fer-ano{grid-template-columns:repeat(12,52px)}
+  .fer-modal-head,.fer-filtros,.fer-modal-lista,.fer-add{padding-left:16px;padding-right:16px}
+}
+@media (prefers-reduced-motion:reduce){.fer-sw span,.fer-sw span::after,.fer-m,.fer-row{transition:none}}
+
 /* MODAL */
 .modal-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:1000;align-items:center;justify-content:center}
 .modal-ov.open{display:flex}
@@ -786,17 +857,17 @@ body{font-family:'DM Sans',sans-serif;background:var(--preto);color:var(--txt);m
         <button class="btn btn-p" onclick="salvarTodasMetasHoras()">💾 Salvar Todas</button>
       </div>
     </div>
-    <div class="table-card" style="margin-bottom:16px">
-      <div class="tc-head" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
-        <div class="tc-title" id="mh-fer-titulo">🎉 Feriados</div>
-        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-          <input type="date" class="fi" id="mh-fer-data" style="min-width:140px">
-          <input type="text" class="fi" id="mh-fer-nome" placeholder="Nome do feriado (ex.: Aniversário da cidade)" style="min-width:240px">
-          <button class="btn btn-s" onclick="adicionarFeriado('mh')">➕ Adicionar feriado</button>
+    <div class="table-card fer-card" style="margin-bottom:16px">
+      <div class="tc-head">
+        <div class="fer-head-l">
+          <div class="tc-title" id="mh-fer-titulo">🎉 Feriados</div>
+          <div class="fer-resumo" id="mh-fer-resumo"></div>
         </div>
+        <button class="btn btn-s" onclick="abrirModalFeriados('mh')">📅 Gerenciar feriados</button>
       </div>
-      <div id="mh-fer-lista" style="padding:12px 18px 4px;display:flex;flex-wrap:wrap;gap:8px"></div>
-      <div id="mh-fer-aviso" style="padding:6px 18px 14px;font-size:12px;color:var(--fraco)"></div>
+      <div class="fer-ano" id="mh-fer-ano" aria-label="Feriados por mês"></div>
+      <div class="fer-mes" id="mh-fer-lista"></div>
+      <div class="fer-aviso" id="mh-fer-aviso"></div>
     </div>
     <div class="table-card">
       <div class="tc-head"><div class="tc-title" id="mh-titulo">Metas de Horas Previstas</div></div>
@@ -834,17 +905,17 @@ body{font-family:'DM Sans',sans-serif;background:var(--preto);color:var(--txt);m
         <button class="btn btn-p" onclick="salvarTodasMetasProducao()">💾 Salvar Todas</button>
       </div>
     </div>
-    <div class="table-card" style="margin-bottom:16px">
-      <div class="tc-head" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
-        <div class="tc-title" id="mp-fer-titulo">🎉 Feriados</div>
-        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-          <input type="date" class="fi" id="mp-fer-data" style="min-width:140px">
-          <input type="text" class="fi" id="mp-fer-nome" placeholder="Nome do feriado (ex.: Aniversário da cidade)" style="min-width:240px">
-          <button class="btn btn-s" onclick="adicionarFeriado('mp')">➕ Adicionar feriado</button>
+    <div class="table-card fer-card" style="margin-bottom:16px">
+      <div class="tc-head">
+        <div class="fer-head-l">
+          <div class="tc-title" id="mp-fer-titulo">🎉 Feriados</div>
+          <div class="fer-resumo" id="mp-fer-resumo"></div>
         </div>
+        <button class="btn btn-s" onclick="abrirModalFeriados('mp')">📅 Gerenciar feriados</button>
       </div>
-      <div id="mp-fer-lista" style="padding:12px 18px 4px;display:flex;flex-wrap:wrap;gap:8px"></div>
-      <div id="mp-fer-aviso" style="padding:6px 18px 14px;font-size:12px;color:var(--fraco)"></div>
+      <div class="fer-ano" id="mp-fer-ano" aria-label="Feriados por mês"></div>
+      <div class="fer-mes" id="mp-fer-lista"></div>
+      <div class="fer-aviso" id="mp-fer-aviso"></div>
     </div>
     <div class="table-card">
       <div class="tc-head"><div class="tc-title" id="mp-titulo">Metas de Produção</div></div>
@@ -1323,6 +1394,30 @@ body{font-family:'DM Sans',sans-serif;background:var(--preto);color:var(--txt);m
       </div>
     </div>
   </div>
+
+<!-- ========= MODAL FERIADOS ========= -->
+<div class="modal-ov" id="modal-feriados" onclick="if(event.target===this)fecharModalFeriados()">
+  <div class="modal fer-modal" role="dialog" aria-modal="true" aria-labelledby="fer-modal-titulo">
+    <div class="fer-modal-head">
+      <div>
+        <h3 id="fer-modal-titulo">Feriados</h3>
+        <div class="fer-modal-sub" id="fer-modal-sub"></div>
+      </div>
+      <button class="fer-x" onclick="fecharModalFeriados()" aria-label="Fechar">✕</button>
+    </div>
+    <div class="fer-filtros" id="fer-filtros"></div>
+    <div class="fer-modal-lista" id="fer-modal-lista"></div>
+    <div class="fer-add">
+      <div class="fer-add-t">Adicionar feriado local ou folga da fábrica</div>
+      <div class="fer-add-row">
+        <input type="date" class="fi" id="fm-fer-data" style="min-width:140px">
+        <input type="text" class="fi" id="fm-fer-nome" placeholder="Nome (ex.: Aniversário da cidade)" onkeydown="if(event.key==='Enter')adicionarFeriado('fm')">
+        <button class="btn btn-p" onclick="adicionarFeriado('fm')">➕ Adicionar</button>
+      </div>
+    </div>
+    <div class="fer-modal-nota" id="fer-modal-nota"></div>
+  </div>
+</div>
 
 <!-- ========= MODAL DIA ENTREGAS ========= -->
 <div class="modal-ov" id="modal-dia-entregas">
@@ -4962,35 +5057,140 @@ async function _salvarAjusteFeriado(aj, remover=false){
   return true;
 }
 
+const _FER_DIAS=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+const _FER_DIAS_L=['domingo','segunda','terça','quarta','quinta','sexta','sábado'];
+const _FER_MES_C=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+const _ferCtx={};                                   // px -> {mes, ano}
+let _ferModal={px:'mh', ano:new Date().getFullYear(), mes:1, filtro:'todos'};
+
+function _ferInfo(f){
+  const [a,m,d]=f.data.split('-').map(Number);
+  const dow=new Date(a,m-1,d).getDay();
+  return {a,m,d,dow,fds:dow===0||dow===6};
+}
+function _ferTag(f){
+  return f.tipo==='nacional' ? '<span class="badge badge-ok">Nacional</span>'
+       : f.tipo==='facultativo' ? '<span class="badge badge-warn">Ponto facultativo</span>'
+       : '<span class="badge badge-ficha">Adicionado</span>';
+}
+function _ferRowHTML(f){
+  const i=_ferInfo(f);
+  const impacto = i.fds ? `Cai no ${_FER_DIAS_L[i.dow]}, não afeta a meta`
+                : f.ativo ? '<span class="fer-impacto">Meta do dia zerada</span>'
+                : 'Conta como dia útil';
+  return `<div class="fer-row ${f.ativo?'':'off'}">
+    <div class="fer-dt"><b>${String(i.d).padStart(2,'0')}</b><span>${_FER_DIAS[i.dow]}</span></div>
+    <div class="fer-info">
+      <div class="fer-nome" title="${_ferEsc(f.nome)}">${_ferEsc(f.nome)}</div>
+      <div class="fer-meta">${_ferTag(f)}<span>${impacto}</span></div>
+    </div>
+    ${f.personalizado?`<button class="fer-rm" onclick="removerFeriado('${f.data}')" title="Remover feriado" aria-label="Remover ${_ferEsc(f.nome)}">🗑</button>`:''}
+    <label class="fer-sw" title="${f.ativo?'Considerado feriado — clique para voltar a ser dia útil':'Clique para considerar como feriado'}">
+      <input type="checkbox" ${f.ativo?'checked':''} onchange="alternarFeriado('${f.data}',this.checked)" aria-label="Considerar ${_ferEsc(f.nome)} como feriado">
+      <span></span>
+    </label>
+  </div>`;
+}
+
 function renderPainelFeriados(px, mes, ano){
   const el=document.getElementById(px+'-fer-lista'); if(!el) return;
-  const DIAS=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+  mes=Number(mes); ano=Number(ano);
+  _ferCtx[px]={mes,ano};
   const lista=listaFeriadosAno(ano);
   document.getElementById(px+'-fer-titulo').textContent=`🎉 Feriados ${ano}`;
-  const inp=document.getElementById(px+'-fer-data');
-  if(inp && !inp.value) inp.value=`${ano}-${String(mes).padStart(2,'0')}-01`;
-  el.innerHTML = lista.map(f=>{
-    const [, fm, fd]=f.data.split('-').map(Number);
-    const dow=new Date(ano,fm-1,fd).getDay();
-    const noMes=fm===mes, fds=dow===0||dow===6;
-    const tag = f.tipo==='nacional' ? '<span class="badge badge-ok">Nacional</span>'
-              : f.tipo==='facultativo' ? '<span class="badge badge-warn">Ponto facultativo</span>'
-              : '<span class="badge badge-ficha">Adicionado</span>';
-    return `<label title="${fds?'Cai em fim de semana':''}" style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;border-radius:8px;padding:6px 10px;
-        border:1px solid ${noMes?'var(--amar)':'var(--borda)'};background:${noMes?'rgba(243,156,18,.10)':'var(--cm)'};${f.ativo?'':'opacity:.55;'}">
-      <input type="checkbox" ${f.ativo?'checked':''} onchange="alternarFeriado('${f.data}',this.checked)">
-      <b>${String(fd).padStart(2,'0')}/${String(fm).padStart(2,'0')}</b>
-      <span style="color:var(--fraco)">${DIAS[dow]}</span>
-      <span style="${f.ativo?'':'text-decoration:line-through'}">${_ferEsc(f.nome)}</span>${tag}
-      ${f.personalizado?`<span onclick="event.preventDefault();removerFeriado('${f.data}')" title="Remover feriado" style="cursor:pointer;color:var(--verm);font-weight:700;padding:0 2px">✕</span>`:''}
-    </label>`;
+
+  // resumo
+  const ativos=lista.filter(f=>f.ativo).length;
+  const desm=lista.length-ativos;
+  const qtdMes=lista.filter(f=>f.ativo&&_ferInfo(f).m===mes&&!_ferInfo(f).fds).length;
+  const res=document.getElementById(px+'-fer-resumo');
+  if(res) res.innerHTML =
+    `<span class="fer-pill"><b>${ativos}</b> considerados no ano</span>`+
+    (desm?`<span class="fer-pill"><b>${desm}</b> desmarcados</span>`:'')+
+    `<span class="fer-pill"><b>${qtdMes}</b> em dia útil em ${MESES_IND[mes-1].toLowerCase()}</span>`;
+
+  // faixa dos 12 meses
+  const faixa=document.getElementById(px+'-fer-ano');
+  if(faixa) faixa.innerHTML=_FER_MES_C.map((nm,idx)=>{
+    const m=idx+1;
+    const doMes=lista.filter(f=>_ferInfo(f).m===m);
+    const dots=doMes.map(f=>`<i class="${!f.ativo?'off':_ferInfo(f).fds?'fds':''}"></i>`).join('');
+    const tip=doMes.length?doMes.map(f=>`${f.data.slice(8)}/${f.data.slice(5,7)} ${f.nome}${f.ativo?'':' (desmarcado)'}`).join('\n'):'Sem feriados';
+    return `<button type="button" class="fer-m ${m===mes?'cur':''}" title="${_ferEsc(tip)}" onclick="abrirModalFeriados('${px}',${m})">
+      <span>${nm}</span><span class="fer-m-d">${dots}</span></button>`;
   }).join('');
-  const qtdMes=lista.filter(f=>f.ativo&&parseInt(f.data.split('-')[1])===mes&&isDiaUtilSemFeriado(f.data)).length;
+
+  // feriados do mês selecionado
+  const doMes=lista.filter(f=>_ferInfo(f).m===mes);
+  if(doMes.length){
+    el.innerHTML=`<div class="fer-mes-t">Em ${MESES_IND[mes-1].toLowerCase()}</div>`+doMes.map(_ferRowHTML).join('');
+  } else {
+    const hoje=`${ano}-${String(mes).padStart(2,'0')}-31`;
+    const prox=lista.find(f=>f.ativo&&f.data>hoje);
+    el.innerHTML=`<div class="fer-vazio">Nenhum feriado em ${MESES_IND[mes-1].toLowerCase()}.`+
+      (prox?` Próximo: <b>${_ferEsc(prox.nome)}</b>, ${_FER_DIAS_L[_ferInfo(prox).dow]} ${prox.data.slice(8)}/${prox.data.slice(5,7)}.`:'')+`</div>`;
+  }
+
   document.getElementById(px+'-fer-aviso').innerHTML =
-    `${qtdMes} feriado(s) em dia útil em ${MESES_IND[mes-1]}. Desmarque para voltar a contar como dia útil; marque os pontos facultativos em que a fábrica não trabalha. `+
-    `Ao alterar, a meta do dia é ajustada na tabela abaixo — clique em <b>💾 Salvar Todas</b> para gravar.`+
-    (feriadosRemoto?'':' <span style="color:var(--amar)">(Feriados salvos só neste navegador — crie a tabela "feriados" no Supabase para compartilhar.)</span>');
+    `Feriado ligado zera a meta do dia na tabela abaixo; desligado, o dia volta a contar como útil. Depois de alterar, clique em <b>💾 Salvar Todas</b>.`+
+    (feriadosRemoto?'':' <span style="color:var(--amar)">Os ajustes ficam salvos só neste navegador — crie a tabela "feriados" no Supabase para compartilhar.</span>');
 }
+
+// ── Modal "Gerenciar feriados" ──
+function abrirModalFeriados(px, mesFoco){
+  const ctx=_ferCtx[px]||{mes:new Date().getMonth()+1, ano:new Date().getFullYear()};
+  _ferModal={px, ano:ctx.ano, mes:mesFoco||ctx.mes, filtro:'todos'};
+  const inp=document.getElementById('fm-fer-data');
+  if(inp) inp.value=`${ctx.ano}-${String(_ferModal.mes).padStart(2,'0')}-01`;
+  document.getElementById('modal-feriados').classList.add('open');
+  renderModalFeriados(true);
+}
+function fecharModalFeriados(){ document.getElementById('modal-feriados').classList.remove('open'); }
+function filtrarModalFeriados(filtro){ _ferModal.filtro=filtro; renderModalFeriados(); }
+function _ferModalAberto(){ return document.getElementById('modal-feriados')?.classList.contains('open'); }
+
+function renderModalFeriados(rolar){
+  if(!_ferModalAberto()) return;
+  const {ano, mes, filtro}=_ferModal;
+  const lista=listaFeriadosAno(ano);
+  const box=document.getElementById('fer-modal-lista');
+  const scroll=box.scrollTop;
+  document.getElementById('fer-modal-titulo').textContent=`🎉 Feriados ${ano}`;
+  const ativos=lista.filter(f=>f.ativo).length;
+  document.getElementById('fer-modal-sub').textContent=
+    `${ativos} de ${lista.length} considerados. Ligue os pontos facultativos em que a fábrica não trabalha.`;
+
+  const cont=t=>t==='todos'?lista.length:lista.filter(f=>f.tipo===t).length;
+  const filtros=[['todos','Todos'],['nacional','Nacionais'],['facultativo','Facultativos'],['personalizado','Adicionados']];
+  document.getElementById('fer-filtros').innerHTML=filtros
+    .filter(([k])=>k==='todos'||cont(k)>0)
+    .map(([k,n])=>`<button type="button" class="fer-f ${filtro===k?'on':''}" onclick="filtrarModalFeriados('${k}')">${n}<small>${cont(k)}</small></button>`).join('');
+
+  const vis=lista.filter(f=>filtro==='todos'||f.tipo===filtro);
+  if(!vis.length){ box.innerHTML='<div class="fer-vazio" style="margin-top:14px">Nenhum feriado neste filtro.</div>'; }
+  else {
+    const grupos={};
+    vis.forEach(f=>{ const m=_ferInfo(f).m; (grupos[m]=grupos[m]||[]).push(f); });
+    box.innerHTML=Object.keys(grupos).map(Number).sort((a,b)=>a-b).map(m=>{
+      const g=grupos[m], on=g.filter(f=>f.ativo).length;
+      return `<div class="fer-grupo ${m===mes?'cur':''}" id="fer-g-${m}">
+        <div class="fer-grupo-t">${MESES_IND[m-1]}<span>${on} de ${g.length} considerado${g.length>1?'s':''}</span></div>
+        ${g.map(_ferRowHTML).join('')}
+      </div>`;
+    }).join('');
+  }
+  document.getElementById('fer-modal-nota').textContent = feriadosRemoto ? '' :
+    'Os ajustes ficam salvos só neste navegador — crie a tabela "feriados" no Supabase para compartilhar.';
+
+  if(rolar){
+    // rola até o mês de foco (ou o mais próximo depois dele)
+    const alvo=[...box.querySelectorAll('.fer-grupo')].find(g=>Number(g.id.slice(6))>=mes);
+    box.scrollTop = 0;
+    if(alvo) box.scrollTop = alvo.getBoundingClientRect().top - box.getBoundingClientRect().top - 4;
+  } else box.scrollTop=scroll;
+}
+document.addEventListener('keydown',e=>{ if(e.key==='Escape' && _ferModalAberto()) fecharModalFeriados(); });
+
 function isDiaUtilSemFeriado(dataStr){ const [a,m,d]=dataStr.split('-').map(Number); const w=new Date(a,m-1,d).getDay(); return w!==0&&w!==6; }
 
 function _capturarInputsMeta(sel){
@@ -5018,6 +5218,7 @@ async function alternarFeriado(dataStr, ativo){
   if(!f) return;
   await _salvarAjusteFeriado({data:dataStr, nome:f.nome, ativo:!!ativo, personalizado:!!f.personalizado});
   _aplicarMudancaFeriado(dataStr);
+  renderModalFeriados();
 }
 
 async function adicionarFeriado(px){
@@ -5034,6 +5235,7 @@ async function adicionarFeriado(px){
   }
   document.getElementById(px+'-fer-nome').value='';
   _aplicarMudancaFeriado(data);
+  if(px==='fm'){ _ferModal.ano=parseInt(data.slice(0,4)); _ferModal.mes=parseInt(data.slice(5,7)); _ferModal.filtro='todos'; renderModalFeriados(true); }
 }
 
 async function removerFeriado(dataStr){
@@ -5041,6 +5243,7 @@ async function removerFeriado(dataStr){
   if(!f || !confirm(`Remover o feriado "${f.nome}" (${dataStr.split('-').reverse().join('/')})?`)) return;
   await _salvarAjusteFeriado({data:dataStr}, true);
   _aplicarMudancaFeriado(dataStr);
+  renderModalFeriados();
 }
 
 // ══════ METAS DE HORAS ══════
