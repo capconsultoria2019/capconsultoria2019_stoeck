@@ -237,6 +237,42 @@ body{font-family:'DM Sans',sans-serif;background:var(--preto);color:var(--txt);m
 .modal-ov.open{display:flex}
 .modal{background:var(--ce);border:1px solid var(--borda);border-radius:16px;padding:28px;width:560px;max-width:96vw;max-height:90vh;overflow-y:auto}
 .modal h3{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;margin-bottom:18px}
+/* ── Modal lançamentos da Variação Mensal ── */
+#tb-variacao tr.vl-click{cursor:pointer;transition:background .12s}
+#tb-variacao tr.vl-click:hover{background:rgba(46,139,46,.08)}
+#tb-variacao td.vl-cell:hover{text-decoration:underline}
+.vl-modal{width:min(1260px,97vw)!important;padding:0!important;display:flex;flex-direction:column;overflow:hidden!important}
+.vl-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:22px 26px 16px;border-bottom:1px solid var(--borda)}
+.vl-title{font-family:'Syne',sans-serif;font-size:18px;font-weight:700}
+.vl-sub{font-size:12px;color:var(--fraco);margin-top:3px}
+.vl-x{background:none;border:1px solid var(--borda);color:var(--fraco);width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:15px;flex-shrink:0}
+.vl-x:hover{color:var(--txt);border-color:var(--fraco)}
+.vl-body{padding:18px 26px;overflow-y:auto;flex:1}
+.vl-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}
+.vl-kpi{background:var(--cm);border:1px solid var(--borda);border-radius:10px;padding:12px 14px}
+.vl-kpi .l{font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--fraco)}
+.vl-kpi .v{font-family:'Syne',sans-serif;font-size:18px;font-weight:700;margin-top:4px;font-variant-numeric:tabular-nums}
+.vl-kpi .s{font-size:11px;color:var(--fraco);margin-top:2px;font-variant-numeric:tabular-nums}
+.vl-bar{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.vl-tabs{display:inline-flex;border:1px solid var(--borda);border-radius:8px;overflow:hidden}
+.vl-tabs button{border:none;background:var(--cm);color:var(--fraco);padding:7px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit}
+.vl-tabs button.on{background:var(--vm);color:#fff}
+.vl-bar input{flex:1;min-width:200px;max-width:320px;margin-left:auto}
+.vl-tw{border:1px solid var(--borda);border-radius:10px;overflow:auto;max-height:46vh}
+.vl-t{width:100%;border-collapse:collapse;font-size:12.5px}
+.vl-t th{position:sticky;top:0;background:var(--cm);z-index:1;text-align:left;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--fraco);font-weight:600;padding:10px 12px;border-bottom:1px solid var(--borda);white-space:nowrap}
+.vl-t td{padding:9px 12px;border-bottom:1px solid var(--borda);vertical-align:middle}
+.vl-t tr:last-child td{border-bottom:none}
+.vl-t tbody tr:nth-child(even) td{background:rgba(127,127,127,.04)}
+.vl-t .n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.vl-t .c{text-align:center}
+.vl-t .badge{white-space:nowrap}
+.vl-t td.nw{white-space:nowrap}
+.vl-t .obs{color:var(--fraco);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.vl-t tfoot td{position:sticky;bottom:0;background:var(--cm);font-weight:700;border-top:1px solid var(--borda)}
+.vl-foot{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:14px 26px;border-top:1px solid var(--borda)}
+.vl-foot .info{font-size:12px;color:var(--fraco)}
+@media(max-width:760px){.vl-kpis{grid-template-columns:repeat(2,1fr)}.vl-head,.vl-body,.vl-foot{padding-left:16px;padding-right:16px}}
 .modal-foot{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
 
 .table-wrap tfoot td{font-size:13px;padding:10px 14px;border-top:2px solid var(--borda);white-space:nowrap}
@@ -440,6 +476,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--preto);color:var(--txt);m
     <div class="table-card">
       <div class="tc-head">
         <div class="tc-title" id="estoque-count">Estoque</div>
+        <button class="btn btn-s" onclick="exportarEstoqueExcel()" title="Baixar a tabela (com os filtros atuais) em Excel">📥 Exportar Excel</button>
         <div id="btn-ajuste-saldo-area" style="display:none">
           <span style="font-size:11px;color:var(--fraco);margin-right:8px">Admin:</span>
         </div>
@@ -989,6 +1026,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--preto);color:var(--txt);m
         <div class="tc-title">Histórico de Saídas</div>
         <button class="btn btn-p" onclick="abrirModalSaida()">＋ Nova Saída</button>
         <button class="btn btn-p" onclick="abrirModalProducao()" style="font-size:12px;padding:6px 14px;flex-shrink:0;background:var(--vmd)">🏭 + Lançamento Produção</button>
+        <button class="btn btn-s" onclick="recalcularBaixasMP(false)" style="font-size:12px;padding:6px 14px;flex-shrink:0" title="Preenche o valor das baixas automáticas de matéria-prima que ficaram com R$ 0,00">🔄 Recalcular baixas MP</button>
         <button class="btn btn-p" onclick="importarSaidasXlsx()" style="margin-left:auto;font-size:12px;padding:6px 14px;flex-shrink:0">📤 Importar Planilha (83 reg.)</button>
         <div class="filters" style="margin:0;flex-wrap:nowrap">
           <select class="fi" id="fe-sai-mes" onchange="renderSaidas()"><option value="">Todos os meses</option></select>
@@ -1751,6 +1789,44 @@ body{font-family:'DM Sans',sans-serif;background:var(--preto);color:var(--txt);m
 </div>
 
 <!-- MODAL MOVIMENTOS DO PRODUTO (editar entradas/saídas) -->
+<!-- ========= MODAL LANÇAMENTOS DA VARIAÇÃO MENSAL ========= -->
+<div class="modal-ov" id="modal-var-lanc" onclick="if(event.target===this)closeModal('modal-var-lanc')">
+  <div class="modal vl-modal">
+    <div class="vl-head">
+      <div>
+        <div class="vl-title" id="vl-titulo">Lançamentos</div>
+        <div class="vl-sub" id="vl-sub">—</div>
+      </div>
+      <button class="vl-x" onclick="closeModal('modal-var-lanc')" title="Fechar">✕</button>
+    </div>
+    <div class="vl-body">
+      <div class="vl-kpis" id="vl-kpis"></div>
+      <div class="vl-bar">
+        <div class="vl-tabs">
+          <button id="vl-tab-t" onclick="setVlTipo('t')">Todos</button>
+          <button id="vl-tab-e" onclick="setVlTipo('e')">Entradas</button>
+          <button id="vl-tab-s" onclick="setVlTipo('s')">Saídas</button>
+        </div>
+        <input class="fi" id="vl-busca" placeholder="🔍 Buscar produto, fornecedor, cliente, NF..." oninput="renderVlTabela()">
+      </div>
+      <div class="vl-tw">
+        <table class="vl-t">
+          <thead><tr><th>Data</th><th class="c">Tipo</th><th>Produto</th><th>Subfamília</th><th class="n">Quantidade</th><th class="n" title="Entradas: custo médio de compra do item · Saídas: valor da saída ÷ quantidade">Custo Médio</th><th class="n">Valor Total</th><th>Fornecedor / Cliente</th><th>NF</th><th>Responsável</th><th>Obs.</th></tr></thead>
+          <tbody id="vl-tbody"></tbody>
+          <tfoot id="vl-tfoot"></tfoot>
+        </table>
+      </div>
+    </div>
+    <div class="vl-foot">
+      <div class="info" id="vl-info"></div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-s" onclick="exportarVlExcel()">📊 Exportar Excel</button>
+        <button class="btn btn-s" onclick="closeModal('modal-var-lanc')">Fechar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="modal-ov" id="modal-mov-produto">
   <div class="modal" style="width:min(860px,97vw);max-height:90vh;overflow-y:auto">
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
@@ -2196,6 +2272,8 @@ async function carregarTudo(silent=false){
     if(tudoOk){
       salvarCacheLocal();
       setSyncStatus('ok');
+      // corrige automaticamente baixas de MP gravadas com R$ 0,00
+      setTimeout(()=>recalcularBaixasMP(true), 500);
     } else {
       salvarCacheLocal(); // guarda o que temos, ainda que parcial
       setSyncStatus('error');
@@ -2503,7 +2581,8 @@ function aplicarFiltroGlobal(sfSelId, prodSelId, renderFn, onSfChangeFn){
   const sfSel   = document.getElementById(sfSelId);
   const prodSel = document.getElementById(prodSelId);
   if(!sfSel||!prodSel) return;
-  if(_gFiltroSF && sfSel.querySelector(`option[value="${_gFiltroSF}"]`)){
+  fillSfProdPair(sfSelId, prodSelId);
+  if(_gFiltroSF &&sfSel.querySelector(`option[value="${_gFiltroSF}"]`)){
     sfSel.value = _gFiltroSF;
     // refiltra produtos pelo SF
     const lista = _gFiltroSF ? produtos.filter(p=>p.subfam===parseInt(_gFiltroSF)) : produtos;
@@ -2559,9 +2638,25 @@ function produtosComFicha(){
   const ids = new Set(fichasTecnicas.map(f=>f.acabadoId));
   return produtos.filter(p=>ids.has(p.id));
 }
+// Preenche um par Subfamília + Produto, mantendo a seleção e listando só os produtos da subfamília escolhida.
+function fillSfProdPair(sfId, prodId){
+  const sfSel = document.getElementById(sfId);
+  if(sfSel) fillSel(sfId, subfamilias, 'id', s=>s.nome, 'Todas as subfamílias');
+  const prodSel = document.getElementById(prodId);
+  if(!prodSel) return;
+  const sfF = sfSel ? (parseInt(sfSel.value)||null) : null;
+  const cur = prodSel.value;
+  const lista = sfF ? produtos.filter(p=>p.subfam===sfF) : produtos;
+  prodSel.innerHTML = '<option value="">Todos os produtos</option>' +
+    lista.map(p=>`<option value="${p.id}">${p.desc}</option>`).join('');
+  prodSel.value = lista.some(p=>String(p.id)===cur) ? cur : '';
+}
 function fillAllSelects(){
-  ['ent-prod','sai-prod','var-prod','me-prod','ms-prod'].forEach(id=>fillSel(id,produtos,'id',p=>p.desc));
+  ['ent-prod','sai-prod','me-prod','ms-prod'].forEach(id=>fillSel(id,produtos,'id',p=>p.desc));
+  fillSfProdPair('var-sf','var-prod');
+  fillSfProdPair('mov-sf','mov-prod');
   ['prod-sf','fe-sf','fp-sf'].forEach(id=>fillSel(id,subfamilias,'id',s=>s.nome,'Todas'));
+  ['fe-ent-sf','fe-sai-sf'].forEach(id=>fillSel(id,subfamilias,'id',s=>s.nome,'Todas subfamílias'));
   ['prod-loc-sel','fe-loc','fp-loc'].forEach(id=>fillSel(id,localizacoes,'id',l=>l.nome,'Todas'));
   ['ent-forn','fe-ent-forn','me-forn'].forEach(id=>fillSel(id,fornecedores,'id',f=>f.nome,'— Sem vínculo —'));
   ['sai-cli','ms-cli','fe-sai-cli','prod-cliente'].forEach(id=>fillSel(id,clientes,'id',c=>c.nome,'— Sem vínculo —'));
@@ -2725,22 +2820,52 @@ function estItemPeriodo(prodId, mesF, anoF){
   return {ini, e, s, saldo: ini + e - s, cmp};
 }
 
-function renderEstoque(){
-  fillAllSelects();
+// Filtros atuais da tela Estoque Atual (usado pela tabela e pela exportação Excel)
+function estoqueFiltrado(){
   const search = document.querySelector('#page-estoque .fi-search')?.value.toLowerCase()||'';
   const mesF   = document.getElementById('fe-mes')?.value||'';
   const anoF   = document.getElementById('fe-ano')?.value||'';
   const sfF    = document.getElementById('fe-sf')?.value||'';
   const locF   = document.getElementById('fe-loc')?.value||'';
-  let rows='', count=0, totQtd=0, totValor=0, totVariacao=0;
-  produtos.filter(p=>{
-    const est = estItemPeriodo(p.id, mesF, anoF);
-    const isCrit = est.saldo<=p.min||est.saldo<0;
-    return(!search||p.desc.toLowerCase().includes(search)||p.id.toString()===search)
-      &&(!sfF||String(p.subfam)===sfF)
-      &&(!locF||String(p.locId)===locF)
+  const lista = produtos.filter(p=>
+    (!search||p.desc.toLowerCase().includes(search)||p.id.toString()===search)
+    &&(!sfF||String(p.subfam)===sfF)
+    &&(!locF||String(p.locId)===locF)
+  );
+  return {mesF, anoF, lista};
+}
 
-  }).forEach(p=>{
+function exportarEstoqueExcel(){
+  const {mesF, anoF, lista} = estoqueFiltrado();
+  if(!lista.length){ alert('Nenhum item para exportar com os filtros atuais.'); return; }
+  const r2 = v => Math.round((Number(v)||0)*100)/100;
+  const periodoTxt = (mesF||anoF) ? `${mesF?MESES[parseInt(mesF)-1]:''}${mesF&&anoF?' ':''}${anoF||''}` : 'Todos os períodos';
+  const linhas = [
+    ['Estoque Atual — ' + periodoTxt],
+    ['Gerado em', new Date().toLocaleString('pt-BR')],
+    [],
+    ['Cód.','Produto','Subfamília','Localização','Estoque Mín.','Saldo Inicial','Entradas','Saídas','Saldo','Custo Médio (R$)','Valor Estoque (R$)','Variação do Mês (R$)','Situação']
+  ];
+  let totQtd=0, totValor=0, totVar=0;
+  lista.forEach(p=>{
+    const sf=gSF(p.subfam); const loc=gLoc(p.locId);
+    const est=estItemPeriodo(p.id, mesF, anoF);
+    const isCrit=est.saldo<=p.min||est.saldo<0;
+    const valorItem = Math.max(0,est.saldo)*est.cmp;
+    const variacaoItem = (est.e - est.s)*est.cmp;
+    totQtd+=est.saldo; totValor+=valorItem; totVar+=variacaoItem;
+    linhas.push([p.id, p.desc, sf?sf.nome:'—', loc?loc.nome:'—', r2(p.min), r2(est.ini), r2(est.e), r2(est.s), r2(est.saldo), r2(est.cmp), r2(valorItem), r2(variacaoItem), isCrit?'Crítico':'OK']);
+  });
+  linhas.push([]);
+  linhas.push(['','TOTAL ('+lista.length+' itens)','','','','','','',r2(totQtd),'',r2(totValor),r2(totVar),'']);
+  baixarExcel(`estoque_atual_${carimboArquivo()}.xlsx`, {'Estoque Atual': linhas});
+}
+
+function renderEstoque(){
+  fillAllSelects();
+  const {mesF, anoF, lista} = estoqueFiltrado();
+  let rows='', count=0, totQtd=0, totValor=0, totVariacao=0;
+  lista.forEach(p=>{
     count++;
     const sf=gSF(p.subfam); const loc=gLoc(p.locId);
     const est=estItemPeriodo(p.id, mesF, anoF);
@@ -3095,21 +3220,21 @@ function renderVariacao(){
     const varTxt = m.varPct===null?'—':(m.varPct>=0?'+':'')+m.varPct.toFixed(1)+'%';
     if(modoVal){
       const finCls = m.estFinVal<0?'txt-r fw':m.estFinVal>0?'fw':'txt-f';
-      rows+=`<tr style="${!temDados?'opacity:0.35':''}">
+      rows+=`<tr class="vl-click" onclick="abrirLancVar(${m.mes},'t')" title="Clique para ver os lançamentos do mês" style="${!temDados?'opacity:0.35':''}">
         <td class="fw">${MESES[m.mes-1]}</td>
         <td style="text-align:right;color:var(--fraco)">${m.estIniVal?fR(m.estIniVal):'R$ 0,00'}</td>
-        <td style="text-align:right;color:var(--verde);font-weight:600">${m.entVal?fR(m.entVal):'—'}</td>
-        <td style="text-align:right;color:var(--verm);font-weight:600">${m.saiVal?fR(m.saiVal):'—'}</td>
+        <td class="vl-cell" onclick="event.stopPropagation();abrirLancVar(${m.mes},'e')" style="text-align:right;color:var(--verde);font-weight:600">${m.entVal?fR(m.entVal):'—'}</td>
+        <td class="vl-cell" onclick="event.stopPropagation();abrirLancVar(${m.mes},'s')" style="text-align:right;color:var(--verm);font-weight:600">${m.saiVal?fR(m.saiVal):'—'}</td>
         <td style="text-align:right" class="${finCls}">${fR(m.estFinVal)}</td>
         <td style="text-align:right" class="${varCls}">${varTxt}</td>
       </tr>`;
     } else {
       const finCls = m.estFinQt<0?'txt-r fw':m.estFinQt>0?'fw':'txt-f';
-      rows+=`<tr style="${!temDados?'opacity:0.35':''}">
+      rows+=`<tr class="vl-click" onclick="abrirLancVar(${m.mes},'t')" title="Clique para ver os lançamentos do mês" style="${!temDados?'opacity:0.35':''}">
         <td class="fw">${MESES[m.mes-1]}</td>
         <td style="text-align:right;color:var(--fraco)">${fN(m.estIniQt)}</td>
-        <td style="text-align:right;color:var(--verde);font-weight:600">${m.entQt?fN(m.entQt):'—'}</td>
-        <td style="text-align:right;color:var(--verm);font-weight:600">${m.saiQt?fN(m.saiQt):'—'}</td>
+        <td class="vl-cell" onclick="event.stopPropagation();abrirLancVar(${m.mes},'e')" style="text-align:right;color:var(--verde);font-weight:600">${m.entQt?fN(m.entQt):'—'}</td>
+        <td class="vl-cell" onclick="event.stopPropagation();abrirLancVar(${m.mes},'s')" style="text-align:right;color:var(--verm);font-weight:600">${m.saiQt?fN(m.saiQt):'—'}</td>
         <td style="text-align:right" class="${finCls}">${fN(m.estFinQt)}</td>
         <td style="text-align:right" class="${varCls}">${varTxt}</td>
       </tr>`;
@@ -3152,6 +3277,113 @@ function renderVariacao(){
   }
 }
 
+
+// ══════ LANÇAMENTOS DO MÊS (Variação Mensal) ══════
+const VL_MESES=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+let _vl = {mes:0, ano:0, pids:null, tipo:'t', linhas:[], resumo:null};
+function _escVl(s){ return String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+function abrirLancVar(mes, tipo){
+  const prodF = parseInt(document.getElementById('var-prod').value)||null;
+  const sfF   = parseInt(document.getElementById('var-sf').value)||null;
+  const ano   = parseInt(document.getElementById('var-ano').value)||new Date().getFullYear();
+  const pids  = prodF ? [prodF] : sfF ? produtos.filter(p=>p.subfam===sfF).map(p=>p.id) : null;
+  const ok = id => !pids || pids.includes(id);
+
+  const linhas = [];
+  entradas.filter(e=>e.mes===mes && e.ano===ano && ok(e.prodId)).forEach(e=>{
+    const p=gP(e.prodId); const sf=gSF(p?.subfam); const f=gForn(e.fornId);
+    // custo médio de compra do item (média ponderada das compras), não o custo do lançamento individual
+    const cm = custoMedioMP(e.prodId);
+    linhas.push({tipo:'e', data:e.data, prod:p?p.desc:'—', sf:sf?sf.nome:'—', qt:e.qt, unit:cm, valor:e.qt*cm, custoLanc:e.custo||0,
+      parte:f?f.nome:'—', nf:e.nf||'', resp:e.resp||'', obs:e.obs||''});
+  });
+  saidas.filter(s=>s.mes===mes && s.ano===ano && ok(s.prodId)).forEach(s=>{
+    const p=gP(s.prodId); const sf=gSF(p?.subfam); const c=gCli(s.cliId);
+    linhas.push({tipo:'s', data:s.data, prod:p?p.desc:'—', sf:sf?sf.nome:'—', qt:s.qt, unit:s.qt?(s.valor||0)/s.qt:0, valor:s.valor||0,
+      parte:c?c.nome:'—', nf:'', resp:s.resp||'', obs:s.obs||''});
+  });
+  linhas.sort((a,b)=>(a.data||'').localeCompare(b.data||'') || (a.tipo<b.tipo?-1:1));
+
+  const filtroTxt = prodF ? 'Produto: '+(gP(prodF)?.desc||'') : sfF ? 'Subfamília: '+(gSF(sfF)?.nome||'') : 'Todos os produtos';
+  _vl = {mes, ano, pids, tipo:tipo||'t', linhas, filtroTxt};
+  document.getElementById('vl-titulo').textContent = `Lançamentos — ${VL_MESES[mes-1]} de ${ano}`;
+  document.getElementById('vl-sub').textContent = filtroTxt;
+  document.getElementById('vl-busca').value = '';
+
+  // resumo do mês (mesma base do quadro de variação)
+  const E = linhas.filter(l=>l.tipo==='e'), S = linhas.filter(l=>l.tipo==='s');
+  const sum = (a,k)=>a.reduce((x,l)=>x+l[k],0);
+  const lista = pids || produtos.map(p=>p.id);
+  let iniQt=0;
+  lista.forEach(pid=>{
+    const p=gP(pid); iniQt += Number(p?.saldoInicial||0);
+    iniQt += entradas.filter(x=>x.prodId===pid&&(x.ano<ano||(x.ano===ano&&x.mes<mes))).reduce((a,b)=>a+b.qt,0);
+    iniQt -= saidas.filter(x=>x.prodId===pid&&(x.ano<ano||(x.ano===ano&&x.mes<mes))).reduce((a,b)=>a+b.qt,0);
+  });
+  const finQt = iniQt + sum(E,'qt') - sum(S,'qt');
+  const k=(l,v,s,cor)=>`<div class="vl-kpi"><div class="l">${l}</div><div class="v" style="${cor?'color:'+cor:''}">${v}</div><div class="s">${s}</div></div>`;
+  document.getElementById('vl-kpis').innerHTML =
+    k('Estoque Inicial', fN(Math.round(iniQt*100)/100)+' un.', 'início do mês') +
+    k('Entradas', fN(Math.round(sum(E,'qt')*100)/100)+' un.', `${E.length} lançamento(s) · ${fR(sum(E,'valor'))}`, 'var(--verde)') +
+    k('Saídas', fN(Math.round(sum(S,'qt')*100)/100)+' un.', `${S.length} lançamento(s) · ${fR(sum(S,'valor'))}`, 'var(--verm)') +
+    k('Estoque Final', fN(Math.round(finQt*100)/100)+' un.', 'fim do mês', finQt<0?'var(--verm)':'');
+
+  setVlTipo(_vl.tipo);
+  openModal('modal-var-lanc');
+}
+
+function setVlTipo(t){
+  _vl.tipo = t;
+  ['t','e','s'].forEach(x=>document.getElementById('vl-tab-'+x).classList.toggle('on', x===t));
+  renderVlTabela();
+}
+
+function _vlFiltradas(){
+  const b = (document.getElementById('vl-busca').value||'').toLowerCase().trim();
+  return _vl.linhas.filter(l=>(_vl.tipo==='t'||l.tipo===_vl.tipo) &&
+    (!b || [l.prod,l.sf,l.parte,l.nf,l.resp,l.obs].some(v=>String(v).toLowerCase().includes(b))));
+}
+
+function renderVlTabela(){
+  const ls = _vlFiltradas();
+  const n2 = v => (Math.round(v*100)/100).toLocaleString('pt-BR');
+  document.getElementById('vl-tbody').innerHTML = ls.length ? ls.map(l=>`<tr>
+    <td style="white-space:nowrap">${fD(l.data)}</td>
+    <td class="c"><span class="badge ${l.tipo==='e'?'badge-e':'badge-s'}">${l.tipo==='e'?'↑ Entrada':'↓ Saída'}</span></td>
+    <td class="fw nw">${_escVl(l.prod)}</td>
+    <td class="nw">${_escVl(l.sf)}</td>
+    <td class="n fw" style="color:${l.tipo==='e'?'var(--verde)':'var(--verm)'}">${l.tipo==='e'?'+':'−'}${n2(l.qt)}</td>
+    <td class="n" ${l.tipo==='e'?`title="Custo deste lançamento: ${fR(l.custoLanc)}"`:''}>${fR(l.unit)}</td>
+    <td class="n fw">${fR(l.valor)}</td>
+    <td>${_escVl(l.parte)}</td>
+    <td>${_escVl(l.nf)||'—'}</td>
+    <td>${_escVl(l.resp)||'—'}</td>
+    <td class="obs" title="${_escVl(l.obs)}">${_escVl(l.obs)||'—'}</td>
+  </tr>`).join('') : `<tr><td colspan="11" class="empty" style="text-align:center;padding:28px;color:var(--fraco)">Nenhum lançamento neste mês.</td></tr>`;
+
+  const E=ls.filter(l=>l.tipo==='e'), S=ls.filter(l=>l.tipo==='s');
+  const s=(a,k)=>a.reduce((x,l)=>x+l[k],0);
+  let foot='';
+  if(_vl.tipo!=='s' && E.length) foot+=`<tr><td colspan="4">Total Entradas</td><td class="n" style="color:var(--verde)">+${n2(s(E,'qt'))}</td><td></td><td class="n">${fR(s(E,'valor'))}</td><td colspan="4"></td></tr>`;
+  if(_vl.tipo!=='e' && S.length) foot+=`<tr><td colspan="4">Total Saídas</td><td class="n" style="color:var(--verm)">−${n2(s(S,'qt'))}</td><td></td><td class="n">${fR(s(S,'valor'))}</td><td colspan="4"></td></tr>`;
+  document.getElementById('vl-tfoot').innerHTML = foot;
+  document.getElementById('vl-info').textContent = `${ls.length} lançamento(s) exibido(s)`;
+}
+
+function exportarVlExcel(){
+  const ls = _vlFiltradas();
+  if(!ls.length){ alert('Nenhum lançamento para exportar.'); return; }
+  const r2 = v => Math.round((Number(v)||0)*100)/100;
+  const linhas = [
+    [`Lançamentos — ${VL_MESES[_vl.mes-1]} de ${_vl.ano}`],
+    [_vl.filtroTxt],
+    [],
+    ['Data','Tipo','Produto','Subfamília','Quantidade','Custo Médio (R$)','Valor Total (R$)','Fornecedor / Cliente','NF','Responsável','Obs.','Custo do Lançamento (R$)']
+  ];
+  ls.forEach(l=>linhas.push([fD(l.data), l.tipo==='e'?'Entrada':'Saída', l.prod, l.sf, r2(l.qt), r2(l.unit), r2(l.valor), l.parte, l.nf, l.resp, l.obs, l.tipo==='e'?r2(l.custoLanc):'']));
+  baixarExcel(`lancamentos_${_vl.ano}_${String(_vl.mes).padStart(2,'0')}_${carimboArquivo()}.xlsx`, {'Lançamentos': linhas});
+}
 
 // ===== PRODUTOS =====
 function renderProdutos(busca=''){
@@ -3745,11 +3977,50 @@ function getFT(acabadoId){
 function custoProducaoAcabado(prodId){
   const ft = getFT(prodId);
   if(ft){
-    const cmpMP = estItem(ft.mpId).cmp || 0;
-    return ft.qtMP * cmpMP;
+    return ft.qtMP * custoMedioMP(ft.mpId);
   }
   const p = gP(prodId);
   return p ? (p.custo||0) : 0;
+}
+
+// Custo médio de COMPRA da matéria-prima: média ponderada só das entradas de compra
+// (ignora entradas geradas por produção [lp:] e por transferência). Sem compras, usa o CMP geral e depois o custo do cadastro.
+function custoMedioMP(mpId){
+  const compras = entradas.filter(e=>e.prodId===mpId && (e.custo||0)>0
+    && !(e.obs||'').includes('[lp:') && e.resp!=='Transferência');
+  const qt = compras.reduce((a,e)=>a+e.qt,0);
+  if(qt>0) return compras.reduce((a,e)=>a+e.qt*e.custo,0)/qt;
+  const cmp = estItem(mpId).cmp;
+  return cmp>0 ? cmp : (gP(mpId)?.custo||0);
+}
+
+// Atribui o custo médio de compra de cada matéria-prima às baixas automáticas ("Baixa MP auto") com valor R$ 0,00.
+// silencioso=true: roda sozinho ao carregar os dados, sem perguntas.
+let _corrigindoBaixasMP = false;
+async function recalcularBaixasMP(silencioso){
+  if(_corrigindoBaixasMP) return;
+  const alvo = saidas.filter(s=>(s.obs||'').includes('Baixa MP auto') && !(Number(s.valor)>0));
+  if(!alvo.length){ if(!silencioso) alert('Nenhuma baixa automática com valor R$ 0,00 foi encontrada.'); return; }
+  if(!silencioso && !confirm(`Encontradas ${alvo.length} baixa(s) automática(s) de matéria-prima com valor R$ 0,00.\n\nAtribuir o custo médio de compra de cada matéria-prima?`)) return;
+  _corrigindoBaixasMP = true;
+  let ok=0, falha=0, semCusto=0;
+  try{
+    for(const s of alvo){
+      const cm = custoMedioMP(s.prodId);
+      if(!(cm>0)){ semCusto++; continue; }
+      const valor = Math.round(s.qt*cm*100)/100;
+      const r = await sbUpdate('saidas', s.id, {valor_total:valor});
+      if(r){ s.valor = valor; ok++; } else falha++;
+    }
+  } finally { _corrigindoBaixasMP = false; }
+  if(ok) { try{ salvarCacheLocal(); }catch(e){} }
+  console.log(`[Baixa MP] ${ok} atualizada(s), ${falha} falha(s), ${semCusto} sem custo de compra.`);
+  if(!silencioso){
+    alert(`${ok} baixa(s) atualizada(s) com o custo médio de compra.`
+      + (semCusto?`\n${semCusto} ficaram sem valor: a matéria-prima não tem compra nem custo de cadastro.`:'')
+      + (falha?`\n${falha} falharam — verifique a conexão e tente novamente.`:''));
+  }
+  if(ok){ try{ renderSaidas(); renderEstoque(); renderDash(); if(document.getElementById('page-variacao')?.classList.contains('active')) renderVariacao(); }catch(e){} }
 }
 
 function onProdSituacaoChange(){
@@ -3823,8 +4094,10 @@ async function _lpAplicarMov(lancId, o){
     const ft = getFT(o.prodId);
     if(ft){
       const qtMP = ft.qtMP * o.qt;
+      // valor da baixa = qtd de MP × custo médio de compra da MP
+      const valorMP = Math.round(qtMP * custoMedioMP(ft.mpId) * 100) / 100;
       const saiCorpo = {data:o.data, produto_id:ft.mpId, quantidade:qtMP,
-        cliente_id:null, responsavel:'Produção', valor_total:0,
+        cliente_id:null, responsavel:'Produção', valor_total:valorMP,
         obs:'Baixa MP auto — produção'+tag};
       const saiR = await sbSave('saidas', saiCorpo);
       if(saiR){ saidas.push(mapSai(Array.isArray(saiR)?saiR[0]:saiR)); }
