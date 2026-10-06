@@ -481,7 +481,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--preto);color:var(--txt);m
           <span style="font-size:11px;color:var(--fraco);margin-right:8px">Admin:</span>
         </div>
       </div>
-      <div class="table-wrap"><table><thead><tr><th>Cód.</th><th>Produto</th><th>Subfamília</th><th>Localização</th><th>Estoque Mín.</th><th>Saldo Inicial</th><th>Entradas</th><th>Saídas</th><th>Saldo</th><th>Custo Médio</th><th>Valor Estoque</th><th>Variação do Mês</th><th id="th-ajuste-saldo" style="display:none">Ajuste</th></tr></thead><tbody id="tb-estoque"></tbody></table></div>
+      <div class="table-wrap"><table><thead><tr><th>Cód.</th><th>Produto</th><th>Subfamília</th><th>Localização</th><th>Estoque Mín.</th><th>Saldo Inicial</th><th>Entradas</th><th>Saídas</th><th>Saldo</th><th title="Média ponderada das compras do item (não inclui entradas de produção nem transferências)">Custo Médio Compra</th><th>Valor Estoque</th><th>Variação do Mês</th><th id="th-ajuste-saldo" style="display:none">Ajuste</th></tr></thead><tbody id="tb-estoque"></tbody></table></div>
     </div>
   </div>
 
@@ -2728,7 +2728,7 @@ function renderGaugesCusto(){
         <div style="font-size:12px;color:var(--fraco);padding:24px 0">Produto não encontrado no cadastro.</div>
       </div>`;
     }
-    const cmp = estItemPeriodo(p.id, mesF, anoF).cmp;
+    const cmp = estItemPeriodo(p.id, mesF, anoF).cmpPeriodo;
     const meta = getMetaCusto(p.id);
     const st = _custoStatus(cmp, meta);
     return `<div class="kpi-card" style="text-align:center;padding:14px 12px">
@@ -2815,9 +2815,15 @@ function estItemPeriodo(prodId, mesF, anoF){
   const saisF = saidas.filter(noPeriodo);
   const e = soma(entsF);
   const s = soma(saisF);
+  // Custo médio = média ponderada das COMPRAS do item (ignora entradas de produção e transferência),
+  // o mesmo usado na baixa automática de MP e na Variação Mensal.
+  // Com ano filtrado: compras até o fim do período (mês escolhido, ou dezembro se só o ano).
+  const ateAnoMes = anoF ? Number(anoF)*100 + Number(mesF||12) : null;
+  const cmp = custoMedioMP(prodId, ateAnoMes);
+  // custo médio só das entradas do período (usado no painel de custo × meta do Dashboard)
   const totalCusto = entsF.reduce((a,b)=>a+(b.qt*(b.custo||0)),0);
-  const cmp = e>0 ? totalCusto/e : (p?.custo||0);
-  return {ini, e, s, saldo: ini + e - s, cmp};
+  const cmpPeriodo = e>0 ? totalCusto/e : (p?.custo||0);
+  return {ini, e, s, saldo: ini + e - s, cmp, cmpPeriodo};
 }
 
 // Filtros atuais da tela Estoque Atual (usado pela tabela e pela exportação Excel)
@@ -2844,7 +2850,7 @@ function exportarEstoqueExcel(){
     ['Estoque Atual — ' + periodoTxt],
     ['Gerado em', new Date().toLocaleString('pt-BR')],
     [],
-    ['Cód.','Produto','Subfamília','Localização','Estoque Mín.','Saldo Inicial','Entradas','Saídas','Saldo','Custo Médio (R$)','Valor Estoque (R$)','Variação do Mês (R$)','Situação']
+    ['Cód.','Produto','Subfamília','Localização','Estoque Mín.','Saldo Inicial','Entradas','Saídas','Saldo','Custo Médio Compra (R$)','Valor Estoque (R$)','Variação do Mês (R$)','Situação']
   ];
   let totQtd=0, totValor=0, totVar=0;
   lista.forEach(p=>{
@@ -3985,9 +3991,11 @@ function custoProducaoAcabado(prodId){
 
 // Custo médio de COMPRA da matéria-prima: média ponderada só das entradas de compra
 // (ignora entradas geradas por produção [lp:] e por transferência). Sem compras, usa o CMP geral e depois o custo do cadastro.
-function custoMedioMP(mpId){
+// ateAnoMes (opcional, ex.: 202609): considera só as compras até esse mês, inclusive.
+function custoMedioMP(mpId, ateAnoMes){
   const compras = entradas.filter(e=>e.prodId===mpId && (e.custo||0)>0
-    && !(e.obs||'').includes('[lp:') && e.resp!=='Transferência');
+    && !(e.obs||'').includes('[lp:') && e.resp!=='Transferência'
+    && (!ateAnoMes || (Number(e.ano)*100+Number(e.mes)) <= ateAnoMes));
   const qt = compras.reduce((a,e)=>a+e.qt,0);
   if(qt>0) return compras.reduce((a,e)=>a+e.qt*e.custo,0)/qt;
   const cmp = estItem(mpId).cmp;
