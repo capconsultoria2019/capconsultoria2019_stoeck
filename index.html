@@ -547,7 +547,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--preto);color:var(--txt);m
       </div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>Data</th><th>Produto</th><th>Situação</th><th>Qtd</th><th>Cliente</th><th>Custo Prod.</th><th>Origem</th><th>Obs.</th><th>Ações</th></tr></thead>
+          <thead><tr><th>Data</th><th>Produto</th><th>Situação</th><th>Qtd</th><th>Cliente</th><th>Custo Prod.</th><th>Origem</th><th>Obs.</th><th>Incluído por</th><th>Ações</th></tr></thead>
           <tbody id="tb-producao"></tbody>
         </table>
       </div>
@@ -1015,7 +1015,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--preto);color:var(--txt);m
           <select class="fi" id="fe-ent-forn" onchange="renderEntradas()"><option value="">Todos fornecedores</option></select>
         </div>
       </div>
-      <div class="table-wrap"><table><thead><tr><th>Data</th><th>Produto</th><th>Subfamília</th><th>Qtd</th><th>Custo Unit.</th><th>Total</th><th>Fornecedor</th><th>NF</th><th>Resp.</th><th>Ações</th></tr></thead><tbody id="tb-entradas"></tbody></table></div>
+      <div class="table-wrap"><table><thead><tr><th>Data</th><th>Produto</th><th>Subfamília</th><th>Qtd</th><th>Custo Unit.</th><th>Total</th><th>Fornecedor</th><th>NF</th><th>Resp.</th><th>Incluído por</th><th>Ações</th></tr></thead><tbody id="tb-entradas"></tbody></table></div>
     </div>
   </div>
 
@@ -1036,7 +1036,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--preto);color:var(--txt);m
           <select class="fi" id="fe-sai-cli" onchange="renderSaidas()"><option value="">Todos clientes</option></select>
         </div>
       </div>
-      <div class="table-wrap"><table><thead><tr><th>Data</th><th>Produto</th><th>Subfamília</th><th>Qtd</th><th>Destino</th><th>Responsável</th><th>Valor Total</th><th>Obs.</th><th>Ações</th></tr></thead><tbody id="tb-saidas"></tbody></table></div>
+      <div class="table-wrap"><table><thead><tr><th>Data</th><th>Produto</th><th>Subfamília</th><th>Qtd</th><th>Destino</th><th>Responsável</th><th>Valor Total</th><th>Obs.</th><th>Incluído por</th><th>Ações</th></tr></thead><tbody id="tb-saidas"></tbody></table></div>
     </div>
   </div>
 
@@ -1405,6 +1405,27 @@ body{font-family:'DM Sans',sans-serif;background:var(--preto);color:var(--txt);m
       </div>
       <div id="backup-status" style="font-size:12px;color:var(--vm);margin-top:10px"></div>
       <div id="backup-ultima-data" style="font-size:12px;color:var(--fraco);margin-top:6px">—</div>
+    </div>
+    <div class="form-card">
+      <h3>🕒 Hora e login nos lançamentos</h3>
+      <p style="font-size:13px;color:var(--fraco);line-height:1.6;margin-bottom:10px">
+        Para gravar <b>quem incluiu</b> e <b>a hora</b> de cada Entrada, Saída e Lançamento de Produção, o banco precisa das colunas abaixo.
+        Rode este comando <b>uma única vez</b> no Supabase (SQL Editor → New query → colar → Run).
+      </p>
+      <pre id="sql-auditoria" style="background:var(--cm);border:1px solid var(--borda);border-radius:8px;padding:12px;font-size:12px;overflow:auto;white-space:pre">-- Hora e login de quem incluiu cada lançamento
+-- Rode uma única vez no Supabase: SQL Editor &gt; New query &gt; colar &gt; Run
+alter table entradas             add column if not exists criado_por text;
+alter table entradas             add column if not exists criado_em  timestamptz default now();
+alter table saidas               add column if not exists criado_por text;
+alter table saidas               add column if not exists criado_em  timestamptz default now();
+alter table lancamentos_producao add column if not exists criado_por text;
+alter table lancamentos_producao add column if not exists criado_em  timestamptz default now();
+-- atualiza o cache do Supabase para reconhecer as colunas novas
+notify pgrst, &#x27;reload schema&#x27;;
+</pre>
+      <div class="form-actions" style="justify-content:flex-start">
+        <button class="btn btn-s" onclick="navigator.clipboard.writeText(document.getElementById('sql-auditoria').textContent).then(()=>alert('SQL copiado!'))">📋 Copiar SQL</button>
+      </div>
     </div>
     <div class="table-card">
       <div class="tc-head"><div class="tc-title">📋 Tabelas incluídas no backup</div></div>
@@ -2214,9 +2235,9 @@ function mapSF(r){ return{id:r.id,nome:r.nome,tipo:r.tipo,desc:r.descricao||''};
 function mapLoc(r){ return{id:r.id,nome:r.nome,tipo:r.tipo,cap:r.capacidade||0,desc:r.descricao||''}; }
 function mapForn(r){ return{id:r.id,nome:r.nome,doc:r.doc||'',contato:r.contato||'',tel:r.tel||'',email:r.email||'',cidade:r.cidade||'',end:r.endereco||'',materiais:r.materiais||'',prazo:r.prazo_entrega||0,pagto:r.cond_pagamento||'',obs:r.obs||''}; }
 function mapCli(r){ return{id:r.id,nome:r.nome,doc:r.doc||'',tipo:r.tipo||'cliente',tel:r.tel||'',email:r.email||'',cidade:r.cidade||'',end:r.endereco||'',obs:r.obs||''}; }
-function mapEnt(r){ const pts=r.data?r.data.split('-'):[]; const mes=r.mes||parseInt(pts[1])||0; const ano=r.ano||parseInt(pts[0])||0; return{id:r.id,data:r.data,prodId:r.produto_id,qt:Number(r.quantidade),custo:Number(r.custo_unitario),fornId:r.fornecedor_id,nf:r.nota_fiscal||'',resp:r.responsavel||'',obs:r.obs||'',mes,ano}; }
-function mapSai(r){ const pts=r.data?r.data.split('-'):[]; const mes=r.mes||parseInt(pts[1])||0; const ano=r.ano||parseInt(pts[0])||0; return{id:r.id,data:r.data,prodId:r.produto_id,qt:Number(r.quantidade),cliId:r.cliente_id,resp:r.responsavel||'',valor:Number(r.valor_total),obs:r.obs||'',mes,ano}; }
-function mapLanc(r){ const pts=r.data?r.data.split("-"):[]; const mes=r.mes||parseInt(pts[1])||0; const ano=r.ano||parseInt(pts[0])||0; return{id:r.id,data:r.data,prodId:r.produto_id,situacao:r.situacao,cliId:r.cliente_id,qt:Number(r.quantidade),custo:Number(r.custo_producao||0),origem:r.origem||'manual',obs:r.obs||'',mes,ano}; }
+function mapEnt(r){ const pts=r.data?r.data.split('-'):[]; const mes=r.mes||parseInt(pts[1])||0; const ano=r.ano||parseInt(pts[0])||0; return{id:r.id,data:r.data,prodId:r.produto_id,qt:Number(r.quantidade),custo:Number(r.custo_unitario),fornId:r.fornecedor_id,nf:r.nota_fiscal||'',resp:r.responsavel||'',obs:r.obs||'',mes,ano,criadoPor:r.criado_por||'',criadoEm:r.criado_em||r.created_at||''}; }
+function mapSai(r){ const pts=r.data?r.data.split('-'):[]; const mes=r.mes||parseInt(pts[1])||0; const ano=r.ano||parseInt(pts[0])||0; return{id:r.id,data:r.data,prodId:r.produto_id,qt:Number(r.quantidade),cliId:r.cliente_id,resp:r.responsavel||'',valor:Number(r.valor_total),obs:r.obs||'',mes,ano,criadoPor:r.criado_por||'',criadoEm:r.criado_em||r.created_at||''}; }
+function mapLanc(r){ const pts=r.data?r.data.split("-"):[]; const mes=r.mes||parseInt(pts[1])||0; const ano=r.ano||parseInt(pts[0])||0; return{id:r.id,data:r.data,prodId:r.produto_id,situacao:r.situacao,cliId:r.cliente_id,qt:Number(r.quantidade),custo:Number(r.custo_producao||0),origem:r.origem||'manual',obs:r.obs||'',mes,ano,criadoPor:r.criado_por||'',criadoEm:r.criado_em||r.created_at||''}; }
 function mapFT(r){ return{id:r.id,acabadoId:r.produto_acabado_id,mpId:r.materia_prima_id,qtMP:Number(r.quantidade_mp)}; }
 function mapRecurso(r){ return{id:r.id,nome:r.nome,desc:r.descricao||'',ativo:r.ativo!==false}; }
 function mapTP(r){ return{id:r.id,nome:r.nome,desc:r.descricao||''}; }
@@ -2411,8 +2432,22 @@ function showLoader(show){
 }
 
 // ══════ SAVE / DELETE para Supabase ══════
+// ── Auditoria: quem incluiu e quando (entradas, saídas, lançamentos de produção) ──
+const TABELAS_AUDIT = ['entradas','saidas','lancamentos_producao'];
+let _auditColsOk = true;   // vira false se as colunas criado_por/criado_em ainda não existirem no Supabase
+function usuarioAtualNome(){ return currentUser ? (currentUser.nome || currentUser.login || '') : ''; }
 async function sbSave(tabela, corpo){
   setSyncStatus('saving');
+  if(TABELAS_AUDIT.includes(tabela) && corpo && !Array.isArray(corpo) && _auditColsOk){
+    const comAudit = {...corpo, criado_por: usuarioAtualNome(), criado_em: new Date().toISOString()};
+    const ra = await sbReq(tabela, 'POST', comAudit);
+    if(ra){ setSyncStatus('ok'); return Array.isArray(ra) ? ra[0] : ra; }
+    const err = String(window._sbLastError||'');
+    if(/criado_por|criado_em|PGRST204|42703/.test(err)){
+      _auditColsOk = false;
+      console.warn('Colunas criado_por/criado_em não existem no Supabase — salvando sem hora/login. Rode o SQL indicado na tela Backup.');
+    } else { setSyncStatus('error'); return null; }
+  }
   const r = await sbReq(tabela, 'POST', corpo);
   setSyncStatus(r ? 'ok' : 'error');
   return r ? (Array.isArray(r) ? r[0] : r) : null;
@@ -2441,6 +2476,12 @@ function today(){return new Date().toISOString().split('T')[0]}
 function fN(n){return typeof n==='number'?n.toLocaleString('pt-BR'):n}
 function fR(n){return'R$ '+Number(n||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}
 function fD(d){if(!d)return'—';const[y,m,dd]=d.split('-');return`${dd}/${m}/${y}`}
+// "07/10/2026 21:30" + login, para a coluna Incluído por
+function fDH(iso){ if(!iso) return ''; const d=new Date(iso); if(isNaN(d)) return ''; return d.toLocaleDateString('pt-BR')+' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}); }
+function cellIncluido(x){
+  if(!x.criadoEm && !x.criadoPor) return '<td class="txt-f" style="white-space:nowrap">—</td>';
+  return `<td style="white-space:nowrap;line-height:1.25"><div class="fw" style="font-size:12px">👤 ${x.criadoPor||'—'}</div><div class="txt-f" style="font-size:11px">🕒 ${fDH(x.criadoEm)||'—'}</div></td>`;
+}
 function getM(d){return parseInt(d.split('-')[1])}
 function getY(d){return parseInt(d.split('-')[0])}
 function save(){} // não usado mais — tudo vai direto ao Supabase
@@ -2944,10 +2985,11 @@ function renderEntradas(){
       <td>${f?f.nome:(e.fornId||'—')}</td>
       <td class="txt-f">${e.nf||'—'}</td>
       <td class="txt-f">${e.resp||'—'}${prodBadge}</td>
+      ${cellIncluido(e)}
       <td><span class="r-edit" onclick="abrirEditEnt(${e.id})">✏️</span><span class="r-del" onclick="delEnt(${e.id})">🗑</span></td>
     </tr>`;
   });
-  document.getElementById('tb-entradas').innerHTML=rows||'<tr><td colspan="10" class="empty">Nenhuma entrada encontrada.</td></tr>';
+  document.getElementById('tb-entradas').innerHTML=rows||'<tr><td colspan="11" class="empty">Nenhuma entrada encontrada.</td></tr>';
 }
 function limparEntrada(){
   editEntId=null;
@@ -2967,6 +3009,7 @@ async function salvarEntrada(){
     if(!db){ alert('Erro ao salvar entrada no Supabase. Os dados do formulário foram mantidos — verifique a conexão e tente novamente.'); return; }
     obj.id=db.id;obj.mes=db.mes;obj.ano=db.ano;
   }
+  obj.criadoPor=usuarioAtualNome(); obj.criadoEm=new Date().toISOString();
   entradas.push(obj);limparEntrada();renderEntradas();closeModal('modal-entrada');
 }
 function abrirEditEnt(id){
@@ -3032,10 +3075,11 @@ function renderSaidas(){
       <td class="txt-f">${s.resp||'—'}${prodBadge}</td>
       <td>${fR(s.valor)}</td>
       <td class="txt-f">${s.obs||'—'}</td>
+      ${cellIncluido(s)}
       <td><span class="r-edit" onclick="abrirEditSai(${s.id})">✏️</span><span class="r-del" onclick="delSai(${s.id})">🗑</span></td>
     </tr>`;
   });
-  document.getElementById('tb-saidas').innerHTML=rows||'<tr><td colspan="9" class="empty">Nenhuma saída encontrada.</td></tr>';
+  document.getElementById('tb-saidas').innerHTML=rows||'<tr><td colspan="10" class="empty">Nenhuma saída encontrada.</td></tr>';
 }
 function limparSaida(){
   editSaiId=null;
@@ -3057,6 +3101,7 @@ async function salvarSaida(){
     if(!db){ alert('Erro ao salvar saída no Supabase. Os dados do formulário foram mantidos — verifique a conexão e tente novamente.'); return; }
     sObj.id=db.id;sObj.mes=db.mes;sObj.ano=db.ano;
   }
+  sObj.criadoPor=usuarioAtualNome(); sObj.criadoEm=new Date().toISOString();
   saidas.push(sObj);limparSaida();renderSaidas();closeModal('modal-saida');
 }
 function abrirEditSai(id){
@@ -3936,10 +3981,10 @@ async function importarSaidasXlsx(){
     const obj={id:0,data:row.data,prodId,qt:row.qt,cliId:cli?cli.id:null,resp:row.resp,valor:row.valor,obs:'',mes:row.mes,ano:row.ano};
     if(sbOnline){
       const db=await sbSave('saidas',{data:row.data,produto_id:prodId,quantidade:row.qt,cliente_id:cli?cli.id:null,responsavel:row.resp,valor_total:row.valor,obs:''});
-      if(db){obj.id=db.id;obj.mes=db.mes||row.mes;obj.ano=db.ano||row.ano;saidas.push(obj);importados++;}
+      if(db){obj.id=db.id;obj.mes=db.mes||row.mes;obj.ano=db.ano||row.ano;obj.criadoPor=usuarioAtualNome();obj.criadoEm=db.criado_em||new Date().toISOString();saidas.push(obj);importados++;}
       else erros++;
     } else {
-      obj.id=Date.now()+Math.random();saidas.push(obj);importados++;
+      obj.id=Date.now()+Math.random();obj.criadoPor=usuarioAtualNome();obj.criadoEm=new Date().toISOString();saidas.push(obj);importados++;
     }
   }
   renderSaidas();
@@ -3963,10 +4008,10 @@ async function importarEntradasXlsx(){
     const obj={id:0,data:row.data,prodId,qt:row.qt,custo:row.custo,fornId:forn?forn.id:null,nf:row.nf,resp:'Importação XLSX',obs:'',mes:row.mes,ano:row.ano};
     if(sbOnline){
       const db=await sbSave('entradas',{data:row.data,produto_id:prodId,quantidade:row.qt,custo_unitario:row.custo,fornecedor_id:forn?forn.id:null,nota_fiscal:row.nf,responsavel:'Importação XLSX',obs:''});
-      if(db){obj.id=db.id;obj.mes=db.mes||row.mes;obj.ano=db.ano||row.ano;entradas.push(obj);importados++;}
+      if(db){obj.id=db.id;obj.mes=db.mes||row.mes;obj.ano=db.ano||row.ano;obj.criadoPor=usuarioAtualNome();obj.criadoEm=db.criado_em||new Date().toISOString();entradas.push(obj);importados++;}
       else erros++;
     } else {
-      obj.id=Date.now()+Math.random();entradas.push(obj);importados++;
+      obj.id=Date.now()+Math.random();obj.criadoPor=usuarioAtualNome();obj.criadoEm=new Date().toISOString();entradas.push(obj);importados++;
     }
   }
   renderEntradas();
@@ -4370,6 +4415,7 @@ function renderProducao(){
       + '<td>'+fR(l.custo)+'</td>'
       + '<td>'+badgeOrigem(l.origem)+'</td>'
       + '<td style="max-width:140px;overflow:hidden;text-overflow:ellipsis">'+(l.obs||'—')+'</td>'
+      + cellIncluido(l)
       + '<td><div style="display:flex;gap:5px;align-items:center">'
       + btnConfirmar
       + '<button class="btn btn-s" style="padding:4px 10px;font-size:12px" onclick="editarProducao('+l.id+')">✏️</button>'
@@ -4378,7 +4424,7 @@ function renderProducao(){
       + '</tr>';
   });
 
-  document.getElementById('tb-producao').innerHTML = rows || '<tr><td colspan="9" class="empty">Nenhum lançamento encontrado.</td></tr>';
+  document.getElementById('tb-producao').innerHTML = rows || '<tr><td colspan="10" class="empty">Nenhum lançamento encontrado.</td></tr>';
   document.getElementById('prod-count').textContent = 'Lançamentos de Produção (' + lista.length + ')';
 }
 
@@ -4388,7 +4434,7 @@ function exportarProducaoExcel(){
   if(!lista.length){ alert('Não há lançamentos para exportar com os filtros atuais.'); return; }
 
   const sitTxt = {PRODUCAO:'Produção', VENDA:'Venda', PRE_VENDA:'Pré-Venda'};
-  const linhas = [['Data','Produto','Situação','Qtd','Cliente','Custo Prod.','Origem','Obs.']];
+  const linhas = [['Data','Produto','Situação','Qtd','Cliente','Custo Prod.','Origem','Obs.','Incluído por','Data/Hora inclusão']];
   lista.forEach(l=>{
     const prod = gP(l.prodId);
     const cli  = gCli(l.cliId);
@@ -4400,7 +4446,9 @@ function exportarProducaoExcel(){
       cli ? cli.nome : '',
       l.custo || 0,
       l.origem==='ficha_tecnica' ? 'Ficha Técnica' : 'Manual',
-      l.obs || ''
+      l.obs || '',
+      l.criadoPor || '',
+      fDH(l.criadoEm)
     ]);
   });
 
