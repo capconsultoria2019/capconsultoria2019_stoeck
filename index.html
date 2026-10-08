@@ -487,7 +487,11 @@ body{font-family:'DM Sans',sans-serif;background:var(--preto);color:var(--txt);m
 
   <!-- ========= PRODUÇÃO ========= -->
   <div class="page" id="page-producao">
-
+    <div class="audit-aviso" style="display:none;margin-bottom:14px;padding:12px 16px;border-radius:10px;border:1px solid rgba(243,156,18,.45);background:rgba(243,156,18,.10);font-size:13px;line-height:1.5">
+      ⚠️ <b>O login de quem lança não está sendo gravado.</b> O banco ainda não tem as colunas <code>criado_por</code> / <code>criado_em</code>.
+      Rode o SQL da tela <a href="#" onclick="goPage('backup');return false" style="color:var(--amar);font-weight:600">Backup → Hora e login nos lançamentos</a> no Supabase e recarregue a página.
+    </div>
+    
     <!-- KPIs de Produção -->
     <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr)">
       <div class="kpi-card green" style="cursor:pointer" onclick="filtrarSit('')" title="Ver todos">
@@ -1001,7 +1005,11 @@ body{font-family:'DM Sans',sans-serif;background:var(--preto);color:var(--txt);m
 
   <!-- ========= ENTRADAS ========= -->
   <div class="page" id="page-entradas">
-    <div class="table-card">
+    <div class="audit-aviso" style="display:none;margin-bottom:14px;padding:12px 16px;border-radius:10px;border:1px solid rgba(243,156,18,.45);background:rgba(243,156,18,.10);font-size:13px;line-height:1.5">
+      ⚠️ <b>O login de quem lança não está sendo gravado.</b> O banco ainda não tem as colunas <code>criado_por</code> / <code>criado_em</code>.
+      Rode o SQL da tela <a href="#" onclick="goPage('backup');return false" style="color:var(--amar);font-weight:600">Backup → Hora e login nos lançamentos</a> no Supabase e recarregue a página.
+    </div>
+        <div class="table-card">
       <div class="tc-head">
         <div class="tc-title">Histórico de Entradas</div>
         <button class="btn btn-p" onclick="abrirModalEntrada()">＋ Nova Entrada</button>
@@ -1021,7 +1029,11 @@ body{font-family:'DM Sans',sans-serif;background:var(--preto);color:var(--txt);m
 
   <!-- ========= SAÍDAS ========= -->
   <div class="page" id="page-saidas">
-    <div class="table-card">
+    <div class="audit-aviso" style="display:none;margin-bottom:14px;padding:12px 16px;border-radius:10px;border:1px solid rgba(243,156,18,.45);background:rgba(243,156,18,.10);font-size:13px;line-height:1.5">
+      ⚠️ <b>O login de quem lança não está sendo gravado.</b> O banco ainda não tem as colunas <code>criado_por</code> / <code>criado_em</code>.
+      Rode o SQL da tela <a href="#" onclick="goPage('backup');return false" style="color:var(--amar);font-weight:600">Backup → Hora e login nos lançamentos</a> no Supabase e recarregue a página.
+    </div>
+        <div class="table-card">
       <div class="tc-head">
         <div class="tc-title">Histórico de Saídas</div>
         <button class="btn btn-p" onclick="abrirModalSaida()">＋ Nova Saída</button>
@@ -1415,11 +1427,14 @@ body{font-family:'DM Sans',sans-serif;background:var(--preto);color:var(--txt);m
       <pre id="sql-auditoria" style="background:var(--cm);border:1px solid var(--borda);border-radius:8px;padding:12px;font-size:12px;overflow:auto;white-space:pre">-- Hora e login de quem incluiu cada lançamento
 -- Rode uma única vez no Supabase: SQL Editor &gt; New query &gt; colar &gt; Run
 alter table entradas             add column if not exists criado_por text;
-alter table entradas             add column if not exists criado_em  timestamptz default now();
+alter table entradas             add column if not exists criado_em  timestamptz;
+alter table entradas             alter column criado_em set default now();
 alter table saidas               add column if not exists criado_por text;
-alter table saidas               add column if not exists criado_em  timestamptz default now();
+alter table saidas               add column if not exists criado_em  timestamptz;
+alter table saidas               alter column criado_em set default now();
 alter table lancamentos_producao add column if not exists criado_por text;
-alter table lancamentos_producao add column if not exists criado_em  timestamptz default now();
+alter table lancamentos_producao add column if not exists criado_em  timestamptz;
+alter table lancamentos_producao alter column criado_em set default now();
 -- atualiza o cache do Supabase para reconhecer as colunas novas
 notify pgrst, &#x27;reload schema&#x27;;
 </pre>
@@ -2295,6 +2310,7 @@ async function carregarTudo(silent=false){
       setSyncStatus('ok');
       // corrige automaticamente baixas de MP gravadas com R$ 0,00
       setTimeout(()=>recalcularBaixasMP(true), 500);
+      verificarColunasAudit();
     } else {
       salvarCacheLocal(); // guarda o que temos, ainda que parcial
       setSyncStatus('error');
@@ -2435,6 +2451,13 @@ function showLoader(show){
 // ── Auditoria: quem incluiu e quando (entradas, saídas, lançamentos de produção) ──
 const TABELAS_AUDIT = ['entradas','saidas','lancamentos_producao'];
 let _auditColsOk = true;   // vira false se as colunas criado_por/criado_em ainda não existirem no Supabase
+// Confere se as colunas de auditoria existem no Supabase e mostra/oculta o aviso nas telas
+async function verificarColunasAudit(){
+  if(!sbOnline) return;
+  const r = await sbReq('entradas','GET',null,'?select=criado_por,criado_em&limit=1');
+  _auditColsOk = r !== null;
+  document.querySelectorAll('.audit-aviso').forEach(el=>el.style.display = _auditColsOk ? 'none' : '');
+}
 function usuarioAtualNome(){ return currentUser ? (currentUser.nome || currentUser.login || '') : ''; }
 async function sbSave(tabela, corpo){
   setSyncStatus('saving');
@@ -2480,7 +2503,9 @@ function fD(d){if(!d)return'—';const[y,m,dd]=d.split('-');return`${dd}/${m}/${
 function fDH(iso){ if(!iso) return ''; const d=new Date(iso); if(isNaN(d)) return ''; return d.toLocaleDateString('pt-BR')+' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}); }
 function cellIncluido(x){
   if(!x.criadoEm && !x.criadoPor) return '<td class="txt-f" style="white-space:nowrap">—</td>';
-  return `<td style="white-space:nowrap;line-height:1.25"><div class="fw" style="font-size:12px">👤 ${x.criadoPor||'—'}</div><div class="txt-f" style="font-size:11px">🕒 ${fDH(x.criadoEm)||'—'}</div></td>`;
+  const quem = x.criadoPor ? `<div class="fw" style="font-size:12px">👤 ${x.criadoPor}</div>`
+    : `<div class="txt-f" style="font-size:11px" title="Lançado antes do registro de login (ou com as colunas ainda não criadas no Supabase)">👤 não registrado</div>`;
+  return `<td style="white-space:nowrap;line-height:1.25">${quem}<div class="txt-f" style="font-size:11px">🕒 ${fDH(x.criadoEm)||'—'}</div></td>`;
 }
 function getM(d){return parseInt(d.split('-')[1])}
 function getY(d){return parseInt(d.split('-')[0])}
