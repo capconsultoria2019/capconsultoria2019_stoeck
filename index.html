@@ -2217,8 +2217,8 @@ function carregarCacheLocal(){
 
 // ══════ DADOS (memória) ══════
 let usuarios   = [
-  {id:1, nome:'Admin',      login:'admin',      senha:'Sto3_@maic', perfil:'admin'},
-  {id:2, nome:'Financeiro', login:'financeiro', senha:'Sto3_@secr', perfil:'consulta'},
+  {id:1, nome:'Maicon',     login:'admin',      senha:'Sto3_@maic', perfil:'admin'},
+  {id:2, nome:'Daiane',     login:'financeiro', senha:'Sto3_@secr', perfil:'consulta'},
   {id:3, nome:'Produção',   login:'producao',   senha:'Sto3_@jaks', perfil:'operador'},
 ];
 let subfamilias= [{id:1,nome:'Matéria Prima',tipo:'materia_prima',desc:''},{id:2,nome:'Produto Acabado',tipo:'produto_acabado',desc:''},{id:3,nome:'Produto Intermediário',tipo:'produto_intermediario',desc:''},{id:4,nome:'Embalagem',tipo:'embalagem',desc:''},{id:5,nome:'Sucata / Refugo',tipo:'sucata',desc:''}];
@@ -2458,7 +2458,22 @@ async function verificarColunasAudit(){
   _auditColsOk = r !== null;
   document.querySelectorAll('.audit-aviso').forEach(el=>el.style.display = _auditColsOk ? 'none' : '');
 }
-function usuarioAtualNome(){ return currentUser ? (currentUser.nome || currentUser.login || '') : ''; }
+// Nome do USUÁRIO (não o login). Busca na lista pelo login, para pegar o nome atualizado.
+function usuarioAtualNome(){
+  if(!currentUser) return '';
+  const u = usuarios.find(x=>x.login===currentUser.login) || currentUser;
+  return u.nome || u.login || '';
+}
+// Converte o que foi gravado (nome antigo ou login) no nome atual do usuário
+function nomeUsuarioExib(v){
+  if(!v) return '';
+  const t = String(v).trim().toLowerCase();
+  const antigos = {admin:'admin', financeiro:'financeiro'}; // nomes padrão antigos -> login
+  const u = usuarios.find(x=>(x.nome||'').toLowerCase()===t && !antigos[t])
+         || usuarios.find(x=>(x.login||'').toLowerCase()===t)
+         || usuarios.find(x=>(x.nome||'').toLowerCase()===t);
+  return u ? u.nome : v;
+}
 async function sbSave(tabela, corpo){
   setSyncStatus('saving');
   if(TABELAS_AUDIT.includes(tabela) && corpo && !Array.isArray(corpo) && _auditColsOk){
@@ -2503,7 +2518,7 @@ function fD(d){if(!d)return'—';const[y,m,dd]=d.split('-');return`${dd}/${m}/${
 function fDH(iso){ if(!iso) return ''; const d=new Date(iso); if(isNaN(d)) return ''; return d.toLocaleDateString('pt-BR')+' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}); }
 function cellIncluido(x){
   if(!x.criadoEm && !x.criadoPor) return '<td class="txt-f" style="white-space:nowrap">—</td>';
-  const quem = x.criadoPor ? `<div class="fw" style="font-size:12px">👤 ${x.criadoPor}</div>`
+  const quem = x.criadoPor ? `<div class="fw" style="font-size:12px">👤 ${nomeUsuarioExib(x.criadoPor)}</div>`
     : `<div class="txt-f" style="font-size:11px" title="Lançado antes do registro de login (ou com as colunas ainda não criadas no Supabase)">👤 não registrado</div>`;
   return `<td style="white-space:nowrap;line-height:1.25">${quem}<div class="txt-f" style="font-size:11px">🕒 ${fDH(x.criadoEm)||'—'}</div></td>`;
 }
@@ -4472,7 +4487,7 @@ function exportarProducaoExcel(){
       l.custo || 0,
       l.origem==='ficha_tecnica' ? 'Ficha Técnica' : 'Manual',
       l.obs || '',
-      l.criadoPor || '',
+      nomeUsuarioExib(l.criadoPor),
       fDH(l.criadoEm)
     ]);
   });
