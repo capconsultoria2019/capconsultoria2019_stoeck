@@ -1569,6 +1569,47 @@ notify pgrst, &#x27;reload schema&#x27;;
         <button class="btn btn-s" onclick="navigator.clipboard.writeText(document.getElementById('sql-auditoria').textContent).then(()=>alert('SQL copiado!'))">📋 Copiar SQL</button>
       </div>
     </div>
+    <div class="form-card" id="card-sql-custos">
+      <h3>💰 Custos compartilhados entre usuários</h3>
+      <p style="font-size:13px;color:var(--fraco);line-height:1.6;margin-bottom:10px">
+        Para que os custos da tela <b>Custo Hora de Produção</b> e a escolha do <b>Custo GGF aplicado por mês</b> (tela Custo Real de Produção)
+        fiquem iguais para <b>todos os usuários</b>, rode este comando <b>uma única vez</b> no Supabase (SQL Editor → New query → colar → Run) e depois recarregue o sistema.
+        O que já estiver salvo neste navegador é enviado automaticamente para o servidor na primeira vez.
+      </p>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px">
+        <button class="btn btn-p" onclick="verificarTabelasCustos()">🔄 Verificar conexão das tabelas agora</button>
+        <div id="status-sql-custos" style="font-size:12px"></div>
+      </div>
+      <div id="diag-sql-custos" style="font-size:12px;margin-bottom:10px"></div>
+      <pre id="sql-custos" style="background:var(--cm);border:1px solid var(--borda);border-radius:8px;padding:12px;font-size:12px;overflow:auto;white-space:pre">-- Custos compartilhados entre usuários (Custo Hora + Custo GGF aplicado por mês)
+-- Rode uma única vez no Supabase: SQL Editor &gt; New query &gt; colar &gt; Run
+create table if not exists custo_producao (
+  id bigint generated always as identity primary key,
+  ano int not null, mes int not null,
+  manutencao numeric default 0, insumos numeric default 0, rh numeric default 0,
+  unique (ano, mes)
+);
+create table if not exists custo_ggf_ref (
+  id bigint generated always as identity primary key,
+  ano int not null, mes int not null,
+  ref_ano int not null, ref_mes int not null,
+  unique (ano, mes)
+);
+-- acesso para o sistema (mesma chave usada nas outras tabelas)
+grant select, insert, update, delete on custo_producao, custo_ggf_ref to anon, authenticated;
+alter table custo_producao enable row level security;
+alter table custo_ggf_ref  enable row level security;
+drop policy if exists "acesso total" on custo_producao;
+drop policy if exists "acesso total" on custo_ggf_ref;
+create policy "acesso total" on custo_producao for all to anon, authenticated using (true) with check (true);
+create policy "acesso total" on custo_ggf_ref  for all to anon, authenticated using (true) with check (true);
+-- atualiza o cache do Supabase para reconhecer as tabelas novas
+notify pgrst, &#x27;reload schema&#x27;;
+</pre>
+      <div class="form-actions" style="justify-content:flex-start">
+        <button class="btn btn-s" onclick="navigator.clipboard.writeText(document.getElementById('sql-custos').textContent).then(()=>alert('SQL copiado!'))">📋 Copiar SQL</button>
+      </div>
+    </div>
     <div class="table-card">
       <div class="tc-head"><div class="tc-title">📋 Tabelas incluídas no backup</div></div>
       <div class="table-wrap">
@@ -1583,6 +1624,8 @@ notify pgrst, &#x27;reload schema&#x27;;
             <tr><td>entradas</td><td>Entradas de estoque</td></tr>
             <tr><td>saidas</td><td>Saídas de estoque</td></tr>
             <tr><td>lancamentos_producao</td><td>Lançamentos de produção / vendas</td></tr>
+            <tr><td>custo_producao</td><td>Custo Hora de Produção (manutenção, insumos, RH) — se a tabela existir</td></tr>
+            <tr><td>custo_ggf_ref</td><td>Custo GGF aplicado por mês — se a tabela existir</td></tr>
             <tr><td>ficha_tecnica</td><td>Ficha técnica dos produtos</td></tr>
             <tr><td>recursos</td><td>Recursos / máquinas</td></tr>
             <tr><td>tipos_parada</td><td>Tipos de parada</td></tr>
@@ -2509,6 +2552,7 @@ const TABELAS_BACKUP = [
 ];
 
 function renderBackup(){
+  statusSqlCustos();
   const el = document.getElementById('backup-ultima-data');
   if(!el) return;
   let ultimo = null;
@@ -2548,6 +2592,11 @@ async function baixarBackupCompleto(){
     const agora = new Date();
     const backup = { sistema: 'Stoeck - Controle de Estoque', geradoEm: agora.toISOString(), tabelas: {} };
     TABELAS_BACKUP.forEach((tabela, i) => { backup.tabelas[tabela] = resultados[i]; });
+    // tabelas de custos (opcionais: entram no backup só se já existirem no Supabase)
+    for(const tb of ['custo_producao','custo_ggf_ref']){
+      const rr = await sbReqAll(tb);
+      if(Array.isArray(rr)) backup.tabelas[tb] = rr;
+    }
 
     const json = JSON.stringify(backup, null, 2);
     const blob = new Blob([json], { type: 'application/json' });
@@ -6410,6 +6459,43 @@ function gerarPdfIndicadores(){
   doc.save(nomeArq);
 }
 
+function irSqlCustos(){
+  goPage('backup');
+  setTimeout(()=>{ document.getElementById('card-sql-custos')?.scrollIntoView({behavior:'smooth',block:'start'}); verificarTabelasCustos(); },100);
+}
+// Testa cada tabela de custos no Supabase, mostra o erro real e já reconecta/envia os dados locais
+async function verificarTabelasCustos(){
+  const box = document.getElementById('diag-sql-custos');
+  if(box) box.innerHTML = '⏳ Consultando o Supabase...';
+  if(!SB_URL || !SB_KEY){ if(box) box.innerHTML = '<span style="color:var(--verm)">Supabase não configurado neste navegador.</span>'; return; }
+  const linhas = [];
+  for(const tb of ['custo_producao','custo_ggf_ref']){
+    const r = await sbReq(tb,'GET',null,'?limit=1');
+    const st = window._sbLastStatus, err = String(window._sbLastError||'');
+    let msg;
+    if(r!==null) msg = '<span style="color:var(--verde);font-weight:600">✅ OK — tabela acessível</span>';
+    else if(st===404 || /PGRST205|42P01|Could not find the table|does not exist/i.test(err))
+      msg = '<span style="color:var(--verm);font-weight:600">❌ Tabela não encontrada pela API.</span> Ela não existe neste projeto do Supabase, ou foi criada mas a API ainda não recarregou. Rode o SQL abaixo (ele cria o que faltar e recarrega a API).';
+    else if(st===401 || st===403 || /42501|permission denied/i.test(err))
+      msg = '<span style="color:var(--verm);font-weight:600">❌ Sem permissão.</span> A tabela existe, mas a chave do sistema não tem acesso. Rode o SQL abaixo (parte do <i>grant</i> e <i>policy</i>).';
+    else msg = '<span style="color:var(--verm);font-weight:600">❌ Erro ' + (st||'de rede') + '.</span>';
+    linhas.push(`<div style="margin:3px 0"><code>${tb}</code>: ${msg}${r===null && err ? `<div style="font-size:11px;color:var(--fraco);margin-top:2px">Resposta do servidor: ${_ferEsc(err.slice(0,300))}</div>`:''}</div>`);
+  }
+  linhas.push(`<div style="font-size:11px;color:var(--fraco);margin-top:4px">Projeto consultado: ${_ferEsc(SB_URL)}</div>`);
+  if(box) box.innerHTML = linhas.join('');
+  await carregarCustoProducao();
+  await carregarCustoGgfRef();
+  statusSqlCustos();
+  const pg = document.querySelector('.page.active')?.id;
+  if(pg==='page-custohora') renderCustoHora();
+  if(pg==='page-custoreal') renderCustoReal();
+}
+function statusSqlCustos(){
+  const el=document.getElementById('status-sql-custos'); if(!el) return;
+  const ok = custoProducaoRemoto && custoGgfRefRemoto;
+  el.innerHTML = ok ? '<span style="color:var(--verde);font-weight:600">✅ Tabelas encontradas — os custos já estão compartilhados entre usuários.</span>'
+    : `<span style="color:var(--amar);font-weight:600">⚠️ Ainda salvo só no navegador. Falta: ${[!custoProducaoRemoto?'custo_producao':'', !custoGgfRefRemoto?'custo_ggf_ref':''].filter(Boolean).join(', ')}.</span>`;
+}
 // ══════ CUSTO HORA DE PRODUÇÃO (GGF ÷ PRODUÇÃO TOTAL) ══════
 // Custos mensais (manutenção, insumos, RH) ficam na tabela "custo_producao" do Supabase
 // quando existir, com cópia sempre no navegador (localStorage) — mesmo padrão dos feriados.
@@ -6432,7 +6518,17 @@ async function carregarCustoProducao(){
   if(Array.isArray(r)){
     custoProducaoRemoto = true;
     custoProducao = r.map(x=>({ano:+x.ano, mes:+x.mes, manutencao:+x.manutencao||0, insumos:+x.insumos||0, rh:+x.rh||0}));
+    // primeira vez com a tabela: envia ao servidor o que só existia neste navegador
+    let local=[]; try{ if(!localStorage.getItem(CUSTO_PROD_LS_KEY+'_migrado')) local = JSON.parse(localStorage.getItem(CUSTO_PROD_LS_KEY)||'[]'); }catch(e){}
+    const faltam = local.filter(l=>!custoProducao.some(c=>c.ano===l.ano&&c.mes===l.mes));
+    let migrou = true;
+    if(faltam.length){
+      const ok = await sbReq('custo_producao','POST',faltam.map(l=>({ano:l.ano, mes:l.mes, manutencao:l.manutencao||0, insumos:l.insumos||0, rh:l.rh||0})));
+      custoProducao.push(...faltam);          // mantém na tela mesmo se o envio falhar
+      if(ok===null) migrou=false;     // tenta enviar de novo no próximo carregamento
+    }
     try{ localStorage.setItem(CUSTO_PROD_LS_KEY, JSON.stringify(custoProducao)); }catch(e){}
+    if(migrou) try{ localStorage.setItem(CUSTO_PROD_LS_KEY+'_migrado','1'); }catch(e){}
   } else {
     custoProducaoRemoto = false;
     try{ custoProducao = JSON.parse(localStorage.getItem(CUSTO_PROD_LS_KEY)||'[]'); }catch(e){ custoProducao=[]; }
@@ -6536,7 +6632,7 @@ function renderCustoHora(){
   document.getElementById('tb-custohora').innerHTML = rows;
   document.getElementById('ch-nota').innerHTML = custoProducaoRemoto
     ? 'Custo por kg = 1.0 GGF ÷ Produção Total (kg). Valores salvos no servidor.'
-    : 'Custo por kg = 1.0 GGF ÷ Produção Total (kg). <span style="color:var(--amar)">Os custos estão salvos só neste navegador — crie a tabela "custo_producao" no Supabase para compartilhar entre usuários.</span>';
+    : 'Custo por kg = 1.0 GGF ÷ Produção Total (kg). <span style="color:var(--amar)">Os custos estão salvos só neste navegador. Para compartilhar entre usuários, rode o SQL em <a href="#" onclick="irSqlCustos();return false" style="color:var(--amar);font-weight:700">Backup → Custos compartilhados</a>.</span>';
 }
 
 async function salvarCustoHora(ano, mes, campo, el){
@@ -6680,7 +6776,17 @@ async function carregarCustoGgfRef(){
   if(Array.isArray(r)){
     custoGgfRefRemoto = true;
     custoGgfRef = r.map(x=>({ano:+x.ano, mes:+x.mes, refAno:+x.ref_ano, refMes:+x.ref_mes}));
+    // primeira vez com a tabela: envia ao servidor o que só existia neste navegador
+    let local=[]; try{ if(!localStorage.getItem(CUSTO_GGF_REF_LS_KEY+'_migrado')) local = JSON.parse(localStorage.getItem(CUSTO_GGF_REF_LS_KEY)||'[]'); }catch(e){}
+    const faltam = local.filter(l=>!custoGgfRef.some(c=>c.ano===l.ano&&c.mes===l.mes));
+    let migrou = true;
+    if(faltam.length){
+      const ok = await sbReq('custo_ggf_ref','POST',faltam.map(l=>({ano:l.ano, mes:l.mes, ref_ano:l.refAno, ref_mes:l.refMes})));
+      custoGgfRef.push(...faltam);          // mantém na tela mesmo se o envio falhar
+      if(ok===null) migrou=false;     // tenta enviar de novo no próximo carregamento
+    }
     try{ localStorage.setItem(CUSTO_GGF_REF_LS_KEY, JSON.stringify(custoGgfRef)); }catch(e){}
+    if(migrou) try{ localStorage.setItem(CUSTO_GGF_REF_LS_KEY+'_migrado','1'); }catch(e){}
   } else {
     custoGgfRefRemoto = false;
     try{ custoGgfRef = JSON.parse(localStorage.getItem(CUSTO_GGF_REF_LS_KEY)||'[]'); }catch(e){ custoGgfRef=[]; }
@@ -6828,7 +6934,7 @@ function renderModalCustoGGF(){
   }
   document.getElementById('tb-custo-ggf').innerHTML = rows;
   document.getElementById('cg-nota').innerHTML = custoGgfRefRemoto ? 'Salvo no servidor.' :
-    '<span style="color:var(--amar)">Salvo só neste navegador — crie a tabela "custo_ggf_ref" no Supabase para compartilhar entre usuários.</span>';
+    '<span style="color:var(--amar)">Salvo só neste navegador. Para compartilhar entre usuários, abra <a href="#" onclick="closeModal(\'modal-custo-ggf\');irSqlCustos();return false" style="color:var(--amar);font-weight:700">Backup → Custos compartilhados</a> e clique em “Verificar conexão”.</span>';
 }
 async function salvarRefGGF(ano, mes, valor){
   const i = custoGgfRef.findIndex(r=>r.ano===ano&&r.mes===mes);
