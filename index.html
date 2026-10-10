@@ -6496,6 +6496,26 @@ function statusSqlCustos(){
   el.innerHTML = ok ? '<span style="color:var(--verde);font-weight:600">✅ Tabelas encontradas — os custos já estão compartilhados entre usuários.</span>'
     : `<span style="color:var(--amar);font-weight:600">⚠️ Ainda salvo só no navegador. Falta: ${[!custoProducaoRemoto?'custo_producao':'', !custoGgfRefRemoto?'custo_ggf_ref':''].filter(Boolean).join(', ')}.</span>`;
 }
+// Grava ou atualiza (upsert) pela chave única ano+mes. modo 'merge' = substitui; 'ignore' = mantém o do servidor.
+async function sbUpsertCusto(tabela, corpo, modo='merge'){
+  if(!SB_URL || !SB_KEY) return null;
+  try{
+    const r = await fetch(`${SB_URL}/rest/v1/${tabela}?on_conflict=ano,mes`, {
+      method:'POST',
+      headers:{ 'apikey':SB_KEY, 'Authorization':'Bearer '+SB_KEY, 'Content-Type':'application/json',
+                'Prefer': (modo==='ignore'?'resolution=ignore-duplicates':'resolution=merge-duplicates')+',return=representation' },
+      body: JSON.stringify(corpo)
+    });
+    const txt = await r.text();
+    window._sbLastStatus = r.status;
+    if(!r.ok){ window._sbLastError = txt; console.error('Supabase upsert ERR', tabela, r.status, txt); return null; }
+    window._sbLastError = null;
+    return txt ? JSON.parse(txt) : [];
+  }catch(e){ window._sbLastError = String(e); window._sbLastStatus = null; return null; }
+}
+function _avisoFalhaServidor(){
+  alert('Não foi possível salvar no servidor (ficou salvo só neste navegador).\n\nResposta do Supabase: ' + String(window._sbLastError||window._sbLastStatus||'sem resposta').slice(0,300));
+}
 // ══════ CUSTO HORA DE PRODUÇÃO (GGF ÷ PRODUÇÃO TOTAL) ══════
 // Custos mensais (manutenção, insumos, RH) ficam na tabela "custo_producao" do Supabase
 // quando existir, com cópia sempre no navegador (localStorage) — mesmo padrão dos feriados.
@@ -6523,7 +6543,7 @@ async function carregarCustoProducao(){
     const faltam = local.filter(l=>!custoProducao.some(c=>c.ano===l.ano&&c.mes===l.mes));
     let migrou = true;
     if(faltam.length){
-      const ok = await sbReq('custo_producao','POST',faltam.map(l=>({ano:l.ano, mes:l.mes, manutencao:l.manutencao||0, insumos:l.insumos||0, rh:l.rh||0})));
+      const ok = await sbUpsertCusto('custo_producao',faltam.map(l=>({ano:l.ano, mes:l.mes, manutencao:l.manutencao||0, insumos:l.insumos||0, rh:l.rh||0})),'ignore');
       custoProducao.push(...faltam);          // mantém na tela mesmo se o envio falhar
       if(ok===null) migrou=false;     // tenta enviar de novo no próximo carregamento
     }
@@ -6645,10 +6665,8 @@ async function salvarCustoHora(ano, mes, campo, el){
   renderCustoHora();
   if(!custoProducaoRemoto) return;
   const corpo = {ano, mes, manutencao:reg.manutencao, insumos:reg.insumos, rh:reg.rh};
-  let r = novo ? await sbReq('custo_producao','POST',corpo)
-               : await sbReq('custo_producao','PATCH',corpo,`?ano=eq.${ano}&mes=eq.${mes}`);
-  if(r===null && novo) r = await sbReq('custo_producao','PATCH',corpo,`?ano=eq.${ano}&mes=eq.${mes}`);
-  if(r===null) alert('Não foi possível salvar o custo no servidor. Ficou salvo apenas neste navegador.');
+  const r = await sbUpsertCusto('custo_producao', corpo);
+  if(r===null) _avisoFalhaServidor();
 }
 
 // ══════ PDF — CUSTO HORA DE PRODUÇÃO (PAISAGEM / RETRATO) ══════
@@ -6781,7 +6799,7 @@ async function carregarCustoGgfRef(){
     const faltam = local.filter(l=>!custoGgfRef.some(c=>c.ano===l.ano&&c.mes===l.mes));
     let migrou = true;
     if(faltam.length){
-      const ok = await sbReq('custo_ggf_ref','POST',faltam.map(l=>({ano:l.ano, mes:l.mes, ref_ano:l.refAno, ref_mes:l.refMes})));
+      const ok = await sbUpsertCusto('custo_ggf_ref',faltam.map(l=>({ano:l.ano, mes:l.mes, ref_ano:l.refAno, ref_mes:l.refMes})),'ignore');
       custoGgfRef.push(...faltam);          // mantém na tela mesmo se o envio falhar
       if(ok===null) migrou=false;     // tenta enviar de novo no próximo carregamento
     }
@@ -6853,7 +6871,7 @@ function renderCustoReal(){
       <td>${badgeSit(l.situacao)}</td>
       <td style="text-align:right;color:var(--verm)">${fN(l.qt)}</td>
       <td style="text-align:right">${_crR4(l.custo||0)}</td>
-      <td style="text-align:right;background:rgba(243,156,18,.07)" title="${x.ref?'Custo de '+_crRef(x.ref):'Mês sem Custo GGF definido'}">${x.ggf===null?'<span style="color:var(--amar)">não definido</span>':_crR4(x.ggf)+` <span style="font-size:10px;color:var(--fraco)">(${_crRef(x.ref)})</span>`}</td>
+      <td style="text-align:right;background:rgba(243,156,18,.07)" title="${x.ref?(x.ggf===null?'O mês '+_crRef(x.ref)+' não tem GGF ou Produção na tela Custo Hora de Produção':'Custo de '+_crRef(x.ref)):'Mês sem Custo GGF definido'}">${x.ggf===null?(x.ref?`<span style="color:var(--verm)">sem custo em ${_crRef(x.ref)}</span>`:'<span style="color:var(--amar)">não definido</span>'):_crR4(x.ggf)+` <span style="font-size:10px;color:var(--fraco)">(${_crRef(x.ref)})</span>`}</td>
       <td style="text-align:right;background:rgba(46,139,46,.09);font-weight:700;color:var(--vm)">${_crR4(x.real)}</td>
       <td style="text-align:right">${fR(x.total)}</td>
       <td>${badgeOrigem(l.origem)}</td>
@@ -6954,11 +6972,9 @@ async function salvarRefGGF(ano, mes, valor){
   let r;
   if(remover) r = await sbReq('custo_ggf_ref','DELETE',null,filtro);
   else {
-    const corpo = {ano, mes, ref_ano:reg.refAno, ref_mes:reg.refMes};
-    r = i>=0 ? await sbReq('custo_ggf_ref','PATCH',corpo,filtro) : await sbReq('custo_ggf_ref','POST',corpo);
-    if(r===null && i<0) r = await sbReq('custo_ggf_ref','PATCH',corpo,filtro);
+    r = await sbUpsertCusto('custo_ggf_ref', {ano, mes, ref_ano:reg.refAno, ref_mes:reg.refMes});
   }
-  if(r===null) alert('Não foi possível salvar no servidor. Ficou salvo apenas neste navegador.');
+  if(r===null) _avisoFalhaServidor();
 }
 
 // ===== INIT =====
