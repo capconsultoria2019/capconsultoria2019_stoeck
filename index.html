@@ -13,6 +13,17 @@
   --verde: #27ae60; --verm: #e74c3c; --amar: #f39c12;
   --sw: 230px;
 }
+/* CUSTO HORA DE PRODUÇÃO */
+.ch-tab th,.ch-tab td{white-space:nowrap}
+.ch-tab td.ch-num,.ch-tab th.ch-num{text-align:right}
+.ch-tab td.ch-lbl{min-width:210px;font-weight:500}
+.ch-tab tr.ch-ggf td{background:rgba(46,139,46,.14);font-weight:700}
+.ch-tab tr.ch-ckg td{background:rgba(243,156,18,.12);font-weight:700}
+.ch-tab tr.ch-sub td.ch-lbl{padding-left:28px;font-weight:400}
+.ch-tab td.ch-mes-sel{outline:2px solid var(--vm);outline-offset:-2px}
+.ch-inp{width:92px;background:var(--cm);border:1px solid var(--borda);border-radius:6px;padding:4px 6px;color:var(--txt);font-size:12px;text-align:right;font-family:'DM Sans',sans-serif;outline:none}
+.ch-inp:focus{border-color:var(--vm)}
+.ch-inp.ch-ok{border-color:var(--verde)}
 /* TEMA CLARO */
 [data-tema="claro"] {
   --preto: #f0f2f5; --ce: #ffffff; --cm: #f5f5f5; --cc: #e0e0e0;
@@ -359,6 +370,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--preto);color:var(--txt);m
     <div class="nav-item" onclick="goPage('transferencia')" data-page="transferencia"><span class="ic">🔀</span> Transferência</div>
     <div class="nav-item" onclick="goPage('fichatecnica')"><span class="ic">📋</span> Ficha Técnica</div>
     <div class="nav-item" onclick="goPage('indicadores')"><span class="ic">📊</span> Indicadores</div>
+    <div class="nav-item" onclick="goPage('custohora')"><span class="ic">💰</span> Custo Hora de Produção</div>
+    <div class="nav-item" onclick="goPage('custoreal')"><span class="ic">🧾</span> Custo Real de Produção</div>
     <div class="nav-item" onclick="goPage('paradas')"><span class="ic">⛔</span> Paradas</div>
     <div class="nav-item" onclick="goPage('oee')"><span class="ic">🎯</span> OEE</div>
     <div class="nav-sec">Cadastros Produção</div>
@@ -455,6 +468,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--preto);color:var(--txt);m
       </select>
       <select class="fi" id="fe-sf" onchange="renderEstoque()"><option value="">Todas subfamílias</option></select>
       <select class="fi" id="fe-loc" onchange="renderEstoque()"><option value="">Todas localizações</option></select>
+      <select class="fi" id="fe-custo" onchange="salvarModoCustoEstoque();renderEstoque()" title="Custo usado nos produtos acabados" style="min-width:230px;border-color:var(--vm)">
+        <option value="compra">Custo: Médio de Compra</option>
+        <option value="real">Custo: Real (Total / Média Ponderada)</option>
+      </select>
     </div>
     <div class="kpi-grid" style="grid-template-columns:repeat(3,1fr)">
       <div class="kpi-card ok">
@@ -481,7 +498,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--preto);color:var(--txt);m
           <span style="font-size:11px;color:var(--fraco);margin-right:8px">Admin:</span>
         </div>
       </div>
-      <div class="table-wrap"><table><thead><tr><th>Cód.</th><th>Produto</th><th>Subfamília</th><th>Localização</th><th>Estoque Mín.</th><th>Saldo Inicial</th><th>Entradas</th><th>Saídas</th><th>Saldo</th><th title="Matéria-prima/insumo: média ponderada das compras. Produto acabado: qtd de MP da ficha técnica × custo médio de compra da MP de origem">Custo Médio Compra</th><th>Valor Estoque</th><th>Variação do Mês</th><th id="th-ajuste-saldo" style="display:none">Ajuste</th></tr></thead><tbody id="tb-estoque"></tbody></table></div>
+      <div class="table-wrap"><table><thead><tr><th>Cód.</th><th>Produto</th><th>Subfamília</th><th>Localização</th><th>Estoque Mín.</th><th>Saldo Inicial</th><th>Entradas</th><th>Saídas</th><th>Saldo</th><th title="Matéria-prima/insumo: média ponderada das compras. Produto acabado: Custo Real médio ponderado (Custo Prod. + Custo GGF) da tela Custo Real de Produção no período do filtro; sem produção no período, usa o custo médio de compra"><span id="th-custo-estoque">Custo Médio Compra / Real</span></th><th>Valor Estoque</th><th>Variação do Mês</th><th id="th-ajuste-saldo" style="display:none">Ajuste</th></tr></thead><tbody id="tb-estoque"></tbody></table></div>
     </div>
   </div>
 
@@ -732,6 +749,116 @@ body{font-family:'DM Sans',sans-serif;background:var(--preto);color:var(--txt);m
         <svg id="ind-grafico-anual" width="100%" viewBox="0 0 980 340" style="min-width:760px"></svg>
         <div id="ind-grafico-legend" style="display:flex;gap:18px;justify-content:center;margin-top:6px;font-size:12px;color:var(--fraco)"></div>
       </div>
+    </div>
+  </div>
+
+  <!-- ========= CUSTO REAL DE PRODUÇÃO ========= -->
+  <div class="page" id="page-custoreal">
+    <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:16px">
+      <div class="kpi-card ok"><div class="kpi-label">🏭 Produção (kg)</div><div class="kpi-value" id="cr-kpi-qt" style="font-size:22px">0</div><div class="kpi-sub" id="cr-kpi-qt-sub">0 lançamentos</div></div>
+      <div class="kpi-card warn"><div class="kpi-label">Custo GGF aplicado</div><div class="kpi-value" id="cr-kpi-ggf" style="font-size:22px">—</div><div class="kpi-sub" id="cr-kpi-ggf-sub">R$/kg</div></div>
+      <div class="kpi-card green"><div class="kpi-label">Custo Real Médio</div><div class="kpi-value" id="cr-kpi-real" style="font-size:22px">—</div><div class="kpi-sub">R$/kg (ponderado pela qtd)</div></div>
+      <div class="kpi-card"><div class="kpi-label">Valor Total Real</div><div class="kpi-value" id="cr-kpi-total" style="font-size:22px">R$ 0,00</div><div class="kpi-sub">Σ Qtd × Custo Real</div></div>
+    </div>
+
+    <div class="table-card">
+      <div class="tc-head">
+        <div class="tc-title" id="cr-count">Custo Real de Produção</div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <div class="filters" style="margin:0;flex-wrap:nowrap">
+            <select class="fi" id="cr-mes" onchange="renderCustoReal()">
+              <option value="">Todos os meses</option>
+              <option value="1">Janeiro</option><option value="2">Fevereiro</option><option value="3">Março</option>
+              <option value="4">Abril</option><option value="5">Maio</option><option value="6">Junho</option>
+              <option value="7">Julho</option><option value="8">Agosto</option><option value="9">Setembro</option>
+              <option value="10">Outubro</option><option value="11">Novembro</option><option value="12">Dezembro</option>
+            </select>
+            <select class="fi" id="cr-ano" onchange="renderCustoReal()">
+              <option value="">Todos os anos</option>
+              <option value="2024">2024</option><option value="2025">2025</option><option value="2026">2026</option><option value="2027">2027</option><option value="2028">2028</option><option value="2029">2029</option><option value="2030">2030</option><option value="2031">2031</option><option value="2032">2032</option>
+            </select>
+            <select class="fi" id="cr-prod" onchange="renderCustoReal()"><option value="">Todos produtos</option></select>
+          </div>
+          <button class="btn btn-s" onclick="exportarCustoRealExcel()" title="Exportar os lançamentos filtrados para Excel">📊 Exportar Excel</button>
+          <button class="btn btn-p" onclick="abrirModalCustoGGF()">⚙️ Definir Custo GGF do Mês</button>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>Data</th><th>Produto</th><th>Situação</th><th style="text-align:right">Qtd</th>
+            <th style="text-align:right">Custo Prod.</th>
+            <th style="text-align:right;background:rgba(243,156,18,.18)">Custo GGF</th>
+            <th style="text-align:right;background:rgba(46,139,46,.22)">Custo Real</th>
+            <th style="text-align:right">Total Real</th>
+            <th>Origem</th><th>Obs.</th><th>Incluído por</th>
+          </tr></thead>
+          <tbody id="tb-custoreal"></tbody>
+          <tfoot id="tf-custoreal"></tfoot>
+        </table>
+      </div>
+      <div id="cr-nota" style="padding:8px 18px 14px;font-size:11px;color:var(--fraco)"></div>
+    </div>
+  </div>
+
+  <!-- ========= CUSTO HORA DE PRODUÇÃO ========= -->
+  <div class="page" id="page-custohora">
+
+    <!-- FILTROS -->
+    <div class="form-card" style="padding:14px 18px;margin-bottom:16px">
+      <div style="display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap">
+        <div class="fg" style="min-width:80px">
+          <label>Mês (resumo)</label>
+          <select class="fi" id="ch-mes" onchange="renderCustoHora()">
+            <option value="1">Janeiro</option><option value="2">Fevereiro</option><option value="3">Março</option>
+            <option value="4">Abril</option><option value="5">Maio</option><option value="6">Junho</option>
+            <option value="7">Julho</option><option value="8">Agosto</option><option value="9">Setembro</option>
+            <option value="10">Outubro</option><option value="11">Novembro</option><option value="12">Dezembro</option>
+          </select>
+        </div>
+        <div class="fg" style="min-width:80px">
+          <label>Ano</label>
+          <select class="fi" id="ch-ano" onchange="renderCustoHora()">
+            <option value="2024">2024</option><option value="2025">2025</option><option value="2026" selected>2026</option><option value="2027">2027</option><option value="2028">2028</option><option value="2029">2029</option><option value="2030">2030</option><option value="2031">2031</option><option value="2032">2032</option>
+          </select>
+        </div>
+        <span style="font-size:12px;color:var(--fraco);align-self:center">Digite os custos 1.1, 1.2 e 1.3 direto na tabela. A <b style="color:var(--vm)">Produção Total (kg)</b> vem da tela <b style="color:var(--vm)">Indicador de Desempenho</b>.</span>
+      </div>
+    </div>
+
+    <!-- KPIs DO MÊS -->
+    <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:16px">
+      <div class="kpi-card warn"><div class="kpi-label">1.0 GGF do Mês</div><div class="kpi-value" id="ch-kpi-ggf" style="font-size:22px">R$ 0,00</div><div class="kpi-sub">manutenção + insumos + RH</div></div>
+      <div class="kpi-card ok"><div class="kpi-label">Produção Total (kg)</div><div class="kpi-value" id="ch-kpi-prod" style="font-size:22px">0</div><div class="kpi-sub" id="ch-kpi-prod-sub">acumulado no mês</div></div>
+      <div class="kpi-card green"><div class="kpi-label">Custo por kg Produzido</div><div class="kpi-value" id="ch-kpi-ckg" style="font-size:22px">—</div><div class="kpi-sub">GGF ÷ Produção Total</div></div>
+      <div class="kpi-card" id="ch-kpi-card-var"><div class="kpi-label">Variação x Mês Anterior</div><div class="kpi-value" id="ch-kpi-var" style="font-size:22px">—</div><div class="kpi-sub">custo por kg</div></div>
+    </div>
+
+    <!-- TABELA ANUAL -->
+    <div class="table-card" style="margin-bottom:16px">
+      <div class="tc-head" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+        <div class="tc-title" id="ch-titulo">Custo Hora de Produção</div>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <select class="fi" id="ch-pdf-formato" style="min-width:78px;padding:6px 8px" title="Tamanho da folha">
+            <option value="a4" selected>A4</option>
+            <option value="a3">A3</option>
+          </select>
+          <select class="fi" id="ch-pdf-fonte" style="min-width:120px;padding:6px 8px" title="Tamanho da letra">
+            <option value="8" selected>Fonte: Pequena</option>
+            <option value="10">Fonte: Média</option>
+            <option value="12">Fonte: Grande</option>
+          </select>
+          <button class="btn btn-s" onclick="gerarPdfCustoHora('landscape')">📄 PDF Paisagem</button>
+          <button class="btn btn-s" onclick="gerarPdfCustoHora('portrait')">📄 PDF Retrato</button>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table class="ch-tab">
+          <thead id="th-custohora"></thead>
+          <tbody id="tb-custohora"></tbody>
+        </table>
+      </div>
+      <div id="ch-nota" style="padding:8px 18px 14px;font-size:11px;color:var(--fraco)"></div>
     </div>
   </div>
 
@@ -1490,6 +1617,30 @@ notify pgrst, &#x27;reload schema&#x27;;
       </div>
     </div>
     <div class="fer-modal-nota" id="fer-modal-nota"></div>
+  </div>
+</div>
+
+<!-- ========= MODAL CUSTO GGF POR MÊS ========= -->
+<div class="modal-ov" id="modal-custo-ggf" onclick="if(event.target===this)closeModal('modal-custo-ggf')">
+  <div class="modal" style="width:620px;max-width:95vw">
+    <h3>⚙️ Custo GGF aplicado por mês</h3>
+    <div style="font-size:12px;color:var(--fraco);margin:-6px 0 12px">Escolha, para cada mês, de qual mês da tela <b style="color:var(--vm)">Custo Hora de Produção</b> vem o Custo por kg (GGF). Ex.: em 09/2026 usar o custo de 08/2026.</div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+      <label style="font-size:12px;color:var(--fraco)">Ano</label>
+      <select class="fi" id="cg-ano" onchange="renderModalCustoGGF()" style="min-width:100px">
+        <option value="2024">2024</option><option value="2025">2025</option><option value="2026">2026</option><option value="2027">2027</option><option value="2028">2028</option><option value="2029">2029</option><option value="2030">2030</option><option value="2031">2031</option><option value="2032">2032</option>
+      </select>
+    </div>
+    <div style="max-height:420px;overflow-y:auto">
+      <table style="width:100%">
+        <thead><tr style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--fraco)"><th style="text-align:left;font-weight:500;padding:6px 4px">Mês dos lançamentos</th><th style="text-align:left;font-weight:500;padding:6px 4px">Usar o custo de</th><th style="text-align:right;font-weight:500;padding:6px 4px">Custo GGF (R$/kg)</th></tr></thead>
+        <tbody id="tb-custo-ggf"></tbody>
+      </table>
+    </div>
+    <div id="cg-nota" style="font-size:11px;color:var(--fraco);margin-top:10px"></div>
+    <div class="modal-foot">
+      <button class="btn btn-s" onclick="closeModal('modal-custo-ggf')">Fechar</button>
+    </div>
   </div>
 </div>
 
@@ -2342,6 +2493,8 @@ async function carregarTudo(silent=false){
   }
 
   await carregarFeriados();
+  await carregarCustoProducao();
+  await carregarCustoGgfRef();
 
   if(!silent) showLoader(false);
   fillAllSelects();
@@ -2649,7 +2802,7 @@ function logout(){
 }
 
 // ══════ NAV ══════
-const PT={dashboard:'Dashboard',estoque:'Estoque Atual',entradas:'Entradas',saidas:'Saídas',variacao:'Variação Mensal',movimentacao:'Movimentação do Estoque',producao:'Lançamentos de Produção',conciliacao:'Conciliação Produção × Estoque',transferencia:'Transferência de Estoque',fichatecnica:'Ficha Técnica',indicadores:'Indicador de Desempenho',paradas:'Paradas de Recurso',recursos:'Cadastro de Recursos',tiposparada:'Tipos de Parada',metashoras:'Metas de Horas Previstas',metasproducao:'Metas de Produção',oee:'OEE — Indicador Global',produtos:'Cadastro de Produtos',clientes:'Cadastro de Clientes',fornecedores:'Cadastro de Fornecedores',subfamilias:'Subfamílias',localizacoes:'Localizações',usuarios:'Usuários',calendario:'Calendário de Entregas',backup:'Backup do Sistema'};
+const PT={dashboard:'Dashboard',estoque:'Estoque Atual',entradas:'Entradas',saidas:'Saídas',variacao:'Variação Mensal',movimentacao:'Movimentação do Estoque',producao:'Lançamentos de Produção',conciliacao:'Conciliação Produção × Estoque',transferencia:'Transferência de Estoque',fichatecnica:'Ficha Técnica',indicadores:'Indicador de Desempenho',custohora:'Custo Hora de Produção',custoreal:'Custo Real de Produção',paradas:'Paradas de Recurso',recursos:'Cadastro de Recursos',tiposparada:'Tipos de Parada',metashoras:'Metas de Horas Previstas',metasproducao:'Metas de Produção',oee:'OEE — Indicador Global',produtos:'Cadastro de Produtos',clientes:'Cadastro de Clientes',fornecedores:'Cadastro de Fornecedores',subfamilias:'Subfamílias',localizacoes:'Localizações',usuarios:'Usuários',calendario:'Calendário de Entregas',backup:'Backup do Sistema'};
 // ── FILTRO GLOBAL (subfamília + produto) ──
 let _gFiltroSF = '';
 let _gFiltroProd = '';
@@ -2703,7 +2856,7 @@ function goPage(id){
     carregarFiltrosParadas();
   }
 
-  const renders={dashboard:renderDash,estoque:renderEstoque,entradas:renderEntradas,saidas:renderSaidas,variacao:renderVariacao,movimentacao:renderMovimentacao,producao:renderProducao,conciliacao:renderConciliacao,transferencia:renderTransferencia,fichatecnica:renderFT,indicadores:renderIndicadores,paradas:renderParadas,recursos:renderRecursos,tiposparada:renderTP,metashoras:renderMetasHoras,metasproducao:renderMetasProducao,oee:renderOEE,produtos:renderProdutos,clientes:renderClientes,fornecedores:renderForn,subfamilias:renderSF,localizacoes:renderLoc,usuarios:renderUsr,calendario:renderCalendario,backup:renderBackup};
+  const renders={dashboard:renderDash,estoque:renderEstoque,entradas:renderEntradas,saidas:renderSaidas,variacao:renderVariacao,movimentacao:renderMovimentacao,producao:renderProducao,conciliacao:renderConciliacao,transferencia:renderTransferencia,fichatecnica:renderFT,indicadores:renderIndicadores,custohora:renderCustoHora,custoreal:renderCustoReal,paradas:renderParadas,recursos:renderRecursos,tiposparada:renderTP,metashoras:renderMetasHoras,metasproducao:renderMetasProducao,oee:renderOEE,produtos:renderProdutos,clientes:renderClientes,fornecedores:renderForn,subfamilias:renderSF,localizacoes:renderLoc,usuarios:renderUsr,calendario:renderCalendario,backup:renderBackup};
   if(renders[id])renders[id]();
 }
 
@@ -2922,6 +3075,36 @@ function estoqueFiltrado(){
   return {mesF, anoF, lista};
 }
 
+// Produto acabado: usa o Custo Real médio ponderado (tela Custo Real de Produção) no período do filtro.
+// Demais subfamílias (ou acabado sem produção no período): custo médio de compra.
+function custoRealMedioProduto(prodId, mesF, anoF){
+  let qt=0, val=0;
+  lancamentosProducao.forEach(l=>{
+    if(l.situacao!=='PRODUCAO' || l.prodId!==prodId) return;
+    if(mesF && String(l.mes)!==String(mesF)) return;
+    if(anoF && String(l.ano)!==String(anoF)) return;
+    const [y,m] = l.data.split('-').map(Number);
+    const ggf = custoGgfAplicado(m, y) || 0;
+    qt  += l.qt||0;
+    val += ((l.custo||0) + ggf) * (l.qt||0);
+  });
+  return qt>0 ? val/qt : null;
+}
+function modoCustoEstoque(){ return document.getElementById('fe-custo')?.value || 'real'; }
+function salvarModoCustoEstoque(){ try{ localStorage.setItem('stoeck_modo_custo_estoque', modoCustoEstoque()); }catch(e){} }
+(function(){ // restaura a última escolha
+  const aplicar=()=>{ try{ const v=localStorage.getItem('stoeck_modo_custo_estoque'); const el=document.getElementById('fe-custo'); if(el) el.value = v || 'real'; }catch(e){} };
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', aplicar); else aplicar();
+})();
+function custoEstoqueItem(p, est, mesF, anoF){
+  const sf = gSF(p.subfam);
+  if(modoCustoEstoque()==='real' && sf && sf.tipo==='produto_acabado'){
+    const cr = custoRealMedioProduto(p.id, mesF, anoF);
+    if(cr!==null) return {custo:cr, real:true};
+  }
+  return {custo:est.cmp, real:false};
+}
+
 function exportarEstoqueExcel(){
   const {mesF, anoF, lista} = estoqueFiltrado();
   if(!lista.length){ alert('Nenhum item para exportar com os filtros atuais.'); return; }
@@ -2931,20 +3114,21 @@ function exportarEstoqueExcel(){
     ['Estoque Atual — ' + periodoTxt],
     ['Gerado em', new Date().toLocaleString('pt-BR')],
     [],
-    ['Cód.','Produto','Subfamília','Localização','Estoque Mín.','Saldo Inicial','Entradas','Saídas','Saldo','Custo Médio Compra (R$)','Valor Estoque (R$)','Variação do Mês (R$)','Situação']
+    ['Cód.','Produto','Subfamília','Localização','Estoque Mín.','Saldo Inicial','Entradas','Saídas','Saldo','Custo Médio Compra / Custo Real (R$)','Tipo de Custo','Valor Estoque (R$)','Variação do Mês (R$)','Situação']
   ];
   let totQtd=0, totValor=0, totVar=0;
   lista.forEach(p=>{
     const sf=gSF(p.subfam); const loc=gLoc(p.locId);
     const est=estItemPeriodo(p.id, mesF, anoF);
     const isCrit=est.saldo<=p.min||est.saldo<0;
-    const valorItem = Math.max(0,est.saldo)*est.cmp;
-    const variacaoItem = (est.e - est.s)*est.cmp;
+    const ce = custoEstoqueItem(p, est, mesF, anoF);
+    const valorItem = Math.max(0,est.saldo)*ce.custo;
+    const variacaoItem = (est.e - est.s)*ce.custo;
     totQtd+=est.saldo; totValor+=valorItem; totVar+=variacaoItem;
-    linhas.push([p.id, p.desc, sf?sf.nome:'—', loc?loc.nome:'—', r2(p.min), r2(est.ini), r2(est.e), r2(est.s), r2(est.saldo), r2(est.cmp), r2(valorItem), r2(variacaoItem), isCrit?'Crítico':'OK']);
+    linhas.push([p.id, p.desc, sf?sf.nome:'—', loc?loc.nome:'—', r2(p.min), r2(est.ini), r2(est.e), r2(est.s), r2(est.saldo), Math.round(ce.custo*10000)/10000, ce.real?'Custo Real':'Custo Médio Compra', r2(valorItem), r2(variacaoItem), isCrit?'Crítico':'OK']);
   });
   linhas.push([]);
-  linhas.push(['','TOTAL ('+lista.length+' itens)','','','','','','',r2(totQtd),'',r2(totValor),r2(totVar),'']);
+  linhas.push(['','TOTAL ('+lista.length+' itens)','','','','','','',r2(totQtd),'','',r2(totValor),r2(totVar),'']);
   baixarExcel(`estoque_atual_${carimboArquivo()}.xlsx`, {'Estoque Atual': linhas});
 }
 
@@ -2964,12 +3148,16 @@ function renderEstoque(){
     const ajusteBtn=isAdmin?`<span class="r-edit" onclick="abrirAjusteSaldo(${p.id})" title="Ajustar saldo inicial">⚖️</span> <span class="r-edit" onclick="abrirMovProduto(${p.id})" title="Editar entradas/saídas do produto">📋</span>`:'';
     const saldoInicialCell=`<td class="txt-f">${fN(est.ini)}</td>`;
     const ajusteCell=isAdmin?`<td>${ajusteBtn}</td>`:'<td style="display:none"></td>';
-    const valorItem = Math.max(0,est.saldo)*est.cmp;
-    const variacaoItem = (est.e - est.s)*est.cmp;
+    const ce = custoEstoqueItem(p, est, mesF, anoF);
+    const valorItem = Math.max(0,est.saldo)*ce.custo;
+    const variacaoItem = (est.e - est.s)*ce.custo;
+    const custoCell = ce.real
+      ? `<td title="Custo Real médio ponderado (Custo Prod. + Custo GGF) — tela Custo Real de Produção"><span class="fw" style="color:var(--vm)">${fR(ce.custo)}</span> <span style="font-size:10px;color:var(--vm)">(real)</span></td>`
+      : `<td class="txt-f">${fR(ce.custo)}</td>`;
     totQtd   += est.saldo;
     totValor += valorItem;
     totVariacao += variacaoItem;
-    rows+=`<tr><td>${p.id}</td><td class="fw">${p.desc}</td><td>${sf?sf.nome:'—'}</td><td>${loc?loc.nome:'—'}</td><td>${fN(p.min)}</td>${saldoInicialCell}<td class="txt-v">${fN(est.e)}</td><td class="txt-r">${fN(est.s)}</td><td class="fw ${saldoClass}">${fN(est.saldo)}${periodoLabel}${critIcon}</td><td class="txt-f">${fR(est.cmp)}</td><td>${fR(valorItem)}</td><td class="fw" style="color:${variacaoItem<0?'var(--verm)':'var(--verde)'}">${fR(variacaoItem)}</td>${ajusteCell}</tr>`;
+    rows+=`<tr><td>${p.id}</td><td class="fw">${p.desc}</td><td>${sf?sf.nome:'—'}</td><td>${loc?loc.nome:'—'}</td><td>${fN(p.min)}</td>${saldoInicialCell}<td class="txt-v">${fN(est.e)}</td><td class="txt-r">${fN(est.s)}</td><td class="fw ${saldoClass}">${fN(est.saldo)}${periodoLabel}${critIcon}</td>${custoCell}<td>${fR(valorItem)}</td><td class="fw" style="color:${variacaoItem<0?'var(--verm)':'var(--verde)'}">${fR(variacaoItem)}</td>${ajusteCell}</tr>`;
   });
   const totQtdEl=document.getElementById('est-tot-qtd');
   if(totQtdEl){ totQtdEl.textContent=fN(totQtd); totQtdEl.style.color = totQtd<0 ? 'var(--verm)' : 'var(--verde)'; }
@@ -2981,6 +3169,10 @@ function renderEstoque(){
   if(totQtdSub) totQtdSub.textContent=`${count} ${count===1?'item':'itens'} (filtro atual)`;
   const periodoTxt = (mesF||anoF) ? ` — ${mesF?MESES[parseInt(mesF)-1]:''}${mesF&&anoF?' ':''}${anoF||''}` : '';
   document.getElementById('estoque-count').textContent=`Estoque${periodoTxt} — ${count} itens`;
+  const thC=document.getElementById('th-custo-estoque');
+  if(thC) thC.textContent = modoCustoEstoque()==='real' ? 'Custo Médio Compra / Real' : 'Custo Médio Compra';
+  const subVar=document.getElementById('est-tot-variacao')?.parentElement?.querySelector('.kpi-sub');
+  if(subVar) subVar.textContent = modoCustoEstoque()==='real' ? 'saldo × custo real nos acabados (filtro atual)' : 'saldo × custo médio (filtro atual)';
   const isAdmin=currentUser&&currentUser.perfil==='admin';
   const colCount = isAdmin ? 13 : 12;
   document.getElementById('tb-estoque').innerHTML=rows||`<tr><td colspan="${colCount}" class="empty">Nenhum item encontrado.</td></tr>`;
@@ -6218,6 +6410,451 @@ function gerarPdfIndicadores(){
   doc.save(nomeArq);
 }
 
+// ══════ CUSTO HORA DE PRODUÇÃO (GGF ÷ PRODUÇÃO TOTAL) ══════
+// Custos mensais (manutenção, insumos, RH) ficam na tabela "custo_producao" do Supabase
+// quando existir, com cópia sempre no navegador (localStorage) — mesmo padrão dos feriados.
+// SQL para criar a tabela no Supabase:
+//   create table custo_producao (id bigint generated always as identity primary key,
+//     ano int not null, mes int not null, manutencao numeric default 0,
+//     insumos numeric default 0, rh numeric default 0, unique(ano,mes));
+//   alter table custo_producao disable row level security;
+const CUSTO_PROD_LS_KEY = 'stoeck_custo_producao_v1';
+let custoProducao = [];        // [{ano, mes, manutencao, insumos, rh}]
+let custoProducaoRemoto = false;
+const CH_CAMPOS = [
+  {k:'manutencao', cod:'1.1', nome:'Custo com Manutenção'},
+  {k:'insumos',    cod:'1.2', nome:'Custo com Insumos de Produção'},
+  {k:'rh',         cod:'1.3', nome:'Custo com RH'}
+];
+
+async function carregarCustoProducao(){
+  const r = await sbReqAll('custo_producao','?order=ano,mes');
+  if(Array.isArray(r)){
+    custoProducaoRemoto = true;
+    custoProducao = r.map(x=>({ano:+x.ano, mes:+x.mes, manutencao:+x.manutencao||0, insumos:+x.insumos||0, rh:+x.rh||0}));
+    try{ localStorage.setItem(CUSTO_PROD_LS_KEY, JSON.stringify(custoProducao)); }catch(e){}
+  } else {
+    custoProducaoRemoto = false;
+    try{ custoProducao = JSON.parse(localStorage.getItem(CUSTO_PROD_LS_KEY)||'[]'); }catch(e){ custoProducao=[]; }
+  }
+}
+
+function getCustoMes(mes, ano){
+  return custoProducao.find(c=>c.mes===mes&&c.ano===ano) || {ano, mes, manutencao:0, insumos:0, rh:0};
+}
+
+// Produção Total (kg) do mês — mesma regra da tela Indicador de Desempenho
+function prodTotalMesCH(mes, ano){
+  let t = 0;
+  lancamentosProducao.forEach(l=>{
+    if(l.situacao !== 'PRODUCAO') return;
+    const [ly,lm] = l.data.split('-').map(Number);
+    if(lm===mes && ly===ano) t += l.qt;
+  });
+  return t;
+}
+
+// Monta os números do ano inteiro (12 meses)
+function dadosCustoHoraAno(ano){
+  const meses = [];
+  for(let m=1;m<=12;m++){
+    const c = getCustoMes(m, ano);
+    const ggf  = (c.manutencao||0) + (c.insumos||0) + (c.rh||0);
+    const prod = prodTotalMesCH(m, ano);
+    const ckg  = prod>0 ? ggf/prod : null;
+    meses.push({mes:m, manutencao:c.manutencao||0, insumos:c.insumos||0, rh:c.rh||0, ggf, prod, ckg});
+  }
+  meses.forEach((d,i)=>{
+    // variação do custo/kg em relação ao mês anterior (dez do ano anterior para janeiro)
+    let prev = i>0 ? meses[i-1].ckg : null;
+    if(i===0){
+      const c0 = getCustoMes(12, ano-1);
+      const g0 = (c0.manutencao||0)+(c0.insumos||0)+(c0.rh||0);
+      const p0 = prodTotalMesCH(12, ano-1);
+      prev = p0>0 && g0>0 ? g0/p0 : null;
+    }
+    d.var = (d.ckg!==null && prev) ? (d.ckg/prev - 1)*100 : null;
+  });
+  const tot = {
+    manutencao: meses.reduce((a,d)=>a+d.manutencao,0),
+    insumos:    meses.reduce((a,d)=>a+d.insumos,0),
+    rh:         meses.reduce((a,d)=>a+d.rh,0),
+    ggf:        meses.reduce((a,d)=>a+d.ggf,0),
+    prod:       meses.reduce((a,d)=>a+d.prod,0)
+  };
+  tot.ckg = tot.prod>0 ? tot.ggf/tot.prod : null;
+  return {meses, tot};
+}
+
+const _chN2  = v => Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+const _chKg  = v => Number(v||0).toLocaleString('pt-BR',{maximumFractionDigits:2});
+const _chCkg = v => v===null||v===undefined ? '—' : 'R$ '+Number(v).toLocaleString('pt-BR',{minimumFractionDigits:4,maximumFractionDigits:4});
+const _chVar = v => v===null||v===undefined ? '—' : (v>0?'+':'')+v.toFixed(2).replace('.',',')+'%';
+function _chParse(txt){
+  let s = String(txt||'').replace(/[R$\s]/g,'');
+  if(s.includes(',')) s = s.replace(/\./g,'').replace(',','.');   // formato 1.500,00
+  const n = parseFloat(s);
+  return isNaN(n) ? 0 : n;
+}
+
+function renderCustoHora(){
+  const mesSel = parseInt(document.getElementById('ch-mes')?.value || new Date().getMonth()+1);
+  const ano    = parseInt(document.getElementById('ch-ano')?.value || new Date().getFullYear());
+  const {meses, tot} = dadosCustoHoraAno(ano);
+  const dm = meses[mesSel-1];
+
+  // KPIs do mês selecionado
+  document.getElementById('ch-kpi-ggf').textContent  = fR(dm.ggf);
+  document.getElementById('ch-kpi-prod').textContent = _chKg(dm.prod);
+  document.getElementById('ch-kpi-prod-sub').textContent = `${MESES_IND[mesSel-1]}/${ano}`;
+  document.getElementById('ch-kpi-ckg').textContent  = _chCkg(dm.ckg);
+  document.getElementById('ch-kpi-var').textContent  = _chVar(dm.var);
+  document.getElementById('ch-kpi-card-var').className = 'kpi-card ' + (dm.var===null?'':dm.var>0?'danger':'ok');
+  document.getElementById('ch-titulo').textContent = `Custo Hora de Produção — ${ano}`;
+
+  const selCls = m => m===mesSel ? ' ch-mes-sel' : '';
+  document.getElementById('th-custohora').innerHTML =
+    `<tr><th>Descrição</th>${MESES.map((m,i)=>`<th class="ch-num">${m}/${String(ano).slice(2)}</th>`).join('')}<th class="ch-num">Total Ano</th></tr>`;
+
+  let rows = '';
+  // 1.0 GGF (soma)
+  rows += `<tr class="ch-ggf"><td class="ch-lbl">1.0 GGF — Gastos Gerais de Fabricação</td>${meses.map(d=>`<td class="ch-num${selCls(d.mes)}">${_chN2(d.ggf)}</td>`).join('')}<td class="ch-num">${_chN2(tot.ggf)}</td></tr>`;
+  // 1.1 / 1.2 / 1.3 editáveis
+  CH_CAMPOS.forEach(f=>{
+    rows += `<tr class="ch-sub"><td class="ch-lbl">${f.cod} ${f.nome}</td>${meses.map(d=>
+      `<td class="ch-num${selCls(d.mes)}"><input class="ch-inp" inputmode="decimal" value="${d[f.k]?_chN2(d[f.k]):''}" placeholder="0,00"
+         onfocus="this.select()" onkeydown="if(event.key==='Enter')this.blur()"
+         onchange="salvarCustoHora(${ano},${d.mes},'${f.k}',this)"></td>`).join('')}<td class="ch-num fw">${_chN2(tot[f.k])}</td></tr>`;
+  });
+  // Produção total
+  rows += `<tr><td class="ch-lbl">Produção Total (kg)</td>${meses.map(d=>`<td class="ch-num${selCls(d.mes)}" style="color:var(--verde)">${d.prod>0?_chKg(d.prod):'<span style="color:var(--fraco)">0</span>'}</td>`).join('')}<td class="ch-num fw" style="color:var(--verde)">${_chKg(tot.prod)}</td></tr>`;
+  // Custo por kg
+  rows += `<tr class="ch-ckg"><td class="ch-lbl">Custo por kg Produzido</td>${meses.map(d=>`<td class="ch-num${selCls(d.mes)}">${_chCkg(d.ckg)}</td>`).join('')}<td class="ch-num">${_chCkg(tot.ckg)}</td></tr>`;
+  // Variação
+  rows += `<tr><td class="ch-lbl" style="color:var(--fraco)">Variação x mês anterior</td>${meses.map(d=>`<td class="ch-num${selCls(d.mes)}" style="color:${d.var===null?'var(--fraco)':d.var>0?'var(--verm)':'var(--verde)'}">${_chVar(d.var)}</td>`).join('')}<td class="ch-num" style="color:var(--fraco)">—</td></tr>`;
+
+  document.getElementById('tb-custohora').innerHTML = rows;
+  document.getElementById('ch-nota').innerHTML = custoProducaoRemoto
+    ? 'Custo por kg = 1.0 GGF ÷ Produção Total (kg). Valores salvos no servidor.'
+    : 'Custo por kg = 1.0 GGF ÷ Produção Total (kg). <span style="color:var(--amar)">Os custos estão salvos só neste navegador — crie a tabela "custo_producao" no Supabase para compartilhar entre usuários.</span>';
+}
+
+async function salvarCustoHora(ano, mes, campo, el){
+  const val = _chParse(el.value);
+  let reg = custoProducao.find(c=>c.mes===mes&&c.ano===ano);
+  const novo = !reg;
+  if(novo){ reg = {ano, mes, manutencao:0, insumos:0, rh:0}; custoProducao.push(reg); }
+  reg[campo] = val;
+  try{ localStorage.setItem(CUSTO_PROD_LS_KEY, JSON.stringify(custoProducao)); }catch(e){}
+  renderCustoHora();
+  if(!custoProducaoRemoto) return;
+  const corpo = {ano, mes, manutencao:reg.manutencao, insumos:reg.insumos, rh:reg.rh};
+  let r = novo ? await sbReq('custo_producao','POST',corpo)
+               : await sbReq('custo_producao','PATCH',corpo,`?ano=eq.${ano}&mes=eq.${mes}`);
+  if(r===null && novo) r = await sbReq('custo_producao','PATCH',corpo,`?ano=eq.${ano}&mes=eq.${mes}`);
+  if(r===null) alert('Não foi possível salvar o custo no servidor. Ficou salvo apenas neste navegador.');
+}
+
+// ══════ PDF — CUSTO HORA DE PRODUÇÃO (PAISAGEM / RETRATO) ══════
+function gerarPdfCustoHora(orient){
+  if(!window.jspdf){ alert('Biblioteca de PDF ainda não carregou. Aguarde alguns segundos e tente novamente.'); return; }
+  const { jsPDF } = window.jspdf;
+  const fmt   = document.getElementById('ch-pdf-formato')?.value || 'a4';
+  const fonte = parseInt(document.getElementById('ch-pdf-fonte')?.value || 8);
+  const doc = new jsPDF({orientation:orient, unit:'pt', format:fmt});
+  const retrato = orient==='portrait';
+
+  const mesSel = parseInt(document.getElementById('ch-mes')?.value || new Date().getMonth()+1);
+  const ano    = parseInt(document.getElementById('ch-ano')?.value || new Date().getFullYear());
+  const {meses, tot} = dadosCustoHoraAno(ano);
+  const dm = meses[mesSel-1];
+
+  const pageW = doc.internal.pageSize.getWidth();
+  const pageH = doc.internal.pageSize.getHeight();
+  const margem = retrato ? 30 : 40;
+  const logoH = 52, logoW = logoH * (280/300);
+  try { doc.addImage(LOGO_PDF_B64, 'JPEG', margem, 18, logoW, logoH); } catch(e){ console.warn('Logo não adicionada ao PDF', e); }
+
+  const titulo = `Custo Hora de Produção — ${ano}`;
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(18 + (fonte-8));
+  doc.setTextColor(33,33,33);
+  doc.text(titulo, pageW/2, 40, {align:'center'});
+
+  const kpiTxt = `${MESES_IND[mesSel-1]}/${ano}:  GGF ${fR(dm.ggf)}   |   Produção ${_chKg(dm.prod)} kg   |   Custo/kg ${_chCkg(dm.ckg)}   |   Variação ${_chVar(dm.var)}`;
+  doc.setFont('helvetica','normal');
+  doc.setTextColor(80,80,80);
+  const larguraLivre = pageW - 2*(margem + logoW + 10);
+  let kpiFonte = 10 + Math.round((fonte-8)/2);
+  doc.setFontSize(kpiFonte);
+  while(kpiFonte > 6 && doc.getTextWidth(kpiTxt) > larguraLivre){ kpiFonte -= 0.5; doc.setFontSize(kpiFonte); }
+  doc.text(kpiTxt, pageW/2, 60, {align:'center'});
+
+  doc.setDrawColor(46,139,46);
+  doc.setLineWidth(1.2);
+  doc.line(margem, 80, pageW - margem, 80);
+  doc.setTextColor(0,0,0);
+
+  let head, body, destaque;   // destaque: function(rowIndex,colIndex) -> 'ggf' | 'ckg' | 'tot' | null
+  if(!retrato){
+    // PAISAGEM: igual à tela — itens nas linhas, meses nas colunas
+    head = [['Descrição', ...MESES.map(m=>`${m}/${String(ano).slice(2)}`), 'Total Ano']];
+    body = [
+      ['1.0 GGF — Gastos Gerais de Fabricação', ...meses.map(d=>_chN2(d.ggf)), _chN2(tot.ggf)],
+      ...CH_CAMPOS.map(f=>[`   ${f.cod} ${f.nome}`, ...meses.map(d=>_chN2(d[f.k])), _chN2(tot[f.k])]),
+      ['Produção Total (kg)', ...meses.map(d=>_chKg(d.prod)), _chKg(tot.prod)],
+      ['Custo por kg Produzido (R$)', ...meses.map(d=>d.ckg===null?'—':_chN2v4(d.ckg)), tot.ckg===null?'—':_chN2v4(tot.ckg)],
+      ['Variação x mês anterior', ...meses.map(d=>_chVar(d.var)), '—']
+    ];
+    destaque = (r,c)=> r===0?'ggf' : r===5?'ckg' : (c===13?'tot':null);
+  } else {
+    // RETRATO: meses nas linhas, itens nas colunas (cabe na folha em pé)
+    head = [['Mês','1.1 Manutenção','1.2 Insumos','1.3 RH','1.0 GGF','Produção (kg)','Custo/kg (R$)','Variação']];
+    body = meses.map(d=>[
+      `${MESES_IND[d.mes-1]}`, _chN2(d.manutencao), _chN2(d.insumos), _chN2(d.rh), _chN2(d.ggf),
+      _chKg(d.prod), d.ckg===null?'—':_chN2v4(d.ckg), _chVar(d.var)
+    ]);
+    body.push(['TOTAL', _chN2(tot.manutencao), _chN2(tot.insumos), _chN2(tot.rh), _chN2(tot.ggf), _chKg(tot.prod), tot.ckg===null?'—':_chN2v4(tot.ckg), '—']);
+    destaque = (r,c)=> r===12?'tot' : c===4?'ggf' : c===6?'ckg' : null;
+  }
+
+  const VERDE_LINHA = [198,224,180];
+  doc.autoTable({
+    head, body,
+    startY: 90,
+    styles:{ fontSize: retrato ? fonte+1 : fonte, cellPadding: fonte<=8?4:5, halign:'right', valign:'middle',
+             lineColor:[190,190,190], lineWidth:0.5, textColor:[40,40,40] },
+    headStyles:{ fillColor:[46,139,46], textColor:[255,255,255], fontStyle:'bold', halign:'center' },
+    bodyStyles:{ fillColor:[255,255,255] },
+    alternateRowStyles:{ fillColor: retrato ? VERDE_LINHA : [255,255,255] },
+    columnStyles:{ 0:{ halign:'left', fontStyle:'bold' } },
+    margin:{ left:margem, right:margem },
+    didParseCell: function(data){
+      if(data.section!=='body') return;
+      const tipo = destaque(data.row.index, data.column.index);
+      if(tipo==='ggf'){ data.cell.styles.fillColor=[169,208,142]; data.cell.styles.fontStyle='bold'; }
+      if(tipo==='ckg'){ data.cell.styles.fillColor=[252,228,190]; data.cell.styles.fontStyle='bold'; }
+      if(tipo==='tot'){ data.cell.styles.fillColor=[169,208,142]; data.cell.styles.fontStyle='bold'; }
+      // mês selecionado em destaque
+      const ehMesSel = retrato ? data.row.index===mesSel-1 : data.column.index===mesSel;
+      if(ehMesSel && !tipo) data.cell.styles.fillColor=[226,239,218];
+      // variação: vermelho subiu, verde caiu
+      const colVar = retrato ? 7 : null;
+      const ehVar = retrato ? data.column.index===colVar : data.row.index===6;
+      if(ehVar){
+        const t = String(data.cell.raw||'');
+        if(t.startsWith('+')) data.cell.styles.textColor=[192,57,43];
+        else if(t.startsWith('-')) data.cell.styles.textColor=[39,130,70];
+      }
+    }
+  });
+
+  // rodapé com a fórmula
+  let y = (doc.lastAutoTable?.finalY || 90) + 18;
+  if(y > pageH - 30){ doc.addPage(); y = 40; }
+  doc.setFont('helvetica','italic');
+  doc.setFontSize(Math.max(7, fonte));
+  doc.setTextColor(110,110,110);
+  doc.text('1.0 GGF = 1.1 Manutenção + 1.2 Insumos de Produção + 1.3 RH.   Custo por kg = GGF ÷ Produção Total (kg) do Indicador de Desempenho.', margem, y);
+  doc.text(`Gerado em ${new Date().toLocaleString('pt-BR')}`, pageW - margem, pageH - 16, {align:'right'});
+  doc.setTextColor(0,0,0);
+
+  doc.save(`custo_hora_producao_${ano}_${retrato?'retrato':'paisagem'}.pdf`);
+}
+function _chN2v4(v){ return Number(v).toLocaleString('pt-BR',{minimumFractionDigits:4,maximumFractionDigits:4}); }
+
+// ══════ CUSTO REAL DE PRODUÇÃO (Custo Prod. + Custo GGF do mês) ══════
+// Para cada mês dos lançamentos, o usuário escolhe de qual mês da tela "Custo Hora de Produção"
+// vem o Custo por kg (GGF). Fica na tabela "custo_ggf_ref" do Supabase quando existir,
+// com cópia sempre no navegador (localStorage).
+// SQL:
+//   create table custo_ggf_ref (id bigint generated always as identity primary key,
+//     ano int not null, mes int not null, ref_ano int not null, ref_mes int not null, unique(ano,mes));
+//   alter table custo_ggf_ref disable row level security;
+const CUSTO_GGF_REF_LS_KEY = 'stoeck_custo_ggf_ref_v1';
+let custoGgfRef = [];          // [{ano, mes, refAno, refMes}]
+let custoGgfRefRemoto = false;
+
+async function carregarCustoGgfRef(){
+  const r = await sbReqAll('custo_ggf_ref','?order=ano,mes');
+  if(Array.isArray(r)){
+    custoGgfRefRemoto = true;
+    custoGgfRef = r.map(x=>({ano:+x.ano, mes:+x.mes, refAno:+x.ref_ano, refMes:+x.ref_mes}));
+    try{ localStorage.setItem(CUSTO_GGF_REF_LS_KEY, JSON.stringify(custoGgfRef)); }catch(e){}
+  } else {
+    custoGgfRefRemoto = false;
+    try{ custoGgfRef = JSON.parse(localStorage.getItem(CUSTO_GGF_REF_LS_KEY)||'[]'); }catch(e){ custoGgfRef=[]; }
+  }
+}
+
+// Custo por kg (GGF ÷ Produção Total) de um mês — mesma conta da tela Custo Hora de Produção
+function custoKgMesCH(mes, ano){
+  const c = getCustoMes(mes, ano);
+  const ggf = (c.manutencao||0)+(c.insumos||0)+(c.rh||0);
+  const prod = prodTotalMesCH(mes, ano);
+  return prod>0 && ggf>0 ? ggf/prod : null;
+}
+function getRefGGF(mes, ano){ return custoGgfRef.find(r=>r.mes===mes&&r.ano===ano) || null; }
+// Custo GGF (R$/kg) aplicado aos lançamentos do mês/ano
+function custoGgfAplicado(mes, ano){
+  const r = getRefGGF(mes, ano);
+  return r ? custoKgMesCH(r.refMes, r.refAno) : null;
+}
+const _crRef = r => r ? `${String(r.refMes).padStart(2,'0')}/${r.refAno}` : '';
+const _crR4 = v => v===null||v===undefined ? '—' : 'R$ '+Number(v).toLocaleString('pt-BR',{minimumFractionDigits:4,maximumFractionDigits:4});
+
+function _ehAcabado(prodId){
+  const p = gP(prodId); if(!p) return true;   // sem cadastro: não descarta
+  const sf = gSF(p.subfam);
+  return !sf || sf.tipo==='produto_acabado';
+}
+
+function _listaCustoReal(){
+  const mes = document.getElementById('cr-mes')?.value||'';
+  const ano = document.getElementById('cr-ano')?.value||'';
+  const prodF = document.getElementById('cr-prod')?.value||'';
+  return lancamentosProducao.filter(l=>
+       l.situacao==='PRODUCAO' && _ehAcabado(l.prodId)
+    && (!mes||String(l.mes)===mes) && (!ano||String(l.ano)===ano)
+    && (!prodF||String(l.prodId)===prodF)
+  ).map(l=>{
+    const [y,m] = l.data.split('-').map(Number);
+    const ggf  = custoGgfAplicado(m, y);
+    const real = (l.custo||0) + (ggf||0);
+    return {l, ggf, real, total: real*(l.qt||0), ref:getRefGGF(m,y)};
+  }).sort((a,b)=>b.l.data.localeCompare(a.l.data));
+}
+
+function renderCustoReal(){
+  const selP = document.getElementById('cr-prod');
+  if(selP){
+    const cur = selP.value;
+    const ids = new Set(lancamentosProducao.filter(l=>l.situacao==='PRODUCAO').map(l=>l.prodId));
+    selP.innerHTML = '<option value="">Todos produtos</option>' + produtos.filter(p=>ids.has(p.id)).map(p=>`<option value="${p.id}">${p.desc}</option>`).join('');
+    selP.value = cur;
+  }
+  const lista = _listaCustoReal();
+  window._ultimaListaCustoReal = lista;
+
+  let rows='', qt=0, vProd=0, vGgf=0, vReal=0, semGgf=0;
+  lista.forEach(x=>{
+    const l=x.l, prod=gP(l.prodId), [y,m,d]=l.data.split('-');
+    qt += l.qt||0; vProd += (l.custo||0)*(l.qt||0); vGgf += (x.ggf||0)*(l.qt||0); vReal += x.total;
+    if(x.ggf===null) semGgf++;
+    rows += `<tr>
+      <td>${d}/${m}/${y}</td>
+      <td class="fw">${prod?prod.desc:'—'}</td>
+      <td>${badgeSit(l.situacao)}</td>
+      <td style="text-align:right;color:var(--verm)">${fN(l.qt)}</td>
+      <td style="text-align:right">${_crR4(l.custo||0)}</td>
+      <td style="text-align:right;background:rgba(243,156,18,.07)" title="${x.ref?'Custo de '+_crRef(x.ref):'Mês sem Custo GGF definido'}">${x.ggf===null?'<span style="color:var(--amar)">não definido</span>':_crR4(x.ggf)+` <span style="font-size:10px;color:var(--fraco)">(${_crRef(x.ref)})</span>`}</td>
+      <td style="text-align:right;background:rgba(46,139,46,.09);font-weight:700;color:var(--vm)">${_crR4(x.real)}</td>
+      <td style="text-align:right">${fR(x.total)}</td>
+      <td>${badgeOrigem(l.origem)}</td>
+      <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis">${l.obs||'—'}</td>
+      ${cellIncluido(l)}
+    </tr>`;
+  });
+  document.getElementById('tb-custoreal').innerHTML = rows || '<tr><td colspan="11" class="empty">Nenhum lançamento de produção encontrado.</td></tr>';
+  const md = v => qt>0 ? _crR4(v/qt) : '—';
+  document.getElementById('tf-custoreal').innerHTML = lista.length ? `<tr style="font-weight:700;border-top:2px solid var(--borda)">
+      <td colspan="3">TOTAL / MÉDIA PONDERADA</td><td style="text-align:right">${fN(qt)}</td>
+      <td style="text-align:right">${md(vProd)}</td><td style="text-align:right">${md(vGgf)}</td>
+      <td style="text-align:right;color:var(--vm)">${md(vReal)}</td><td style="text-align:right">${fR(vReal)}</td><td colspan="3"></td></tr>` : '';
+  document.getElementById('cr-count').textContent = `Custo Real de Produção (${lista.length})`;
+
+  // KPIs
+  const mesF = parseInt(document.getElementById('cr-mes')?.value)||0;
+  const anoF = parseInt(document.getElementById('cr-ano')?.value)||0;
+  document.getElementById('cr-kpi-qt').textContent = fN(qt);
+  document.getElementById('cr-kpi-qt-sub').textContent = lista.length+' lançamento'+(lista.length!==1?'s':'');
+  if(mesF && anoF){
+    const g = custoGgfAplicado(mesF, anoF), r = getRefGGF(mesF, anoF);
+    document.getElementById('cr-kpi-ggf').textContent = _crR4(g);
+    document.getElementById('cr-kpi-ggf-sub').textContent = r ? `custo de ${_crRef(r)}` : 'não definido para o mês';
+  } else {
+    document.getElementById('cr-kpi-ggf').textContent = md(vGgf);
+    document.getElementById('cr-kpi-ggf-sub').textContent = 'média ponderada do filtro';
+  }
+  document.getElementById('cr-kpi-real').textContent = md(vReal);
+  document.getElementById('cr-kpi-total').textContent = fR(vReal);
+
+  let nota = 'Somente lançamentos de PRODUÇÃO de produto acabado. Custo Real = Custo Prod. + Custo GGF.';
+  if(semGgf) nota += ` <span style="color:var(--amar)">${semGgf} lançamento(s) sem Custo GGF definido — clique em “Definir Custo GGF do Mês”.</span>`;
+  document.getElementById('cr-nota').innerHTML = nota;
+}
+
+function exportarCustoRealExcel(){
+  const lista = window._ultimaListaCustoReal || [];
+  if(!lista.length){ alert('Não há lançamentos para exportar com os filtros atuais.'); return; }
+  const r4 = v => v===null ? '' : Math.round(v*10000)/10000;
+  const linhas = [['Data','Produto','Qtd','Custo Prod.','Custo GGF','Mês ref. GGF','Custo Real','Total Real','Origem','Obs.','Incluído por']];
+  lista.forEach(x=>{
+    const l=x.l, prod=gP(l.prodId);
+    linhas.push([fD(l.data), prod?prod.desc:('#'+l.prodId), l.qt, r4(l.custo||0), r4(x.ggf), _crRef(x.ref), r4(x.real),
+      Math.round(x.total*100)/100, l.origem==='ficha_tecnica'?'Ficha Técnica':'Manual', l.obs||'', nomeUsuarioExib(l.criadoPor)]);
+  });
+  baixarExcel(`custo_real_producao_${carimboArquivo()}.xlsx`, {'Custo Real de Produção': linhas});
+}
+
+// ── Modal "Definir Custo GGF do Mês" ──
+function abrirModalCustoGGF(){
+  const a = parseInt(document.getElementById('cr-ano')?.value) || new Date().getFullYear();
+  document.getElementById('cg-ano').value = a;
+  renderModalCustoGGF();
+  openModal('modal-custo-ggf');
+}
+function renderModalCustoGGF(){
+  const ano = parseInt(document.getElementById('cg-ano').value);
+  // opções: de jan do ano anterior até dez do ano escolhido
+  const opcoes = [];
+  for(const a of [ano-1, ano]) for(let m=1;m<=12;m++){
+    const v = custoKgMesCH(m, a);
+    opcoes.push({a, m, v, txt:`${String(m).padStart(2,'0')}/${a} — ${v===null?'sem custo':_crR4(v)}`});
+  }
+  let rows='';
+  for(let m=1;m<=12;m++){
+    const r = getRefGGF(m, ano);
+    const val = r ? custoKgMesCH(r.refMes, r.refAno) : null;
+    const nLanc = lancamentosProducao.filter(l=>l.situacao==='PRODUCAO'&&l.mes===m&&l.ano===ano).length;
+    rows += `<tr>
+      <td><b>${MESES_IND[m-1]}/${ano}</b> <span style="font-size:11px;color:var(--fraco)">${nLanc} lanç.</span></td>
+      <td><select class="fi" style="min-width:230px;padding:5px 8px" onchange="salvarRefGGF(${ano},${m},this.value)">
+        <option value="">— Não aplicar —</option>
+        ${opcoes.map(o=>`<option value="${o.a}-${o.m}" ${r&&r.refAno===o.a&&r.refMes===o.m?'selected':''}>${o.txt}</option>`).join('')}
+      </select></td>
+      <td style="text-align:right;font-weight:700;color:${val===null?'var(--fraco)':'var(--vm)'}">${_crR4(val)}</td>
+    </tr>`;
+  }
+  document.getElementById('tb-custo-ggf').innerHTML = rows;
+  document.getElementById('cg-nota').innerHTML = custoGgfRefRemoto ? 'Salvo no servidor.' :
+    '<span style="color:var(--amar)">Salvo só neste navegador — crie a tabela "custo_ggf_ref" no Supabase para compartilhar entre usuários.</span>';
+}
+async function salvarRefGGF(ano, mes, valor){
+  const i = custoGgfRef.findIndex(r=>r.ano===ano&&r.mes===mes);
+  const remover = !valor;
+  let reg = null;
+  if(remover){ if(i>=0) custoGgfRef.splice(i,1); }
+  else {
+    const [ra, rm] = valor.split('-').map(Number);
+    reg = {ano, mes, refAno:ra, refMes:rm};
+    if(i>=0) custoGgfRef[i]=reg; else custoGgfRef.push(reg);
+  }
+  try{ localStorage.setItem(CUSTO_GGF_REF_LS_KEY, JSON.stringify(custoGgfRef)); }catch(e){}
+  renderModalCustoGGF();
+  if(document.getElementById('page-custoreal')?.classList.contains('active')) renderCustoReal();
+  if(!custoGgfRefRemoto) return;
+  const filtro = `?ano=eq.${ano}&mes=eq.${mes}`;
+  let r;
+  if(remover) r = await sbReq('custo_ggf_ref','DELETE',null,filtro);
+  else {
+    const corpo = {ano, mes, ref_ano:reg.refAno, ref_mes:reg.refMes};
+    r = i>=0 ? await sbReq('custo_ggf_ref','PATCH',corpo,filtro) : await sbReq('custo_ggf_ref','POST',corpo);
+    if(r===null && i<0) r = await sbReq('custo_ggf_ref','PATCH',corpo,filtro);
+  }
+  if(r===null) alert('Não foi possível salvar no servidor. Ficou salvo apenas neste navegador.');
+}
+
 // ===== INIT =====
 function init(){
   document.getElementById('ent-data').value=today();
@@ -6230,6 +6867,12 @@ function init(){
   const selAno = document.getElementById('ind-ano');
   if(selMes) selMes.value = agora.getMonth()+1;
   if(selAno) selAno.value = agora.getFullYear();
+  const chMes=document.getElementById('ch-mes'), chAno=document.getElementById('ch-ano');
+  if(chMes) chMes.value = agora.getMonth()+1;
+  if(chAno) chAno.value = agora.getFullYear();
+  const crMes=document.getElementById('cr-mes'), crAno=document.getElementById('cr-ano');
+  if(crMes) crMes.value = agora.getMonth()+1;
+  if(crAno) crAno.value = agora.getFullYear();
   // metas
   ['mh-mes','mp-mes'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=agora.getMonth()+1; });
   ['mh-ano','mp-ano','oee-ano'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=agora.getFullYear(); });
