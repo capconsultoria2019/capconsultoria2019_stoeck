@@ -568,7 +568,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--preto);color:var(--txt);m
       </div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>Data</th><th>Produto</th><th>Situação</th><th>Qtd</th><th>Cliente</th><th>Custo Prod.</th><th>Origem</th><th>Obs.</th><th>Incluído por</th><th>Ações</th></tr></thead>
+          <thead><tr><th>Data</th><th>Produto</th><th>Situação</th><th>Qtd</th><th>Cliente</th><th>Custo Prod.</th><th>Origem</th><th>Obs.</th><th>Ações</th></tr></thead>
           <tbody id="tb-producao"></tbody>
         </table>
       </div>
@@ -791,7 +791,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--preto);color:var(--txt);m
             <th style="text-align:right;background:rgba(243,156,18,.18)">Custo GGF</th>
             <th style="text-align:right;background:rgba(46,139,46,.22)">Custo Real</th>
             <th style="text-align:right">Total Real</th>
-            <th>Origem</th><th>Obs.</th><th>Incluído por</th>
+            <th>Origem</th><th>Obs.</th>
           </tr></thead>
           <tbody id="tb-custoreal"></tbody>
           <tfoot id="tf-custoreal"></tfoot>
@@ -1150,7 +1150,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--preto);color:var(--txt);m
           <select class="fi" id="fe-ent-forn" onchange="renderEntradas()"><option value="">Todos fornecedores</option></select>
         </div>
       </div>
-      <div class="table-wrap"><table><thead><tr><th>Data</th><th>Produto</th><th>Subfamília</th><th>Qtd</th><th>Custo Unit.</th><th>Total</th><th>Fornecedor</th><th>NF</th><th>Resp.</th><th>Incluído por</th><th>Ações</th></tr></thead><tbody id="tb-entradas"></tbody></table></div>
+      <div class="table-wrap"><table><thead><tr><th>Data</th><th>Produto</th><th>Subfamília</th><th>Qtd</th><th>Custo Unit.</th><th>Total</th><th>Fornecedor</th><th>NF</th><th>Resp.</th><th>Ações</th></tr></thead><tbody id="tb-entradas"></tbody></table></div>
     </div>
   </div>
 
@@ -1175,7 +1175,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--preto);color:var(--txt);m
           <select class="fi" id="fe-sai-cli" onchange="renderSaidas()"><option value="">Todos clientes</option></select>
         </div>
       </div>
-      <div class="table-wrap"><table><thead><tr><th>Data</th><th>Produto</th><th>Subfamília</th><th>Qtd</th><th>Destino</th><th>Responsável</th><th>Valor Total</th><th>Obs.</th><th>Incluído por</th><th>Ações</th></tr></thead><tbody id="tb-saidas"></tbody></table></div>
+      <div class="table-wrap"><table><thead><tr><th>Data</th><th>Produto</th><th>Subfamília</th><th>Qtd</th><th>Destino</th><th>Responsável</th><th>Valor Total</th><th>Obs.</th><th>Ações</th></tr></thead><tbody id="tb-saidas"></tbody></table></div>
     </div>
   </div>
 
@@ -1660,6 +1660,17 @@ notify pgrst, &#x27;reload schema&#x27;;
       </div>
     </div>
     <div class="fer-modal-nota" id="fer-modal-nota"></div>
+  </div>
+</div>
+
+<!-- ========= MODAL CONFERIR INCLUSÃO ========= -->
+<div class="modal-ov" id="modal-incluido" onclick="if(event.target===this)closeModal('modal-incluido')">
+  <div class="modal" style="width:440px;max-width:95vw">
+    <h3>🔍 Conferir inclusão</h3>
+    <div id="incl-corpo" style="font-size:13px;line-height:1.5"></div>
+    <div style="display:flex;justify-content:flex-end;margin-top:18px">
+      <button class="btn btn-s" onclick="closeModal('modal-incluido')">Fechar</button>
+    </div>
   </div>
 </div>
 
@@ -2719,10 +2730,35 @@ function fD(d){if(!d)return'—';const[y,m,dd]=d.split('-');return`${dd}/${m}/${
 // "07/10/2026 21:30" + login, para a coluna Incluído por
 function fDH(iso){ if(!iso) return ''; const d=new Date(iso); if(isNaN(d)) return ''; return d.toLocaleDateString('pt-BR')+' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}); }
 function cellIncluido(x){
+  return ''; // coluna 'Incluído por' oculta — informação disponível no ícone 🔍
   if(!x.criadoEm && !x.criadoPor) return '<td class="txt-f" style="white-space:nowrap">—</td>';
   const quem = x.criadoPor ? `<div class="fw" style="font-size:12px">👤 ${nomeUsuarioExib(x.criadoPor)}</div>`
     : `<div class="txt-f" style="font-size:11px" title="Lançado antes do registro de login (ou com as colunas ainda não criadas no Supabase)">👤 não registrado</div>`;
   return `<td style="white-space:nowrap;line-height:1.25">${quem}<div class="txt-f" style="font-size:11px">🕒 ${fDH(x.criadoEm)||'—'}</div></td>`;
+}
+// Ícone 🔍 (antes da lixeira) para conferir quem incluiu e quando
+function verIncluido(tipo,id){
+  const fonte = {producao:lancamentosProducao, entradas:entradas, saidas:saidas}[tipo]||[];
+  const x = fonte.find(r=>String(r.id)===String(id));
+  if(!x) return;
+  const titulo = {producao:'Lançamento de Produção', entradas:'Entrada', saidas:'Saída'}[tipo];
+  const p = gP(x.prodId);
+  const lin = (r,v)=>`<tr><td style="padding:6px 8px;color:var(--fraco);white-space:nowrap">${r}</td><td style="padding:6px 8px" class="fw">${v}</td></tr>`;
+  const quem = x.criadoPor ? nomeUsuarioExib(x.criadoPor)
+    : '<span class="txt-f" style="font-weight:400">não registrado (lançado antes do registro de login)</span>';
+  const login = x.criadoPor && nomeUsuarioExib(x.criadoPor)!==x.criadoPor ? ` <span class="txt-f" style="font-weight:400">(${x.criadoPor})</span>` : '';
+  document.getElementById('incl-corpo').innerHTML =
+    `<div class="txt-f" style="margin:-6px 0 10px">${titulo} #${x.id}</div>
+     <table style="width:100%;border-collapse:collapse">
+       ${lin('👤 Incluído por', quem+login)}
+       ${lin('🕒 Data/hora', fDH(x.criadoEm)||'—')}
+       ${lin('📅 Data do lançamento', fD(x.data))}
+       ${lin('📦 Produto', p?p.desc:'—')}
+       ${lin('⚖️ Quantidade', fN(x.qt))}
+       ${x.resp?lin('🧑 Responsável', x.resp):''}
+       ${x.obs?lin('📝 Obs.', x.obs):''}
+     </table>`;
+  openModal('modal-incluido');
 }
 function getM(d){return parseInt(d.split('-')[1])}
 function getY(d){return parseInt(d.split('-')[0])}
@@ -3267,10 +3303,10 @@ function renderEntradas(){
       <td class="txt-f">${e.nf||'—'}</td>
       <td class="txt-f">${e.resp||'—'}${prodBadge}</td>
       ${cellIncluido(e)}
-      <td><span class="r-edit" onclick="abrirEditEnt(${e.id})">✏️</span><span class="r-del" onclick="delEnt(${e.id})">🗑</span></td>
+      <td><span class="r-edit" onclick="abrirEditEnt(${e.id})">✏️</span><span class="r-edit" onclick="verIncluido('entradas',${e.id})" title="Conferir quem incluiu">🔍</span><span class="r-del" onclick="delEnt(${e.id})">🗑</span></td>
     </tr>`;
   });
-  document.getElementById('tb-entradas').innerHTML=rows||'<tr><td colspan="11" class="empty">Nenhuma entrada encontrada.</td></tr>';
+  document.getElementById('tb-entradas').innerHTML=rows||'<tr><td colspan="10" class="empty">Nenhuma entrada encontrada.</td></tr>';
 }
 function limparEntrada(){
   editEntId=null;
@@ -3357,10 +3393,10 @@ function renderSaidas(){
       <td>${fR(s.valor)}</td>
       <td class="txt-f">${s.obs||'—'}</td>
       ${cellIncluido(s)}
-      <td><span class="r-edit" onclick="abrirEditSai(${s.id})">✏️</span><span class="r-del" onclick="delSai(${s.id})">🗑</span></td>
+      <td><span class="r-edit" onclick="abrirEditSai(${s.id})">✏️</span><span class="r-edit" onclick="verIncluido('saidas',${s.id})" title="Conferir quem incluiu">🔍</span><span class="r-del" onclick="delSai(${s.id})">🗑</span></td>
     </tr>`;
   });
-  document.getElementById('tb-saidas').innerHTML=rows||'<tr><td colspan="10" class="empty">Nenhuma saída encontrada.</td></tr>';
+  document.getElementById('tb-saidas').innerHTML=rows||'<tr><td colspan="9" class="empty">Nenhuma saída encontrada.</td></tr>';
 }
 function limparSaida(){
   editSaiId=null;
@@ -4700,12 +4736,13 @@ function renderProducao(){
       + '<td><div style="display:flex;gap:5px;align-items:center">'
       + btnConfirmar
       + '<button class="btn btn-s" style="padding:4px 10px;font-size:12px" onclick="editarProducao('+l.id+')">✏️</button>'
+      + '<button class="btn btn-s" style="padding:4px 10px;font-size:12px" onclick="verIncluido(\'producao\','+l.id+')" title="Conferir quem incluiu">🔍</button>'
       + '<button class="btn btn-d" style="padding:4px 10px;font-size:12px" onclick="excluirProducao('+l.id+')">🗑</button>'
       + '</div></td>'
       + '</tr>';
   });
 
-  document.getElementById('tb-producao').innerHTML = rows || '<tr><td colspan="10" class="empty">Nenhum lançamento encontrado.</td></tr>';
+  document.getElementById('tb-producao').innerHTML = rows || '<tr><td colspan="9" class="empty">Nenhum lançamento encontrado.</td></tr>';
   document.getElementById('prod-count').textContent = 'Lançamentos de Produção (' + lista.length + ')';
 }
 
@@ -6879,12 +6916,12 @@ function renderCustoReal(){
       ${cellIncluido(l)}
     </tr>`;
   });
-  document.getElementById('tb-custoreal').innerHTML = rows || '<tr><td colspan="11" class="empty">Nenhum lançamento de produção encontrado.</td></tr>';
+  document.getElementById('tb-custoreal').innerHTML = rows || '<tr><td colspan="10" class="empty">Nenhum lançamento de produção encontrado.</td></tr>';
   const md = v => qt>0 ? _crR4(v/qt) : '—';
   document.getElementById('tf-custoreal').innerHTML = lista.length ? `<tr style="font-weight:700;border-top:2px solid var(--borda)">
       <td colspan="3">TOTAL / MÉDIA PONDERADA</td><td style="text-align:right">${fN(qt)}</td>
       <td style="text-align:right">${md(vProd)}</td><td style="text-align:right">${md(vGgf)}</td>
-      <td style="text-align:right;color:var(--vm)">${md(vReal)}</td><td style="text-align:right">${fR(vReal)}</td><td colspan="3"></td></tr>` : '';
+      <td style="text-align:right;color:var(--vm)">${md(vReal)}</td><td style="text-align:right">${fR(vReal)}</td><td colspan="2"></td></tr>` : '';
   document.getElementById('cr-count').textContent = `Custo Real de Produção (${lista.length})`;
 
   // KPIs
