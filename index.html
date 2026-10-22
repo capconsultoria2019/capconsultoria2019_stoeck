@@ -3163,7 +3163,7 @@ function estoqueFiltrado(){
 // Produto acabado: usa o Custo Real médio ponderado (tela Custo Real de Produção) no período do filtro.
 // Demais subfamílias (ou acabado sem produção no período): custo médio de compra.
 function custoRealMedioProduto(prodId, mesF, anoF){
-  let qt=0, val=0;
+  let qt=0, val=0; const cache={};
   lancamentosProducao.forEach(l=>{
     if(l.situacao!=='PRODUCAO' || l.prodId!==prodId) return;
     if(mesF && String(l.mes)!==String(mesF)) return;
@@ -3171,7 +3171,7 @@ function custoRealMedioProduto(prodId, mesF, anoF){
     const [y,m] = l.data.split('-').map(Number);
     const ggf = custoGgfAplicado(m, y) || 0;
     qt  += l.qt||0;
-    val += ((l.custo||0) + ggf) * (l.qt||0);
+    val += (custoProdLancMes(l, cache).custo + ggf) * (l.qt||0);
   });
   return qt>0 ? val/qt : null;
 }
@@ -6870,10 +6870,36 @@ function _ehAcabado(prodId){
   return !sf || sf.tipo==='produto_acabado';
 }
 
+// Custo médio de COMPRA da matéria-prima só no mês/ano informado (ignora produção [lp:] e transferência).
+// Sem compras no mês, usa o custo médio geral (custoMedioMP sem limite de data).
+// Retorna {custo, doMes:true|false}
+function custoMedioMPDoMes(mpId, mes, ano){
+  const compras = entradas.filter(e=>e.prodId===mpId && (e.custo||0)>0
+    && !(e.obs||'').includes('[lp:') && e.resp!=='Transferência'
+    && Number(e.mes)===Number(mes) && Number(e.ano)===Number(ano));
+  const qt = compras.reduce((a,e)=>a+(e.qt||0),0);
+  if(qt>0) return {custo: compras.reduce((a,e)=>a+(e.qt||0)*e.custo,0)/qt, doMes:true};
+  return {custo: custoMedioMP(mpId), doMes:false};
+}
+// Custo Prod. (R$/unid.) do lançamento de produção usado na tela Custo Real de Produção:
+// produto com ficha técnica → qtd de MP × custo médio de compra da MP no mês do lançamento
+// (sem compra no mês: custo médio geral). Sem ficha técnica → custo gravado no lançamento.
+// Retorna {custo, fonte:'mes'|'geral'|'lanc', mpId}
+function custoProdLancMes(l, _cache){
+  const ft = getFT(l.prodId);
+  if(!ft || !ft.mpId || ft.mpId===l.prodId) return {custo:l.custo||0, fonte:'lanc'};
+  const [y,m] = l.data.split('-').map(Number);
+  const k = ft.mpId+'|'+y+'|'+m;
+  let r = _cache && _cache[k];
+  if(!r){ r = custoMedioMPDoMes(ft.mpId, m, y); if(_cache) _cache[k]=r; }
+  return {custo:(ft.qtMP||0)*r.custo, fonte:r.doMes?'mes':'geral', mpId:ft.mpId};
+}
+
 function _listaCustoReal(){
   const mes = document.getElementById('cr-mes')?.value||'';
   const ano = document.getElementById('cr-ano')?.value||'';
   const prodF = document.getElementById('cr-prod')?.value||'';
+  const cache = {};
   return lancamentosProducao.filter(l=>
        l.situacao==='PRODUCAO' && _ehAcabado(l.prodId)
     && (!mes||String(l.mes)===mes) && (!ano||String(l.ano)===ano)
@@ -6881,8 +6907,9 @@ function _listaCustoReal(){
   ).map(l=>{
     const [y,m] = l.data.split('-').map(Number);
     const ggf  = custoGgfAplicado(m, y);
-    const real = (l.custo||0) + (ggf||0);
-    return {l, ggf, real, total: real*(l.qt||0), ref:getRefGGF(m,y)};
+    const cp   = custoProdLancMes(l, cache);
+    const real = cp.custo + (ggf||0);
+    return {l, ggf, custoProd:cp.custo, fonteProd:cp.fonte, real, total: real*(l.qt||0), ref:getRefGGF(m,y)};
   }).sort((a,b)=>b.l.data.localeCompare(a.l.data));
 }
 
@@ -6900,14 +6927,14 @@ function renderCustoReal(){
   let rows='', qt=0, vProd=0, vGgf=0, vReal=0, semGgf=0;
   lista.forEach(x=>{
     const l=x.l, prod=gP(l.prodId), [y,m,d]=l.data.split('-');
-    qt += l.qt||0; vProd += (l.custo||0)*(l.qt||0); vGgf += (x.ggf||0)*(l.qt||0); vReal += x.total;
+    qt += l.qt||0; vProd += x.custoProd*(l.qt||0); vGgf += (x.ggf||0)*(l.qt||0); vReal += x.total;
     if(x.ggf===null) semGgf++;
     rows += `<tr>
       <td>${d}/${m}/${y}</td>
       <td class="fw">${prod?prod.desc:'—'}</td>
       <td>${badgeSit(l.situacao)}</td>
       <td style="text-align:right;color:var(--verm)">${fN(l.qt)}</td>
-      <td style="text-align:right">${_crR4(l.custo||0)}</td>
+      <td style="text-align:right" title="${x.fonteProd==='mes'?'Custo médio das compras da matéria-prima em '+m+'/'+y:(x.fonteProd==='geral'?'Sem compra da matéria-prima em '+m+'/'+y+' — custo médio geral':'Sem ficha técnica — custo gravado no lançamento')}">${_crR4(x.custoProd)}${x.fonteProd==='geral'?' <span style="font-size:10px;color:var(--fraco)">(geral)</span>':''}</td>
       <td style="text-align:right;background:rgba(243,156,18,.07)" title="${x.ref?(x.ggf===null?'O mês '+_crRef(x.ref)+' não tem GGF ou Produção na tela Custo Hora de Produção':'Custo de '+_crRef(x.ref)):'Mês sem Custo GGF definido'}">${x.ggf===null?(x.ref?`<span style="color:var(--verm)">sem custo em ${_crRef(x.ref)}</span>`:'<span style="color:var(--amar)">não definido</span>'):_crR4(x.ggf)+` <span style="font-size:10px;color:var(--fraco)">(${_crRef(x.ref)})</span>`}</td>
       <td style="text-align:right;background:rgba(46,139,46,.09);font-weight:700;color:var(--vm)">${_crR4(x.real)}</td>
       <td style="text-align:right">${fR(x.total)}</td>
@@ -6940,7 +6967,7 @@ function renderCustoReal(){
   document.getElementById('cr-kpi-real').textContent = md(vReal);
   document.getElementById('cr-kpi-total').textContent = fR(vReal);
 
-  let nota = 'Somente lançamentos de PRODUÇÃO de produto acabado. Custo Real = Custo Prod. + Custo GGF.';
+  let nota = 'Somente lançamentos de PRODUÇÃO de produto acabado. Custo Prod. = qtd de MP (ficha técnica) × custo médio de compra da MP no mês do lançamento; sem compra no mês, custo médio geral <span style="font-size:10px;color:var(--fraco)">(geral)</span>. Custo Real = Custo Prod. + Custo GGF.';
   if(semGgf) nota += ` <span style="color:var(--amar)">${semGgf} lançamento(s) sem Custo GGF definido — clique em “Definir Custo GGF do Mês”.</span>`;
   document.getElementById('cr-nota').innerHTML = nota;
 }
@@ -6949,10 +6976,11 @@ function exportarCustoRealExcel(){
   const lista = window._ultimaListaCustoReal || [];
   if(!lista.length){ alert('Não há lançamentos para exportar com os filtros atuais.'); return; }
   const r4 = v => v===null ? '' : Math.round(v*10000)/10000;
-  const linhas = [['Data','Produto','Qtd','Custo Prod.','Custo GGF','Mês ref. GGF','Custo Real','Total Real','Origem','Obs.','Incluído por']];
+  const linhas = [['Data','Produto','Qtd','Custo Prod.','Base Custo Prod.','Custo GGF','Mês ref. GGF','Custo Real','Total Real','Origem','Obs.','Incluído por']];
   lista.forEach(x=>{
     const l=x.l, prod=gP(l.prodId);
-    linhas.push([fD(l.data), prod?prod.desc:('#'+l.prodId), l.qt, r4(l.custo||0), r4(x.ggf), _crRef(x.ref), r4(x.real),
+    linhas.push([fD(l.data), prod?prod.desc:('#'+l.prodId), l.qt, r4(x.custoProd),
+      x.fonteProd==='mes'?'Média do mês':(x.fonteProd==='geral'?'Média geral':'Lançamento'), r4(x.ggf), _crRef(x.ref), r4(x.real),
       Math.round(x.total*100)/100, l.origem==='ficha_tecnica'?'Ficha Técnica':'Manual', l.obs||'', nomeUsuarioExib(l.criadoPor)]);
   });
   baixarExcel(`custo_real_producao_${carimboArquivo()}.xlsx`, {'Custo Real de Produção': linhas});
