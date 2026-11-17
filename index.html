@@ -1539,6 +1539,41 @@ body{font-family:'DM Sans',sans-serif;background:var(--preto);color:var(--txt);m
         entradas, saídas, lançamentos de produção, ficha técnica, recursos, paradas, metas e OEE) e baixa
         direto para o seu computador. Use isso como uma cópia extra além dos backups automáticos do Supabase.
       </p>
+      <div style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end;margin-bottom:14px">
+        <div>
+          <label style="display:block;font-size:12px;color:var(--fraco);margin-bottom:4px">Período dos lançamentos</label>
+          <select id="backup-periodo-tipo" onchange="toggleBackupPeriodo()" style="padding:7px 10px;border:1px solid var(--borda);border-radius:6px">
+            <option value="todos">Todo o período</option>
+            <option value="periodo">Período específico</option>
+          </select>
+        </div>
+        <div id="backup-periodo-datas" style="display:none;gap:10px;align-items:flex-end">
+          <div>
+            <label style="display:block;font-size:12px;color:var(--fraco);margin-bottom:4px">Data inicial</label>
+            <input type="date" id="backup-data-ini" style="padding:6px 8px;border:1px solid var(--borda);border-radius:6px">
+          </div>
+          <div>
+            <label style="display:block;font-size:12px;color:var(--fraco);margin-bottom:4px">Data final</label>
+            <input type="date" id="backup-data-fim" style="padding:6px 8px;border:1px solid var(--borda);border-radius:6px">
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:6px">
+        <button class="btn" type="button" onclick="escolherPastaBackup()">📁 Escolher pasta de destino</button>
+        <button class="btn" type="button" id="btn-backup-limpar-pasta" onclick="limparPastaBackup()" style="display:none">✖ Remover pasta</button>
+        <span id="backup-pasta-nome" style="font-size:12px;color:var(--fraco)">Nenhuma pasta definida — o arquivo vai para a pasta de Downloads do navegador.</span>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin:10px 0 6px;padding:10px 12px;border:1px solid var(--borda);border-radius:8px">
+        <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer">
+          <input type="checkbox" id="backup-auto-ativo" onchange="salvarConfigBackupAuto()"> <b>Backup automático</b>
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:13px">
+          a cada <input type="number" id="backup-auto-horas" min="1" step="1" value="24" onchange="salvarConfigBackupAuto()" style="width:70px;padding:5px 8px;border:1px solid var(--borda);border-radius:6px"> horas
+        </label>
+        <span id="backup-auto-info" style="font-size:12px;color:var(--fraco)"></span>
+      </div>
+      <div style="font-size:11px;color:var(--fraco);margin-bottom:6px">O backup automático é sempre completo (todo o período), vai para a pasta de destino escolhida (ou Downloads) e só roda enquanto o sistema estiver aberto em alguma aba do navegador.</div>
+      <div style="font-size:11px;color:var(--fraco);margin-bottom:14px">O período filtra só as tabelas de movimento (entradas, saídas, produção, paradas, metas, OEE e custos). Cadastros sempre vão completos.</div>
       <div class="form-actions" style="justify-content:flex-start">
         <button class="btn btn-p" id="btn-backup-download" onclick="baixarBackupCompleto()">⬇️ Baixar Backup Completo (JSON)</button>
       </div>
@@ -2562,8 +2597,70 @@ const TABELAS_BACKUP = [
   'tipos_parada','paradas','metas_horas','metas_producao','oee_qualidade'
 ];
 
+// ── Pasta de destino do backup (File System Access API; handle guardado no IndexedDB) ──
+const BK_DB='stoeck_backup_cfg', BK_STORE='cfg';
+function _bkDb(){
+  return new Promise((res,rej)=>{
+    const rq=indexedDB.open(BK_DB,1);
+    rq.onupgradeneeded=()=>rq.result.createObjectStore(BK_STORE);
+    rq.onsuccess=()=>res(rq.result); rq.onerror=()=>rej(rq.error);
+  });
+}
+async function _bkGet(k){ try{ const db=await _bkDb(); return await new Promise(r=>{ const q=db.transaction(BK_STORE).objectStore(BK_STORE).get(k); q.onsuccess=()=>r(q.result); q.onerror=()=>r(null); }); }catch(e){ return null; } }
+async function _bkSet(k,v){ try{ const db=await _bkDb(); await new Promise(r=>{ const t=db.transaction(BK_STORE,'readwrite'); if(v===undefined) t.objectStore(BK_STORE).delete(k); else t.objectStore(BK_STORE).put(v,k); t.oncomplete=r; t.onerror=r; }); }catch(e){} }
+
+async function escolherPastaBackup(){
+  if(!window.showDirectoryPicker){
+    alert('Este navegador não permite escolher pasta. Use Google Chrome ou Microsoft Edge no computador. O backup continuará indo para a pasta de Downloads.');
+    return;
+  }
+  try{
+    const h = await window.showDirectoryPicker({ id:'stoeck-backup', mode:'readwrite' });
+    await _bkSet('pasta', h);
+    atualizarPastaBackupUI();
+  }catch(e){ if(e && e.name!=='AbortError') alert('Não foi possível selecionar a pasta: '+e.message); }
+}
+async function limparPastaBackup(){
+  await _bkSet('pasta', undefined);
+  atualizarPastaBackupUI();
+}
+async function atualizarPastaBackupUI(){
+  const el=document.getElementById('backup-pasta-nome');
+  const bt=document.getElementById('btn-backup-limpar-pasta');
+  if(!el) return;
+  const h = window.showDirectoryPicker ? await _bkGet('pasta') : null;
+  if(h){ el.innerHTML='Pasta de destino: <b>📁 '+h.name+'</b>'; el.style.color='var(--vd, inherit)'; if(bt) bt.style.display=''; }
+  else { el.textContent='Nenhuma pasta definida — o arquivo vai para a pasta de Downloads do navegador.'; el.style.color='var(--fraco)'; if(bt) bt.style.display='none'; }
+}
+function toggleBackupPeriodo(){
+  const t=document.getElementById('backup-periodo-tipo');
+  const d=document.getElementById('backup-periodo-datas');
+  if(d) d.style.display = (t && t.value==='periodo') ? 'flex' : 'none';
+}
+// Filtra linhas pelo período: usa a coluna "data" (AAAA-MM-DD) ou, sem ela, mes/ano
+function _bkFiltrarPeriodo(rows, ini, fim){
+  if(!Array.isArray(rows)) return rows;
+  const mIni = ini ? Number(ini.slice(0,4))*100+Number(ini.slice(5,7)) : null;
+  const mFim = fim ? Number(fim.slice(0,4))*100+Number(fim.slice(5,7)) : null;
+  return rows.filter(r=>{
+    if(r && r.data){
+      const d=String(r.data).slice(0,10);
+      return (!ini || d>=ini) && (!fim || d<=fim);
+    }
+    if(r && r.ano && r.mes){
+      const m=Number(r.ano)*100+Number(r.mes);
+      return (mIni===null || m>=mIni) && (mFim===null || m<=mFim);
+    }
+    return true; // sem data identificável: mantém
+  });
+}
+const TABELAS_BACKUP_PERIODO = ['entradas','saidas','lancamentos_producao','paradas','metas_horas','metas_producao','oee_qualidade','custo_producao','custo_ggf_ref'];
+
 function renderBackup(){
   statusSqlCustos();
+  atualizarPastaBackupUI();
+  atualizarInfoBackupAuto();
+  toggleBackupPeriodo();
   const el = document.getElementById('backup-ultima-data');
   if(!el) return;
   let ultimo = null;
@@ -2581,23 +2678,52 @@ function renderBackup(){
   }
 }
 
-async function baixarBackupCompleto(){
+async function baixarBackupCompleto(opts={}){
+  const auto = !!opts.auto;
+  const aviso = (m) => { if(auto) console.warn('[Backup automático]', m); else alert(m); };
   const btn = document.getElementById('btn-backup-download');
   const status = document.getElementById('backup-status');
   if(!SB_URL || !SB_KEY){
-    alert('Configure a conexão com o Supabase antes de gerar o backup.');
-    return;
+    aviso('Configure a conexão com o Supabase antes de gerar o backup.');
+    return false;
   }
+  // período (o automático é sempre completo)
+  const tipoPer = auto ? 'todos' : ((document.getElementById('backup-periodo-tipo')||{}).value || 'todos');
+  let dIni = '', dFim = '';
+  if(tipoPer === 'periodo'){
+    dIni = (document.getElementById('backup-data-ini')||{}).value || '';
+    dFim = (document.getElementById('backup-data-fim')||{}).value || '';
+    if(!dIni && !dFim){ alert('Informe a data inicial e/ou a data final do período.'); return; }
+    if(dIni && dFim && dIni > dFim){ alert('A data inicial não pode ser maior que a data final.'); return; }
+  }
+  // pasta de destino (pede permissão já no clique, enquanto há gesto do usuário)
+  let pasta = window.showDirectoryPicker ? await _bkGet('pasta') : null;
+  if(pasta){
+    try{
+      let perm = await pasta.queryPermission({mode:'readwrite'});
+      if(perm !== 'granted' && auto){
+        // sem clique do usuário o navegador não deixa pedir permissão: avisa e tenta na próxima verificação
+        if(status) status.textContent = `⚠️ Backup automático pendente: clique em "Baixar Backup Completo" para liberar a gravação na pasta "${pasta.name}".`;
+        return false;
+      }
+      if(perm !== 'granted') perm = await pasta.requestPermission({mode:'readwrite'});
+      if(perm !== 'granted'){
+        if(!confirm('Sem permissão para gravar na pasta "'+pasta.name+'". Baixar na pasta de Downloads?')) return false;
+        pasta = null;
+      }
+    }catch(e){ pasta = null; }
+  }
+
   if(btn){ btn.disabled = true; btn.textContent = '⏳ Gerando backup...'; }
-  if(status) status.textContent = 'Buscando dados de todas as tabelas, aguarde...';
+  if(status) status.textContent = auto ? '⏳ Gerando backup automático...' : 'Buscando dados de todas as tabelas, aguarde...';
 
   try{
     const resultados = await Promise.all(TABELAS_BACKUP.map(t => sbReqAll(t)));
     const falhou = resultados.some(r => r === null);
     if(falhou){
-      alert('⚠️ Não foi possível baixar todas as tabelas (verifique a conexão com o Supabase). Nenhum arquivo foi gerado.');
+      aviso('⚠️ Não foi possível baixar todas as tabelas (verifique a conexão com o Supabase). Nenhum arquivo foi gerado.');
       if(status) status.textContent = 'Falha ao gerar o backup. Tente novamente.';
-      return;
+      return false;
     }
 
     const agora = new Date();
@@ -2608,29 +2734,115 @@ async function baixarBackupCompleto(){
       const rr = await sbReqAll(tb);
       if(Array.isArray(rr)) backup.tabelas[tb] = rr;
     }
+    // aplica o período nas tabelas de movimento
+    if(tipoPer === 'periodo'){
+      TABELAS_BACKUP_PERIODO.forEach(tb => { if(backup.tabelas[tb]) backup.tabelas[tb] = _bkFiltrarPeriodo(backup.tabelas[tb], dIni, dFim); });
+      backup.periodo = { dataInicial: dIni || null, dataFinal: dFim || null };
+    } else {
+      backup.periodo = 'todos';
+    }
 
     const json = JSON.stringify(backup, null, 2);
     const blob = new Blob([json], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
     const carimbo = agora.toISOString().slice(0,19).replace(/[-T:]/g,'');
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `backup_stoeck_${carimbo}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    const sufPer = tipoPer === 'periodo' ? `_${(dIni||'inicio').replace(/-/g,'')}-${(dFim||'hoje').replace(/-/g,'')}` : '';
+    const nomeArq = `backup_stoeck${sufPer}_${carimbo}.json`;
+
+    let salvoNaPasta = false;
+    if(pasta){
+      try{
+        const fh = await pasta.getFileHandle(nomeArq, { create:true });
+        const w = await fh.createWritable();
+        await w.write(blob);
+        await w.close();
+        salvoNaPasta = true;
+      }catch(e){
+        console.error('Falha ao gravar na pasta escolhida', e);
+        aviso('Não foi possível gravar na pasta "'+pasta.name+'" ('+e.message+'). O arquivo será baixado na pasta de Downloads.');
+      }
+    }
+    if(!salvoNaPasta){
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = nomeArq;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
 
     try{ localStorage.setItem('stoeck_ultimo_backup', agora.toISOString()); }catch(e){}
-    if(status) status.textContent = '✅ Backup gerado e baixado com sucesso!';
+    if(tipoPer === 'todos'){ try{ localStorage.setItem('stoeck_ultimo_backup_auto', agora.toISOString()); }catch(e){} } // backup completo (manual ou automático) zera a contagem do automático
+    if(status) status.textContent = (auto ? '🤖 Backup automático: ' : '') + (salvoNaPasta
+      ? `✅ Backup salvo na pasta "${pasta.name}" como ${nomeArq}`
+      : '✅ Backup gerado e baixado com sucesso!');
+    if(typeof atualizarInfoBackupAuto === 'function') atualizarInfoBackupAuto();
     renderBackup();
   }catch(e){
     console.error('Erro ao gerar backup', e);
     alert('Erro ao gerar backup: ' + e.message);
     if(status) status.textContent = 'Erro ao gerar o backup.';
+    return false;
   }finally{
     if(btn){ btn.disabled = false; btn.textContent = '⬇️ Baixar Backup Completo (JSON)'; }
   }
+}
+
+// ══════ BACKUP AUTOMÁTICO (a cada X horas, enquanto o sistema estiver aberto) ══════
+let _bkAutoTimer = null, _bkAutoRodando = false;
+function lerConfigBackupAuto(){
+  let c = { ativo:false, horas:24 };
+  try{ const j = JSON.parse(localStorage.getItem('stoeck_backup_auto_cfg')||'null'); if(j) c = { ativo:!!j.ativo, horas:Math.max(1, parseInt(j.horas)||24) }; }catch(e){}
+  return c;
+}
+function salvarConfigBackupAuto(){
+  const ck = document.getElementById('backup-auto-ativo');
+  const hr = document.getElementById('backup-auto-horas');
+  let horas = parseInt(hr && hr.value) || 24;
+  if(horas < 1) horas = 1;
+  if(hr) hr.value = horas;
+  const cfg = { ativo: !!(ck && ck.checked), horas };
+  try{ localStorage.setItem('stoeck_backup_auto_cfg', JSON.stringify(cfg)); }catch(e){}
+  atualizarInfoBackupAuto();
+  verificarBackupAuto();
+}
+function atualizarInfoBackupAuto(){
+  const cfg = lerConfigBackupAuto();
+  const ck = document.getElementById('backup-auto-ativo');
+  const hr = document.getElementById('backup-auto-horas');
+  const info = document.getElementById('backup-auto-info');
+  if(ck) ck.checked = cfg.ativo;
+  if(hr && document.activeElement !== hr) hr.value = cfg.horas;
+  if(!info) return;
+  if(!cfg.ativo){ info.textContent = 'Desativado.'; return; }
+  let ult = null; try{ ult = localStorage.getItem('stoeck_ultimo_backup_auto'); }catch(e){}
+  const fmt = d => `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()} às ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+  if(!ult){ info.textContent = 'Próximo backup: em instantes.'; return; }
+  const prox = new Date(new Date(ult).getTime() + cfg.horas*3600*1000);
+  info.textContent = `Último: ${fmt(new Date(ult))} · Próximo: ${prox <= new Date() ? 'em instantes' : fmt(prox)}`;
+}
+async function verificarBackupAuto(){
+  const cfg = lerConfigBackupAuto();
+  if(!cfg.ativo || _bkAutoRodando || !SB_URL || !SB_KEY) return;
+  let ult = null; try{ ult = localStorage.getItem('stoeck_ultimo_backup_auto'); }catch(e){}
+  if(ult && (Date.now() - new Date(ult).getTime()) < cfg.horas*3600*1000) return;
+  // trava simples entre abas: só uma aba roda o backup por vez
+  let trava = 0; try{ trava = parseInt(localStorage.getItem('stoeck_backup_auto_trava')||'0'); }catch(e){}
+  if(trava && Date.now() - trava < 10*60*1000) return;
+  try{ localStorage.setItem('stoeck_backup_auto_trava', String(Date.now())); }catch(e){}
+  _bkAutoRodando = true;
+  try{ await baixarBackupCompleto({ auto:true }); }
+  finally{
+    _bkAutoRodando = false;
+    try{ localStorage.removeItem('stoeck_backup_auto_trava'); }catch(e){}
+    atualizarInfoBackupAuto();
+  }
+}
+function iniciarBackupAuto(){
+  if(_bkAutoTimer) clearInterval(_bkAutoTimer);
+  _bkAutoTimer = setInterval(verificarBackupAuto, 60*1000); // verifica a cada 1 min
+  setTimeout(verificarBackupAuto, 15*1000);                // primeira verificação logo após abrir
 }
 
 let _autoRefreshInterval = null;
@@ -2875,9 +3087,11 @@ function doLogin(){
   document.getElementById('topbar-user').textContent=user.nome+' ('+user.perfil+')';
   init();
   iniciarAutoRefresh();
+  iniciarBackupAuto();
 }
 function logout(){
   pararAutoRefresh();
+  if(_bkAutoTimer){ clearInterval(_bkAutoTimer); _bkAutoTimer=null; }
   currentUser=null;
   document.getElementById('app').style.display='none';
   document.getElementById('login-screen').style.display='flex';
